@@ -22,6 +22,12 @@ REG_FRA_SWEEP_AMP_MULT		= 74
 REG_FRA_SETTLE_CYCLES		= 76
 REG_FRA_AVERAGE_CYCLES		= 77
 REG_FRA_SWEEP_OFF_MULT		= 78
+REG_PHASE_OFF_CH1_LSB		= 79
+REG_PHASE_OFF_CH1_MSB		= 80
+REG_HARMONIC_SEL_CH1		= 81
+REG_PHASE_OFF_CH2_LSB		= 82
+REG_PHASE_OFF_CH2_MSB		= 83
+REG_HARMONIC_SEL_CH2		= 84
 
 _FRA_FPGA_CLOCK 		= 125e6
 _FRA_DAC_SMPS 		= 1e9
@@ -359,6 +365,50 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		self.start_sweep()
 
+	@needs_commit
+	def set_harmonics(self, ch, en_fund = True, en_first = False, en_second = False):
+		""" set the number of harmonics for the demodulator.
+		
+		:type ch: int; {1, 2}
+		:param ch: selects the channel to apply settings.
+
+		:type en_fund: bool
+		:param en_fund: enable the fundamental frequency
+
+		:type en_first: bool
+		:param en_first: enable the first harmonic frequency
+
+		:type en_second: bool
+		:param en_second: enable the second harmonic frequency
+
+		"""
+
+		if ch == 1:
+			self.ch1_en_fund 	= en_fund
+			self.ch1_en_first 	= en_first
+			self.ch1_en_second 	= en_second
+		else:
+			self.ch2_en_fund 	= en_fund
+			self.ch2_en_first 	= en_first
+			self.ch2_en_second 	= en_second
+
+
+	@needs_commit
+	def set_ch_phase(self, ch, phase = 0.0):
+		""" set the phase of the measurement with respect to the output signal.
+
+		:type ch: int; {1, 2}
+		:param ch: selects the channel to apply settings.
+
+		:type phase: float [0.0, 360.0] deg
+		:param phase: phase difference between channel 1 and channel 2.
+		"""
+		if ch == 1:
+			self.ch1_meas_phase = (phase / 360.0 ) * 2**64
+		else:
+			self.ch2_meas_phase = (phase / 360.0 ) * 2**64
+
+
 	def get_data(self, timeout=None, wait=True):
 		""" Get current sweep data.
 		In the FrequencyResponseAnalyzer this is an alias for ``get_realtime_data`` as the data
@@ -421,4 +471,18 @@ _na_reg_handlers = {
 
 	'settling_cycles':			(REG_FRA_SETTLE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
 	'averaging_cycles':			(REG_FRA_AVERAGE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32))
+
+	'ch1_en_fund':				(REG_HARMONIC_SEL_CH1, to_reg_bool(0), from_reg_bool(0)),
+	'ch1_en_first':				(REG_HARMONIC_SEL_CH1, to_reg_bool(1), from_reg_bool(1)),
+	'ch1_en_second':			(REG_HARMONIC_SEL_CH1, to_reg_bool(2), from_reg_bool(2)),
+
+	'ch2_en_fund':				(REG_HARMONIC_SEL_CH2, to_reg_bool(0), from_reg_bool(0)),
+	'ch2_en_first':				(REG_HARMONIC_SEL_CH2, to_reg_bool(1), from_reg_bool(1)),
+	'ch2_en_second':			(REG_HARMONIC_SEL_CH2, to_reg_bool(2), from_reg_bool(2)),
+	'ch1_meas_phase':			((REG_PHASE_OFF_CH1_MSB, REG_PHASE_OFF_CH1_LSB), 
+											to_reg_unsigned(0, 64), 
+											from_reg_unsigned(0, 64)),
+	'ch2_meas_phase':			((REG_PHASE_OFF_CH2_MSB, REG_PHASE_OFF_CH2_LSB), 
+											to_reg_unsigned(0, 64), 
+											from_reg_unsigned(0,64))
 }
