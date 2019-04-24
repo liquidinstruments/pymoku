@@ -1,33 +1,29 @@
 #
-# pymoku example: Basic Waveform Generator
+# pymoku example: Waveform Generator Basic
 #
 # This example demonstrates how you can use the Waveform Generator instrument to
-# generate an amplitude modulated sinewave on Channel 1, and un-modulated
-# squarewave on Channel 2.
+# generate a sinewave on Channel 1 and a squarewave on Channel 2.
 #
 # (c) 2019 Liquid Instruments Pty. Ltd.
 #
 from pymoku import Moku
 from pymoku.instruments import WaveformGenerator
-import time
 
 # Connect to your Moku by its device name
 # Alternatively, use Moku.get_by_serial('#####') or Moku('192.168.###.###')
 m = Moku.get_by_name('Moku')
 
 try:
-	i = m.deploy_or_connect(WaveformGenerator)
+	# Deploy the Signal Generator to your Moku
+	i = m.deploy_instrument(WaveformGenerator)
 
-	# Generate a 1.0Vpp 1MHz Sinewave on Channel 1
-	i.gen_sinewave(1, 1.0, 1e6)
+	# Generate a sinewave (amp = 1Vpp, freq = 50 kHz) on channel 1. Squarewave (amp = 1 Vpp, freq = 500 Hz) on channel 2.
+	i.gen_sinewave(1, amplitude = 1.0, frequency = 50e3)
+	i.gen_squarewave(2, amplitude = 1.0, frequency = 500)
 
-	# Generate a 1.0Vpp 2MHz Squarewave on Channel 2
-	# 30% Duty cycle, 10% Rise time, 10% Fall time
-	i.gen_squarewave(2, 1.0, 2e6, risetime=0.1, falltime=0.1, duty=0.3)
-
-	# Amplitude modulate the Channel 1 sinewave with another internally-generated sinewave.
-	# 100% modulation depth at 10Hz.
-	i.gen_modulate(1, 'amplitude', 'internal', 1, 10)
+	# Configure the Moku's frontend
+	i._set_frontend(channel = 1, fiftyr=True, atten=True, ac=False)
+	i._set_frontend(channel = 2, fiftyr=True, atten=True, ac=False)
 
 finally:
 	m.close()
