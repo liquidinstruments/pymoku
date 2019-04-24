@@ -582,17 +582,17 @@ class WaveformGenerator(BasicWaveformGenerator):
 		if ch == 1:
 			if trigger_source == 'in':
 				trigger_source = 'adc1'
-				logging.warning("WARNING: 'in' and 'out' sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
+				warnings.warn("'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 			elif trigger_source == 'out':
 				trigger_source = 'dac2'
-				logging.warning("WARNING: 'in' and 'out' sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
+				warnings.warn("'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 		if ch == 2:
 			if trigger_source == 'in':
 				trigger_source = 'adc2'
-				logging.warning("WARNING: 'in' and 'out' sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
+				warnings.warn("'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 			elif trigger_source == 'out':
 				trigger_source = 'dac1'
-				logging.warning("WARNING: 'in' and 'out' sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
+				warnings.warn("'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 
 		# Can't use current channel as trigger mode source:
 		if ch == 1 and trigger_source == 'dac1':
