@@ -2,3 +2,5 @@ future
 pyzmq
 requests
 decorator
+deprecation
+
