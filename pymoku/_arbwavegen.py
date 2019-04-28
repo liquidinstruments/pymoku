@@ -189,34 +189,23 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 		self.commit()
 
 		# picks the stepsize and the steps based in the mode
-		steps1, stepsize1 = [(8, 8192), (4, 8192 * 2), (2, 8192 * 4), (1, 8192 * 8)][self.mode1]
-		steps2, stepsize2 = [(8, 8192), (4, 8192 * 2), (2, 8192 * 4), (1, 8192 * 8)][self.mode2]
+		steps, stepsize = [(8, 8192), (4, 8192 * 2), (2, 8192 * 4), (1, 8192 * 8)][mode]
 
 		self._data[ch - 1] = data
+		byte_data = bytearray()
+		# Leave the previous data file so we just rewite the new part,
+		# as we have to upload both channels at once.
+		for step in range(steps):
+			byte_data += bytearray(b''.join([struct.pack('<hh', math.ceil((2.0 ** 15 - 1) * d), 0) for d in self._data[ch - 1]]))
+			byte_data += bytearray(b'\0' * (stepsize * 4 - (len(self._data[ch - 1]) * 4)))
 
-		with open('.lutdata.dat', 'w+b') as f:
-			#first check and make the file the right size
-			f.seek(0, os.SEEK_END)
-			size = f.tell()
-			f.write(b'\0' * (_ARB_LUT_LENGTH * 8 * 4 * 2 - size))
-			f.flush()
-
-			#Leave the previous data file so we just rewite the new part,
-			#as we have to upload both channels at once.
-			for step in range(steps1):
-				f.seek(step * stepsize1 * 4)
-				f.write(b''.join([struct.pack('<hh', math.ceil((2.0**15-1) * d),0) for d in self._data[0]]))
-
-			for step in range(steps2):
-				f.seek((_ARB_LUT_LENGTH * 8 * 4) + (step * stepsize2 * 4))
-				f.write(b''.join([struct.pack('<hh', math.ceil((2.0**15-1) * d),0) for d in self._data[1]]))
-
-			f.flush()
-
+		# Write the data to AWG memory map
 		self._set_mmap_access(True)
-		error = self._moku._send_file('j', '.lutdata.dat')
+		self._moku._send_file_bytes('j', '', byte_data, offset=_ARB_LUT_LENGTH * 8 * 4 * (ch - 1))
 		self._set_mmap_access(False)
-		os.remove('.lutdata.dat')
+
+		# Release the memory map "file" to other resources
+		self._moku._fs_finalise('j', '', _ARB_LUT_LENGTH * 8 * 4 * 2)
 
 	@needs_commit
 	def gen_waveform(self, ch, period, amplitude, phase=0, offset=0, interpolation=True, dead_time=0, dead_voltage=0, en=True):
