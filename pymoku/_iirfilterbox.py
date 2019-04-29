@@ -310,17 +310,18 @@ class IIRFilterBox(_CoreOscilloscope):
 							coeff_list[x][y][k] = int(round( 2**(_IIR_COEFFWIDTH - 24) * filter_coeffs[x][y + k*6]))
 						else:
 							coeff_list[x][y][k] = int(round( 2**(_IIR_COEFFWIDTH - 3) * filter_coeffs[x][y + k*6]))
-
-		with open('.data.dat', 'wb') as f:
-			for k in range(2):
-				for y in range(6):
-					for x in range(4):
-						f.write(struct.pack('<q', coeff_list[x][y][k]))
+		coeff_bytes = bytearray()
+		for k in range(2):
+			for y in range(6):
+				for x in range(4):
+					coeff_bytes += bytearray(struct.pack('<q', coeff_list[x][y][k]))
 
 		self._set_mmap_access(True)
-		self._moku._send_file('j', '.data.dat')
+		self._moku._send_file_bytes('j', '', coeff_bytes)
 		self._set_mmap_access(False)
-		os.remove('.data.dat')
+
+		# Release the memory map "file" to other resources
+		self._moku._fs_finalise('j', '', len(coeff_bytes))
 
 		# Enable the output and input of the set channel
 		if ch==1:
