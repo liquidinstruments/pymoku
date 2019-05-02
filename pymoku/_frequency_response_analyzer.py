@@ -56,6 +56,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.sweep_amp_volts_ch1 = 0
 		self.sweep_amp_volts_ch2 = 0
 
+
 	def _calculate_sweep_delta(self, start_frequency, end_frequency, sweep_length, log_scale):
 		if log_scale:
 			sweep_freq_delta = round(((float(end_frequency)/float(start_frequency))**(1.0/(sweep_length - 1)) - 1) * _FRA_FXP_SCALE)
@@ -358,15 +359,19 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.set_frontend(2, fiftyr=True, atten=False, ac=False)
 
 		self.set_sweep()
-
+		self.set_harmonics(1)
+		self.set_harmonics(2)
+		self.set_ch_phase(1)
+		self.set_ch_phase(2)
 		# 100mVpp swept outputs
 		self.set_output(1, 0.1, 0.0)
 		self.set_output(2, 0.1, 0.0)
 
+
 		self.start_sweep()
 
 	@needs_commit
-	def set_harmonics(self, ch, en_fund = True, en_first = False, en_second = False):
+	def set_harmonics(self, ch, en_fund = True, en_second = False, en_third = False):
 		""" set the number of harmonics for the demodulator.
 		
 		:type ch: int; {1, 2}
@@ -376,21 +381,21 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		:param en_fund: enable the fundamental frequency
 
 		:type en_first: bool
-		:param en_first: enable the first harmonic frequency
+		:param en_first: enable the second harmonic frequency
 
 		:type en_second: bool
-		:param en_second: enable the second harmonic frequency
+		:param en_second: enable the third harmonic frequency
 
 		"""
 
 		if ch == 1:
 			self.ch1_en_fund 	= en_fund
-			self.ch1_en_first 	= en_first
-			self.ch1_en_second 	= en_second
+			self.ch1_en_first 	= en_second
+			self.ch1_en_second 	= en_third
 		else:
 			self.ch2_en_fund 	= en_fund
-			self.ch2_en_first 	= en_first
-			self.ch2_en_second 	= en_second
+			self.ch2_en_first 	= en_second
+			self.ch2_en_second 	= en_third
 
 
 	@needs_commit
