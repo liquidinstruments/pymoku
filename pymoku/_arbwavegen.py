@@ -76,7 +76,6 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 		self._input_samplerate	= _ARB_INPUT_SMPS
 		self._chn_buffer_len	= _ARB_CHN_BUFLEN
 
-		self._data = [[0],[0]]
 		self.mode1 = _ARB_MODE_125
 		self.mode2 = _ARB_MODE_125
 
@@ -152,7 +151,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 		"""
 		_utils.check_parameter_valid('set', ch, [1, 2],'output channel')
 		_utils.check_parameter_valid('set', mode, [125, 250, 500, 1000], desc='output sample rate', units="MSmps", allow_none=True)
-		
+
 		# Check that all coefficients are between -1.0 and 1.0
 		if not all(map(lambda x: abs(x) <= 1.0, data)):
 			raise ValueOutOfRangeException("Lookup table coefficients must be in the range [-1.0, 1.0].")
@@ -191,13 +190,10 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 		# picks the stepsize and the steps based in the mode
 		steps, stepsize = [(8, 8192), (4, 8192 * 2), (2, 8192 * 4), (1, 8192 * 8)][mode]
 
-		self._data[ch - 1] = data
 		byte_data = bytearray()
-		# Leave the previous data file so we just rewite the new part,
-		# as we have to upload both channels at once.
 		for step in range(steps):
-			byte_data += bytearray(b''.join([struct.pack('<hh', math.ceil((2.0 ** 15 - 1) * d), 0) for d in self._data[ch - 1]]))
-			byte_data += bytearray(b'\0' * (stepsize * 4 - (len(self._data[ch - 1]) * 4)))
+			byte_data += bytearray(b''.join([struct.pack('<hh', math.ceil((2.0 ** 15 - 1) * d), 0) for d in data]))
+			byte_data += bytearray(b'\0' * (stepsize * 4 - (len(data) * 4)))
 
 		# Write the data to AWG memory map
 		self._set_mmap_access(True)
@@ -311,7 +307,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 		:param ch: Output channel to set triggering on
 
 		:type source: string, {'in1','in2','ext'}
-		:param source: Trigger source. May be either input channel, or the external 'Trig' back-panel connector 
+		:param source: Trigger source. May be either input channel, or the external 'Trig' back-panel connector
 			allowing triggering from an externally-generated digital [LV]TTL or CMOS signal.
 
 		:type edge: string, {'rising','falling','both'}
@@ -340,7 +336,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 			raise InvalidConfigurationException("Can't set both 'minwidth' and 'maxwidth' for Pulse Width trigger mode. Choose one.")
 		if (maxwidth or minwidth) and (edge is 'both'):
 			raise InvalidConfigurationException("Can't set trigger edge type 'both' in Pulse Width trigger mode. Choose one of {'rising','falling'}.")
-		
+
 		# External trigger source is only available on Moku 20
 		if (self._moku.get_hw_version() == 1.0) and source == 'ext':
 			raise InvalidConfigurationException('External trigger source is not available on your hardware.')
@@ -392,7 +388,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
 	@needs_commit
 	def set_waveform_trigger_output(self, ch, trig_en = True, single = False, duration = 0, hold_last = False):
-		""" Enables triggered output mode on the specified channel and configures 'how' to output the 
+		""" Enables triggered output mode on the specified channel and configures 'how' to output the
 			set waveform on a trigger event.
 
 		:type ch: int; {1,2}
@@ -402,10 +398,10 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 		:param trig_en: Enables triggering mode on the specified output channel
 
 		:type single: bool;
-		:param single; Enables single mode. Outputs a single waveform (vs continuous) per trigger event. 
+		:param single; Enables single mode. Outputs a single waveform (vs continuous) per trigger event.
 
 		:type duration: float; [0.0, 1e11] seconds
-		:param duration: Total time that the triggered output should be generated (leave 0 for continuous). 
+		:param duration: Total time that the triggered output should be generated (leave 0 for continuous).
 			Note the duration resolution is 8ns.
 
 		:type hold_last: bool
@@ -512,7 +508,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
 	def _signal_source_volts_per_bit(self, source, scales, trigger=False):
 		"""
-			Converts volts to bits depending on the signal source. 
+			Converts volts to bits depending on the signal source.
 			To do: complete this function when osc functionality added to awg, stubbed for now.
 		"""
 		if (source == _ARB_TRIG_SRC_CH1):
