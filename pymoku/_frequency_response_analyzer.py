@@ -79,7 +79,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		return fs
 
-	def _calculate_gain_correction(self, fs):
+	def _calculate_gain_correction(self, fs, ch):
 		sweep_freq = fs
 
 		cycles_time = [0.0] * self.sweep_length
@@ -91,6 +91,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		average_gain = [0.0] * self.sweep_length
 		gain_scale = [0.0] * self.sweep_length
+		demod_shift = 2**-(self.ch1_demod_shift if ch == 1 else self.ch2_demod_shift)
 
 		# Calculate gain scaling due to accumulator bit ranging
 		for f in range(self.sweep_length):
@@ -126,17 +127,19 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 			if sweep_freq[f] > 0.0 :
 				gain_scale[f] =  math.ceil(average_gain[f] * points_per_freq[f] * _FRA_FPGA_CLOCK / sweep_freq[f])
 			else :
-				gain_scale[f] = average_gain[f]
+				gain_scale[f] = average_gain[f] * demod_shift
 
 		return gain_scale
 
 	def _calculate_scales(self):
 		g1, g2 = self._adc_gains()
 		fs = self._calculate_freq_axis()
-		gs = self._calculate_gain_correction(fs)
+		gs1 = self._calculate_gain_correction(fs, 1)
+		gs2 = self._calculate_gain_correction(fs, 2)
 
 		return {'g1': g1, 'g2': g2,
-				'gain_correction' : gs,
+				'gain_correction_ch1' : gs1,
+				'gain_correction_ch2' : gs2,
 				'frequency_axis' : fs,
 				'sweep_freq_min': self.sweep_freq_min,
 				'sweep_freq_delta': self.sweep_freq_delta,
