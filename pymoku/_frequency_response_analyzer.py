@@ -387,12 +387,22 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		:param en_second: enable the third harmonic frequency
 
 		"""
+		_utils.check_parameter_valid('set', ch, [1, 2], 'output channel')
+		_utils.check_parameter_valid('bool', en_fund, desc='enable fundamental harmonic')
+		_utils.check_parameter_valid('bool', en_second, desc='enable second harmonic')
+		_utils.check_parameter_valid('bool', en_third, desc='enable third harmonic')
+
+		harmonics = en_fund + en_second + en_third
+		if harmonics == 0:
+			raise ValueOutOfRangeException("At least one harmonic must be selected.")
 
 		if ch == 1:
+			self.ch1_demod_shift = harmonics - 1
 			self.ch1_en_fund 	= en_fund
 			self.ch1_en_first 	= en_second
 			self.ch1_en_second 	= en_third
 		else:
+			self.ch2_demod_shift = harmonics - 1
 			self.ch2_en_fund 	= en_fund
 			self.ch2_en_first 	= en_second
 			self.ch2_en_second 	= en_third
@@ -480,10 +490,13 @@ _na_reg_handlers = {
 	'ch1_en_fund':				(REG_HARMONIC_SEL_CH1, to_reg_bool(0), from_reg_bool(0)),
 	'ch1_en_first':				(REG_HARMONIC_SEL_CH1, to_reg_bool(1), from_reg_bool(1)),
 	'ch1_en_second':			(REG_HARMONIC_SEL_CH1, to_reg_bool(2), from_reg_bool(2)),
+	'ch1_demod_shift':			(REG_HARMONIC_SEL_CH1, to_reg_unsigned(3, 2), from_reg_unsigned(3, 2)),
 
 	'ch2_en_fund':				(REG_HARMONIC_SEL_CH2, to_reg_bool(0), from_reg_bool(0)),
 	'ch2_en_first':				(REG_HARMONIC_SEL_CH2, to_reg_bool(1), from_reg_bool(1)),
 	'ch2_en_second':			(REG_HARMONIC_SEL_CH2, to_reg_bool(2), from_reg_bool(2)),
+	'ch2_demod_shift':			(REG_HARMONIC_SEL_CH2, to_reg_unsigned(3, 2), from_reg_unsigned(3, 2)),
+
 	'ch1_meas_phase':			((REG_PHASE_OFF_CH1_MSB, REG_PHASE_OFF_CH1_LSB), 
 											to_reg_unsigned(0, 64), 
 											from_reg_unsigned(0, 64)),
