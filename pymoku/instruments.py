@@ -54,7 +54,7 @@ id_table = {
 	8: LockInAmp,
 	9: FrequencyResponseAnalyzer,
 	10: FIRFilter,
-	11: BodeAnalyzer,
+	11: None,
 	12: None,
 	13: None,
 	14: None,
