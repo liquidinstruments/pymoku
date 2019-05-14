@@ -4,7 +4,7 @@ import struct
 from . import _frame_instrument
 
 
-class _BodeChannelData():
+class _FRAChannelData():
 
 	def __init__(self, input_signal, gain_correction, front_end_scale, output_amp):
 
@@ -35,14 +35,14 @@ class _BodeChannelData():
 		return { 'magnitude' : self.magnitude, 'magnitude_dB' : self.magnitude_dB, 'phase' : self.phase }
 
 
-class BodeData(_frame_instrument.InstrumentData):
+class FRAData(_frame_instrument.InstrumentData):
 	"""
 	Object representing a frame of dual-channel (amplitude and phase) vs frequency response data.
 
-	This is the native output format of the :any:`BodeAnalyzer` instrument.
+	This is the native output format of the :any:`Frequency Response Analyzer` instrument.
 
 	This object should not be instantiated directly, but will be returned by a call to
-	:any:`get_data <pymoku.instruments.BodeAnalyzer.get_data>` on the associated :any:`BodeAnalyzer`
+	:any:`get_data <pymoku.instruments.FrequencyResponseAnalyzer.get_data>` on the associated :any:`FrequencyResponseAnalyzer `
 	instrument.
 
 	- ``ch1.magnitude`` = ``[CH1_MAG_DATA]``
@@ -56,7 +56,7 @@ class BodeData(_frame_instrument.InstrumentData):
 
 	"""
 	def __init__(self, instrument, scales):
-		super(BodeData, self).__init__(instrument)
+		super(FRAData, self).__init__(instrument)
 
 		#: The frequency range associated with both channels
 		self.frequency = []
@@ -69,10 +69,10 @@ class BodeData(_frame_instrument.InstrumentData):
 		return { 'ch1' : self.ch1.__json__(), 'ch2' : self.ch2.__json__(), 'frequency' : self.frequency, 'waveform_id' : self.waveformid }
 
 	def process_complete(self):
-		super(BodeData, self).process_complete()
+		super(FRAData, self).process_complete()
 
 		if self._stateid not in self.scales:
-			#log.debug("Can't render BodeData frame, haven't saved calibration data for state %d", self._stateid)
+			#log.debug("Can't render FRAData frame, haven't saved calibration data for state %d", self._stateid)
 			self.complete = False
 			return
 
@@ -87,18 +87,17 @@ class BodeData(_frame_instrument.InstrumentData):
 			dat = [ x if x != -0x80000000 else None for x in dat ]
 
 			self.ch1_bits = [ float(x) if x is not None else None for x in dat ]
-			self.ch1 = _BodeChannelData(self.ch1_bits, scales['gain_correction'], scales['g1'], scales['sweep_amplitude_ch1'])
+			self.ch1 = _FRAChannelData(self.ch1_bits, scales['gain_correction'], scales['g1'], scales['sweep_amplitude_ch1'])
 
 			smpls = int(len(self._raw2) / 4)
 			dat = struct.unpack('<' + 'i' * smpls, self._raw2)
 			dat = [ x if x != -0x80000000 else None for x in dat ]
 
 			self.ch2_bits = [ float(x) if x is not None else None for x in dat ]
-			self.ch2 = _BodeChannelData(self.ch2_bits, scales['gain_correction'], scales['g2'], scales['sweep_amplitude_ch2'])
+			self.ch2 = _FRAChannelData(self.ch2_bits, scales['gain_correction'], scales['g2'], scales['sweep_amplitude_ch2'])
 
 		except (IndexError, TypeError, struct.error):
 			# If the data is bollocksed, force a reinitialisation on next packet
-			#log.exception("Invalid Bode Analyzer packet")
 			self.frameid = None
 			self.complete = False
 
