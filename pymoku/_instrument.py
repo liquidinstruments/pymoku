@@ -2,6 +2,8 @@ import threading, collections, time, struct, socket, logging, decorator
 
 from pymoku import *
 from pymoku import _get_autocommit, _set_autocommit
+from functools import wraps
+import warnings
 
 REG_CTL 	= 0
 REG_STAT	= 1
@@ -271,6 +273,26 @@ def needs_commit(func, self, *args, **kwargs):
 
 		return res
 
+
+def deprecated(message):
+	def deprecate_warn(func):
+		@wraps(func)
+		def wrapper(*args, **kwargs):
+			warnings.simplefilter('always', DeprecationWarning)
+			warnings.warn(
+				message=message,
+				category=DeprecationWarning,
+				stacklevel=2
+			)
+			warnings.simplefilter('default', DeprecationWarning)
+			return func(*args, **kwargs)
+
+		wrapper.__doc__ = '\n\t\t.. warning::\n\t\t\tDeprecation: {}\n\n\t\t'.format(message)
+		if func.__doc__ is not None:
+			wrapper.__doc__ += func.__doc__.lstrip()
+		return wrapper
+
+	return deprecate_warn
 
 
 class MokuInstrument(object):
