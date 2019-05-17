@@ -7,6 +7,9 @@ import pkg_resources
 import threading
 import tarfile
 
+from functools import wraps
+import warnings
+
 from pymoku.tools import compat as cp
 
 DATAPATH = os.path.expanduser(os.environ.get('PYMOKU_INSTR_PATH', None) or pkg_resources.resource_filename('pymoku', 'data'))
@@ -1256,3 +1259,24 @@ class Moku(object):
 
 		# Don't clobber the ZMQ context as it's global to the interpretter, if the user has multiple Moku
 		# objects then we don't want to mess with that.
+
+
+def deprecated(message):
+	def deprecate_warn(func):
+		@wraps(func)
+		def wrapper(*args, **kwargs):
+			warnings.simplefilter('always', DeprecationWarning)
+			warnings.warn(
+				message=message,
+				category=DeprecationWarning,
+				stacklevel=2
+			)
+			warnings.simplefilter('default', DeprecationWarning)
+			return func(*args, **kwargs)
+
+		wrapper.__doc__ = '\n\t\t.. warning::\n\t\t\tDeprecation: {}\n\n\t\t'.format(message)
+		if func.__doc__ is not None:
+			wrapper.__doc__ += func.__doc__.lstrip()
+		return wrapper
+
+	return deprecate_warn
