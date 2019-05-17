@@ -610,6 +610,12 @@ class MokuInstrument(object):
 	def _set_mmap_access(self, access):
 		self.mmap_access = access
 
+	def _reset_channel_buffers(self):
+		try:
+			self.ch_buffer_rstrobe = 1 if self.ch_buffer_rstrobe == 0 else 0
+		except NameError:
+			self.ch_buffer_rstrobe = 1
+
 _instr_reg_handlers = {
 	# Name : Register, set-transform (user to register), get-transform (register to user); either None is W/R-only
 	'instr_id':			(REG_ID1, 		None, 						from_reg_unsigned(0, 8)),
@@ -628,6 +634,8 @@ _instr_reg_handlers = {
 
 	'waveform_avg1':	(REG_FILT,		to_reg_unsigned(2, 4, allow_range=(0,13)),		from_reg_unsigned(2, 4)),
 	'waveform_avg2':	(REG_FILT,		to_reg_unsigned(6, 4, allow_range=(0,13)),		from_reg_unsigned(6, 4)),
+
+	'ch_buffer_rstrobe':(REG_FILT,		to_reg_unsigned(30, 1),		from_reg_unsigned(30, 1)),
 
 	# Allow range is set to allow ~0-30Hz
 	'framerate':		(REG_FRATE,		to_reg_unsigned(0, 8, allow_range=(0,15), xform=lambda obj, f: f * 256.0 / 477.0),

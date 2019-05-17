@@ -235,6 +235,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 	def _restart_sweep(self):
 		self.sweep_reset = True
+		self._reset_channel_buffers()
 
 	@needs_commit
 	def set_output(self, ch, amplitude, offset=0):
