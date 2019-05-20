@@ -4,7 +4,7 @@ import warnings
 warnings.simplefilter('always', DeprecationWarning)
 
 from ._instrument import *
-from ._instrument import _usgn, _sgn
+from ._instrument import _usgn, _sgn, deprecated
 from . import _utils
 from ._trigger import Trigger
 from ._sweep_generator import SweepGenerator
@@ -872,6 +872,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.range_shift_ch2 = range_shift
 
 	@needs_commit
+	@deprecated(message="'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.")
 	def gen_modulate_off(self, ch=None):
 		"""
 		'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.
@@ -884,10 +885,11 @@ class WaveformGenerator(BasicWaveformGenerator):
 		:type ch: int; {1,2} or None
 		:param ch: Output channel to turn modulation off.
 		"""
-		warnings.warn("'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.", DeprecationWarning)
+		# warnings.warn("'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.", DeprecationWarning)
 		self.set_modulate_trig_off(ch)
 
 	@needs_commit
+	@deprecated(message="'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.")
 	def gen_trigger_off(self, ch=None):
 		"""
 		'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead."
@@ -900,7 +902,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		:type ch: int; {1,2} or None
 		:param ch: Output channel to turn trigger/sweep mode off
 		"""
-		warnings.warn("'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.", DeprecationWarning)
+		# warnings.warn("'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.", DeprecationWarning)
 		self.set_modulate_trig_off(ch)
 
 	@needs_commit
