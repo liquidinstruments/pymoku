@@ -144,7 +144,7 @@ def listmokus(args):
 		x = None
 		try:
 			x = Moku(m, force=True)
-			print("{: <20} {:>06} {: 6d} {: >15}".format(
+			print("{: <20} {: 06d} {: 6d} {: >15}".format(
 				x.get_name()[:20],
 				int(x.get_serial()),
 				x.get_firmware_build(),
