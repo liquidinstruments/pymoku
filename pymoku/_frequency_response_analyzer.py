@@ -22,12 +22,12 @@ REG_FRA_SWEEP_AMP_MULT		= 74
 REG_FRA_SETTLE_CYCLES		= 76
 REG_FRA_AVERAGE_CYCLES		= 77
 REG_FRA_SWEEP_OFF_MULT		= 78
-REG_PHASE_OFF_CH1_LSB		= 79
-REG_PHASE_OFF_CH1_MSB		= 80
-REG_HARMONIC_SEL_CH1		= 81
-REG_PHASE_OFF_CH2_LSB		= 82
-REG_PHASE_OFF_CH2_MSB		= 83
-REG_HARMONIC_SEL_CH2		= 84
+REG_FRA_PHASE_OFF_CH1_LSB		= 79
+REG_FRA_PHASE_OFF_CH1_MSB		= 80
+REG_FRA_HARMONIC_MULT_CH1		= 81
+REG_FRA_PHASE_OFF_CH2_LSB		= 82
+REG_FRA_PHASE_OFF_CH2_MSB		= 83
+REG_FRA_HARMONIC_MULT_CH2		= 84
 
 _FRA_FPGA_CLOCK 		= 125e6
 _FRA_DAC_SMPS 		= 1e9
@@ -79,7 +79,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		return fs
 
-	def _calculate_gain_correction(self, fs, ch):
+	def _calculate_gain_correction(self, fs):
 		sweep_freq = fs
 
 		cycles_time = [0.0] * self.sweep_length
@@ -91,7 +91,6 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		average_gain = [0.0] * self.sweep_length
 		gain_scale = [0.0] * self.sweep_length
-		demod_shift = 2**-(self.ch1_demod_shift if ch == 1 else self.ch2_demod_shift)
 
 		# Calculate gain scaling due to accumulator bit ranging
 		for f in range(self.sweep_length):
@@ -127,19 +126,17 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 			if sweep_freq[f] > 0.0 :
 				gain_scale[f] =  math.ceil(average_gain[f] * points_per_freq[f] * _FRA_FPGA_CLOCK / sweep_freq[f])
 			else :
-				gain_scale[f] = average_gain[f] * demod_shift
+				gain_scale[f] = average_gain[f]
 
 		return gain_scale
 
 	def _calculate_scales(self):
 		g1, g2 = self._adc_gains()
 		fs = self._calculate_freq_axis()
-		gs1 = self._calculate_gain_correction(fs, 1)
-		gs2 = self._calculate_gain_correction(fs, 2)
+		gs = self._calculate_gain_correction(fs)
 
 		return {'g1': g1, 'g2': g2,
-				'gain_correction_ch1' : gs1,
-				'gain_correction_ch2' : gs2,
+				'gain_correction' : gs,
 				'frequency_axis' : fs,
 				'sweep_freq_min': self.sweep_freq_min,
 				'sweep_freq_delta': self.sweep_freq_delta,
@@ -363,54 +360,17 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.set_frontend(2, fiftyr=True, atten=False, ac=False)
 
 		self.set_sweep()
-		self.set_harmonics(1)
-		self.set_harmonics(2)
 		self.set_ch_phase(1)
 		self.set_ch_phase(2)
+
+		self.set_harmonic_multiplier(1)
+		self.set_harmonic_multiplier(2)
 		# 100mVpp swept outputs
 		self.set_output(1, 0.1, 0.0)
 		self.set_output(2, 0.1, 0.0)
 
 
 		self.start_sweep()
-
-	@needs_commit
-	def set_harmonics(self, ch, en_fund = True, en_second = False, en_third = False):
-		""" set the number of harmonics for the demodulator.
-		
-		:type ch: int; {1, 2}
-		:param ch: selects the channel to apply settings.
-
-		:type en_fund: bool
-		:param en_fund: enable the fundamental frequency
-
-		:type en_first: bool
-		:param en_first: enable the second harmonic frequency
-
-		:type en_second: bool
-		:param en_second: enable the third harmonic frequency
-
-		"""
-		_utils.check_parameter_valid('set', ch, [1, 2], 'output channel')
-		_utils.check_parameter_valid('bool', en_fund, desc='enable fundamental harmonic')
-		_utils.check_parameter_valid('bool', en_second, desc='enable second harmonic')
-		_utils.check_parameter_valid('bool', en_third, desc='enable third harmonic')
-
-		harmonics = en_fund + en_second + en_third
-		if harmonics == 0:
-			raise ValueOutOfRangeException("At least one harmonic must be selected.")
-
-		if ch == 1:
-			self.ch1_demod_shift = harmonics - 1
-			self.ch1_en_fund 	= en_fund
-			self.ch1_en_first 	= en_second
-			self.ch1_en_second 	= en_third
-		else:
-			self.ch2_demod_shift = harmonics - 1
-			self.ch2_en_fund 	= en_fund
-			self.ch2_en_first 	= en_second
-			self.ch2_en_second 	= en_third
-
 
 	@needs_commit
 	def set_ch_phase(self, ch, phase = 0.0):
@@ -426,6 +386,23 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 			self.ch1_meas_phase = (phase / 360.0 ) * 2**64
 		else:
 			self.ch2_meas_phase = (phase / 360.0 ) * 2**64
+
+
+	@needs_commit
+	def set_harmonic_multiplier(self, ch, multiplier = 1):
+		""" set the harmonic multiplier to demodulate at integer harmonic of output.
+
+		:type ch: int; {1, 2}
+		:param ch: selects the channel to apply settings.
+
+		:type multiplier: int; [0, 15]
+		:param multiplier: multiplier applied to fundemental.
+		"""
+
+		if ch == 1:
+			self.ch1_harmonic_mult = multiplier
+		elif ch == 2:
+			self.ch2_harmonic_mult = multiplier
 
 
 	def get_data(self, timeout=None, wait=True):
@@ -489,22 +466,15 @@ _na_reg_handlers = {
 											from_reg_signed(16, 16, xform=lambda obj, a: a * obj._dac_gains()[1])),
 
 	'settling_cycles':			(REG_FRA_SETTLE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
-	'averaging_cycles':			(REG_FRA_AVERAGE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32))
+	'averaging_cycles':			(REG_FRA_AVERAGE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
 
-	'ch1_en_fund':				(REG_HARMONIC_SEL_CH1, to_reg_bool(0), from_reg_bool(0)),
-	'ch1_en_first':				(REG_HARMONIC_SEL_CH1, to_reg_bool(1), from_reg_bool(1)),
-	'ch1_en_second':			(REG_HARMONIC_SEL_CH1, to_reg_bool(2), from_reg_bool(2)),
-	'ch1_demod_shift':			(REG_HARMONIC_SEL_CH1, to_reg_unsigned(3, 2), from_reg_unsigned(3, 2)),
+	'ch1_harmonic_mult':		(REG_FRA_HARMONIC_MULT_CH1, to_reg_unsigned(0,4), from_reg_unsigned(0, 4)),
+	'ch2_harmonic_mult':		(REG_FRA_HARMONIC_MULT_CH2, to_reg_unsigned(0,4), from_reg_unsigned(0, 4)),
 
-	'ch2_en_fund':				(REG_HARMONIC_SEL_CH2, to_reg_bool(0), from_reg_bool(0)),
-	'ch2_en_first':				(REG_HARMONIC_SEL_CH2, to_reg_bool(1), from_reg_bool(1)),
-	'ch2_en_second':			(REG_HARMONIC_SEL_CH2, to_reg_bool(2), from_reg_bool(2)),
-	'ch2_demod_shift':			(REG_HARMONIC_SEL_CH2, to_reg_unsigned(3, 2), from_reg_unsigned(3, 2)),
-
-	'ch1_meas_phase':			((REG_PHASE_OFF_CH1_MSB, REG_PHASE_OFF_CH1_LSB), 
+	'ch1_meas_phase':			((REG_FRA_PHASE_OFF_CH1_MSB, REG_FRA_PHASE_OFF_CH1_LSB), 
 											to_reg_unsigned(0, 64), 
 											from_reg_unsigned(0, 64)),
-	'ch2_meas_phase':			((REG_PHASE_OFF_CH2_MSB, REG_PHASE_OFF_CH2_LSB), 
+	'ch2_meas_phase':			((REG_FRA_PHASE_OFF_CH2_MSB, REG_FRA_PHASE_OFF_CH2_LSB), 
 											to_reg_unsigned(0, 64), 
 											from_reg_unsigned(0,64))
 }
