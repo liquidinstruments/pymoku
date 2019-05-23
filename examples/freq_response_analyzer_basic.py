@@ -1,8 +1,8 @@
 #
-# pymoku example: Plotting Bode Analyzer
+# pymoku example: Basic Frequency Response Analyzer
 #
 # This example demonstrates how you can generate output sweeps using the
-# Bode Analyzer instrument, and view transfer function data in real-time.
+# Frequency Response Analyzer instrument, and view transfer function data in real-time.
 #
 # (c) 2019 Liquid Instruments Pty. Ltd.
 #
@@ -15,7 +15,7 @@ import logging
 m = Moku.get_by_name('Moku')
 
 try:
-	# Deploy the Bode Analyzer to your Moku
+	# Deploy the Frequency Response Analyzer to your Moku
 	i = m.deploy_or_connect(FrequencyResponseAnalyzer)
 
 	# Configure output sweep parameters (100Hz-20MHz)
