@@ -7,7 +7,7 @@
 # (c) 2019 Liquid Instruments Pty. Ltd.
 #
 from pymoku import Moku
-from pymoku.instruments import BodeAnalyzer
+from pymoku.instruments import FrequencyResponseAnalyzer
 import logging
 
 # Connect to your Moku by its device name
@@ -16,7 +16,7 @@ m = Moku.get_by_name('Moku')
 
 try:
 	# Deploy the Bode Analyzer to your Moku
-	i = m.deploy_or_connect(BodeAnalyzer)
+	i = m.deploy_or_connect(FrequencyResponseAnalyzer)
 
 	# Configure output sweep parameters (100Hz-20MHz)
 	i.set_sweep(f_start=100,f_end=20e6,sweep_points=256)

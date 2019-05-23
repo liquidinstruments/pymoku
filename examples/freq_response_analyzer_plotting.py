@@ -7,7 +7,7 @@
 # (c) 2019 Liquid Instruments Pty. Ltd.
 #
 from pymoku import Moku
-from pymoku.instruments import BodeAnalyzer
+from pymoku.instruments import FrequencyResponseAnalyzer
 import logging
 
 import matplotlib
@@ -33,7 +33,7 @@ settling_cycles = 1
 try:
 	# See whether there's already a Bode Analyzer running. If there is, take
 	# control of it; if not, deploy a new Bode Analyzer instrument
-	i = m.deploy_or_connect(BodeAnalyzer)
+	i = m.deploy_or_connect(FrequencyResponseAnalyzer)
 
 	# Many PCs struggle to plot magnitude and phase for both channels at the default
 	# 10fps, turn it down so it remains smooth, albeit slow. Turn the output to 'sweep'
