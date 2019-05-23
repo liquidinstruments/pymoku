@@ -7,7 +7,8 @@ from . import _phasemeter
 from . import _specan
 from . import _lockinamp
 from . import _datalogger
-from . import _bodeanalyzer
+from . import _frequency_response_analyzer
+from . import _bode_analyzer
 from . import _arbwavegen
 from . import _stream_instrument
 from . import _frame_instrument
@@ -24,7 +25,7 @@ from . import _laser_lock_box
 InstrumentData = _frame_instrument.InstrumentData
 VoltsData = _oscilloscope.VoltsData
 SpectrumData = _specan.SpectrumData
-BodeData = _bodeanalyzer.BodeData
+FRAData = _frequency_response_analyzer.FRAData
 
 MokuInstrument = _instrument.MokuInstrument
 
@@ -34,7 +35,8 @@ Phasemeter = _phasemeter.Phasemeter
 SpectrumAnalyzer = _specan.SpectrumAnalyzer
 LockInAmp = _lockinamp.LockInAmp
 Datalogger = _datalogger.Datalogger
-BodeAnalyzer = _bodeanalyzer.BodeAnalyzer
+BodeAnalyzer = _bode_analyzer.BodeAnalyzer
+FrequencyResponseAnalyzer = _frequency_response_analyzer.FrequencyResponseAnalyzer
 PIDController = _pid_controller.PIDController
 ArbitraryWaveGen = _arbwavegen.ArbitraryWaveGen
 IIRFilterBox = _iirfilterbox.IIRFilterBox
@@ -50,7 +52,7 @@ id_table = {
 	6: IIRFilterBox,
 	7: Datalogger,
 	8: LockInAmp,
-	9: BodeAnalyzer,
+	9: FrequencyResponseAnalyzer,
 	10: FIRFilter,
 	11: None,
 	12: None,

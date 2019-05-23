@@ -3,6 +3,7 @@ import threading, collections, time, struct, socket, logging, decorator
 from pymoku import *
 from pymoku import _get_autocommit, _set_autocommit
 
+
 REG_CTL 	= 0
 REG_STAT	= 1
 REG_ID1		= 2
@@ -270,6 +271,8 @@ def needs_commit(func, self, *args, **kwargs):
 				_awaiting_commit = False
 
 		return res
+
+
 
 
 

@@ -5,56 +5,56 @@ from ._instrument import *
 from . import _frame_instrument
 from . import _utils
 
-from ._bodeanalyzer_data import BodeData
+from ._frequency_response_analyzer_data import FRAData
 
 log = logging.getLogger(__name__)
 
-REG_NA_SWEEP_FREQ_MIN_L 	= 64
-REG_NA_SWEEP_FREQ_MIN_H 	= 65
-REG_NA_SWEEP_FREQ_DELTA_L 	= 66
-REG_NA_SWEEP_FREQ_DELTA_H 	= 67
-REG_NA_LOG_EN				= 68
-REG_NA_HOLD_OFF_L			= 69
-REG_NA_SWEEP_LENGTH			= 71
-REG_NA_AVERAGE_TIME			= 72
-REG_NA_ENABLES				= 73
-REG_NA_SWEEP_AMP_MULT		= 74
-REG_NA_SETTLE_CYCLES		= 76
-REG_NA_AVERAGE_CYCLES		= 77
-REG_NA_SWEEP_OFF_MULT		= 78
+REG_FRA_SWEEP_FREQ_MIN_L 	= 64
+REG_FRA_SWEEP_FREQ_MIN_H 	= 65
+REG_FRA_SWEEP_FREQ_DELTA_L 	= 66
+REG_FRA_SWEEP_FREQ_DELTA_H 	= 67
+REG_FRA_LOG_EN				= 68
+REG_FRA_HOLD_OFF_L			= 69
+REG_FRA_SWEEP_LENGTH			= 71
+REG_FRA_AVERAGE_TIME			= 72
+REG_FRA_ENABLES				= 73
+REG_FRA_SWEEP_AMP_MULT		= 74
+REG_FRA_SETTLE_CYCLES		= 76
+REG_FRA_AVERAGE_CYCLES		= 77
+REG_FRA_SWEEP_OFF_MULT		= 78
 
-_NA_FPGA_CLOCK 		= 125e6
-_NA_DAC_SMPS 		= 1e9
-_NA_DAC_VRANGE 		= 1
-_NA_DAC_BITDEPTH 	= 2**16
-_NA_DAC_BITS2V		= _NA_DAC_BITDEPTH/_NA_DAC_VRANGE
-_NA_SCREEN_WIDTH	= 1024
-_NA_FREQ_SCALE		= 2**48 / _NA_DAC_SMPS
-_NA_FXP_SCALE 		= 2.0**30
+_FRA_FPGA_CLOCK 		= 125e6
+_FRA_DAC_SMPS 		= 1e9
+_FRA_DAC_VRANGE 		= 1
+_FRA_DAC_BITDEPTH 	= 2**16
+_FRA_DAC_BITS2V		= _FRA_DAC_BITDEPTH/_FRA_DAC_VRANGE
+_FRA_SCREEN_WIDTH	= 1024
+_FRA_FREQ_SCALE		= 2**48 / _FRA_DAC_SMPS
+_FRA_FXP_SCALE 		= 2.0**30
 
 
 
-class BodeAnalyzer(_frame_instrument.FrameBasedInstrument):
-	""" Bode Analyzer instrument object. This should be instantiated and attached to a :any:`Moku` instance.
+class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
+	""" Frequency Response Analyzer instrument object. This should be instantiated and attached to a :any:`Moku` instance.
 	"""
 	def __init__(self):
-		super(BodeAnalyzer, self).__init__()
+		super(FrequencyResponseAnalyzer, self).__init__()
 		self._register_accessors(_na_reg_handlers)
 
 		self.scales = {}
-		self._set_frame_class(BodeData, instrument=self, scales=self.scales)
+		self._set_frame_class(FRAData, instrument=self, scales=self.scales)
 
 		self.id = 9
-		self.type = "bodeanalyzer"
+		self.type = "frequency_response_analyzer"
 
 		self.sweep_amp_volts_ch1 = 0
 		self.sweep_amp_volts_ch2 = 0
 
 	def _calculate_sweep_delta(self, start_frequency, end_frequency, sweep_length, log_scale):
 		if log_scale:
-			sweep_freq_delta = round(((float(end_frequency)/float(start_frequency))**(1.0/(sweep_length - 1)) - 1) * _NA_FXP_SCALE)
+			sweep_freq_delta = round(((float(end_frequency)/float(start_frequency))**(1.0/(sweep_length - 1)) - 1) * _FRA_FXP_SCALE)
 		else:
-			sweep_freq_delta = round((float(end_frequency - start_frequency)/(sweep_length-1)) * _NA_FREQ_SCALE)
+			sweep_freq_delta = round((float(end_frequency - start_frequency)/(sweep_length-1)) * _FRA_FREQ_SCALE)
 
 		return sweep_freq_delta
 
@@ -66,9 +66,9 @@ class BodeAnalyzer(_frame_instrument.FrameBasedInstrument):
 		if self.log_en:
 			# Delta register becomes a multiplier in the logarithmic case
 			# Fixed-point precision is used in the FPGA multiplier (30 fractional bits)
-			fs = [ f_start*(1 + (self.sweep_freq_delta/ _NA_FXP_SCALE))**n for n in range(self.sweep_length)]
+			fs = [ f_start*(1 + (self.sweep_freq_delta/ _FRA_FXP_SCALE))**n for n in range(self.sweep_length)]
 		else:
-			fs = [ (f_start + n*(self.sweep_freq_delta/_NA_FREQ_SCALE)) for n in range(self.sweep_length) ]
+			fs = [ (f_start + n*(self.sweep_freq_delta/_FRA_FREQ_SCALE)) for n in range(self.sweep_length) ]
 
 		return fs
 
@@ -90,11 +90,11 @@ class BodeAnalyzer(_frame_instrument.FrameBasedInstrument):
 			sweep_period = 1 / sweep_freq[f]
 
 			# Predict how many FPGA clock cycles each frequency averages for:
-			average_period_cycles = self.averaging_cycles * sweep_period * _NA_FPGA_CLOCK
+			average_period_cycles = self.averaging_cycles * sweep_period * _FRA_FPGA_CLOCK
 			if self.averaging_time % sweep_period == 0:
-				average_period_time = self.averaging_time * _NA_FPGA_CLOCK
+				average_period_time = self.averaging_time * _FRA_FPGA_CLOCK
 			else :
-				average_period_time = math.ceil(self.averaging_time / sweep_period) * sweep_period * _NA_FPGA_CLOCK
+				average_period_time = math.ceil(self.averaging_time / sweep_period) * sweep_period * _FRA_FPGA_CLOCK
 
 			if average_period_time >= average_period_cycles:
 				average_period = average_period_time
@@ -117,7 +117,7 @@ class BodeAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		for f in range(self.sweep_length):
 			if sweep_freq[f] > 0.0 :
-				gain_scale[f] =  math.ceil(average_gain[f] * points_per_freq[f] * _NA_FPGA_CLOCK / sweep_freq[f])
+				gain_scale[f] =  math.ceil(average_gain[f] * points_per_freq[f] * _FRA_FPGA_CLOCK / sweep_freq[f])
 			else :
 				gain_scale[f] = average_gain[f]
 
@@ -215,7 +215,7 @@ class BodeAnalyzer(_frame_instrument.FrameBasedInstrument):
 		""" Stop sweeping.
 
 		This will stop new data frames from being received, so ensure you implement a timeout
-		on :any:`get_data<pymoku.instruments.BodeAnalyzer.get_data>` calls. """
+		on :any:`get_data<pymoku.instruments.FrequencyResponseAnalyzer.get_data>` calls. """
 		self.single_sweep = self.loop_sweep = False
 
 		self.adc2_en = False
@@ -337,9 +337,9 @@ class BodeAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 	@needs_commit
 	def set_defaults(self):
-		""" Reset the Bode Analyzer to sane defaults """
-		super(BodeAnalyzer, self).set_defaults()
-		self.frame_length = _NA_SCREEN_WIDTH
+		""" Reset the Frequency Response Analyzer to sane defaults """
+		super(FrequencyResponseAnalyzer, self).set_defaults()
+		self.frame_length = _FRA_SCREEN_WIDTH
 
 		self.x_mode = FULL_FRAME
 		self.render_mode = RDR_DDS
@@ -361,15 +361,15 @@ class BodeAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 	def get_data(self, timeout=None, wait=True):
 		""" Get current sweep data.
-		In the BodeAnalyzer this is an alias for ``get_realtime_data`` as the data
+		In the FrequencyResponseAnalyzer this is an alias for ``get_realtime_data`` as the data
 		is never downsampled. """
-		return super(BodeAnalyzer, self).get_realtime_data(timeout, wait)
+		return super(FrequencyResponseAnalyzer, self).get_realtime_data(timeout, wait)
 
 	def commit(self):
 		# Restart the sweep as instrument settings are being changed
 		self._restart_sweep()
 
-		super(BodeAnalyzer, self).commit()
+		super(FrequencyResponseAnalyzer, self).commit()
 
 		# Update the scaling factors for processing of incoming frames
 		# stateid allows us to track which scales correspond to which register state
@@ -378,47 +378,47 @@ class BodeAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 
 _na_reg_handlers = {
-	'loop_sweep':				(REG_NA_ENABLES, to_reg_bool(0), from_reg_bool(0)),
-	'single_sweep':				(REG_NA_ENABLES, to_reg_bool(1), from_reg_bool(1)),
-	'sweep_reset':				(REG_NA_ENABLES, to_reg_bool(2), from_reg_bool(2)),
-	'channel1_en':				(REG_NA_ENABLES, to_reg_bool(3), from_reg_bool(3)),
-	'channel2_en':				(REG_NA_ENABLES, to_reg_bool(4), from_reg_bool(4)),
+	'loop_sweep':				(REG_FRA_ENABLES, to_reg_bool(0), from_reg_bool(0)),
+	'single_sweep':				(REG_FRA_ENABLES, to_reg_bool(1), from_reg_bool(1)),
+	'sweep_reset':				(REG_FRA_ENABLES, to_reg_bool(2), from_reg_bool(2)),
+	'channel1_en':				(REG_FRA_ENABLES, to_reg_bool(3), from_reg_bool(3)),
+	'channel2_en':				(REG_FRA_ENABLES, to_reg_bool(4), from_reg_bool(4)),
 
-	'adc1_en':					(REG_NA_ENABLES, to_reg_bool(5), from_reg_bool(5)),
-	'adc2_en':					(REG_NA_ENABLES, to_reg_bool(6), from_reg_bool(6)),
-	'dac1_en':					(REG_NA_ENABLES, to_reg_bool(7), from_reg_bool(7)),
-	'dac2_en':					(REG_NA_ENABLES, to_reg_bool(8), from_reg_bool(8)),
+	'adc1_en':					(REG_FRA_ENABLES, to_reg_bool(5), from_reg_bool(5)),
+	'adc2_en':					(REG_FRA_ENABLES, to_reg_bool(6), from_reg_bool(6)),
+	'dac1_en':					(REG_FRA_ENABLES, to_reg_bool(7), from_reg_bool(7)),
+	'dac2_en':					(REG_FRA_ENABLES, to_reg_bool(8), from_reg_bool(8)),
 
-	'sweep_freq_min':			((REG_NA_SWEEP_FREQ_MIN_H, REG_NA_SWEEP_FREQ_MIN_L),
-											to_reg_unsigned(0, 48, xform=lambda obj, f: f * _NA_FREQ_SCALE),
-											from_reg_unsigned(0, 48, xform=lambda obj, f: f / _NA_FREQ_SCALE)),
-	'sweep_freq_delta':			((REG_NA_SWEEP_FREQ_DELTA_H, REG_NA_SWEEP_FREQ_DELTA_L),
+	'sweep_freq_min':			((REG_FRA_SWEEP_FREQ_MIN_H, REG_FRA_SWEEP_FREQ_MIN_L),
+											to_reg_unsigned(0, 48, xform=lambda obj, f: f * _FRA_FREQ_SCALE),
+											from_reg_unsigned(0, 48, xform=lambda obj, f: f / _FRA_FREQ_SCALE)),
+	'sweep_freq_delta':			((REG_FRA_SWEEP_FREQ_DELTA_H, REG_FRA_SWEEP_FREQ_DELTA_L),
 											to_reg_signed(0, 48),
 											from_reg_signed(0, 48)),
 
-	'log_en':					(REG_NA_LOG_EN, to_reg_bool(0), from_reg_bool(0)),
-	'sweep_length':				(REG_NA_SWEEP_LENGTH, to_reg_unsigned(0, 10), from_reg_unsigned(0, 10)),
+	'log_en':					(REG_FRA_LOG_EN, to_reg_bool(0), from_reg_bool(0)),
+	'sweep_length':				(REG_FRA_SWEEP_LENGTH, to_reg_unsigned(0, 10), from_reg_unsigned(0, 10)),
 
-	'settling_time':			(REG_NA_HOLD_OFF_L,
-											to_reg_unsigned(0, 32, xform=lambda obj, t: t * _NA_FPGA_CLOCK),
-											from_reg_unsigned(0, 32, xform=lambda obj, t: t / _NA_FPGA_CLOCK)),
-	'averaging_time':			(REG_NA_AVERAGE_TIME,
-											to_reg_unsigned(0, 32, xform=lambda obj, t: t * _NA_FPGA_CLOCK),
-											from_reg_unsigned(0, 32, xform=lambda obj, t: t / _NA_FPGA_CLOCK)),
-	'sweep_amplitude_ch1':		(REG_NA_SWEEP_AMP_MULT,
+	'settling_time':			(REG_FRA_HOLD_OFF_L,
+											to_reg_unsigned(0, 32, xform=lambda obj, t: t * _FRA_FPGA_CLOCK),
+											from_reg_unsigned(0, 32, xform=lambda obj, t: t / _FRA_FPGA_CLOCK)),
+	'averaging_time':			(REG_FRA_AVERAGE_TIME,
+											to_reg_unsigned(0, 32, xform=lambda obj, t: t * _FRA_FPGA_CLOCK),
+											from_reg_unsigned(0, 32, xform=lambda obj, t: t / _FRA_FPGA_CLOCK)),
+	'sweep_amplitude_ch1':		(REG_FRA_SWEEP_AMP_MULT,
 											to_reg_unsigned(0, 16, xform=lambda obj, a: a / obj._dac_gains()[0]),
 											from_reg_unsigned(0, 16, xform=lambda obj, a: a * obj._dac_gains()[0])),
-	'sweep_amplitude_ch2':		(REG_NA_SWEEP_AMP_MULT,
+	'sweep_amplitude_ch2':		(REG_FRA_SWEEP_AMP_MULT,
 											to_reg_unsigned(16, 16, xform=lambda obj, a: a / obj._dac_gains()[1]),
 											from_reg_unsigned(16, 16, xform=lambda obj, a: a * obj._dac_gains()[1])),
 
-	'sweep_offset_ch1':		(REG_NA_SWEEP_OFF_MULT,
+	'sweep_offset_ch1':		(REG_FRA_SWEEP_OFF_MULT,
 											to_reg_signed(0, 16, xform=lambda obj, a: a / obj._dac_gains()[0]),
 											from_reg_signed(0, 16, xform=lambda obj, a: a * obj._dac_gains()[0])),
-	'sweep_offset_ch2':		(REG_NA_SWEEP_OFF_MULT,
+	'sweep_offset_ch2':		(REG_FRA_SWEEP_OFF_MULT,
 											to_reg_signed(16, 16, xform=lambda obj, a: a / obj._dac_gains()[1]),
 											from_reg_signed(16, 16, xform=lambda obj, a: a * obj._dac_gains()[1])),
 
-	'settling_cycles':			(REG_NA_SETTLE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
-	'averaging_cycles':			(REG_NA_AVERAGE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32))
+	'settling_cycles':			(REG_FRA_SETTLE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
+	'averaging_cycles':			(REG_FRA_AVERAGE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32))
 }

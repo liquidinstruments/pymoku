@@ -1,13 +1,13 @@
 #
-# pymoku example: Plotting Bode Analyzer
+# pymoku example: Plotting Frequency Response Analyzer
 #
 # This example demonstrates how you can generate output sweeps using the
-# Bode Analyzer instrument, and view transfer function data in real-time.
+# Frequency Response Analyzer instrument, and view transfer function data in real-time.
 #
 # (c) 2019 Liquid Instruments Pty. Ltd.
 #
 from pymoku import Moku
-from pymoku.instruments import BodeAnalyzer
+from pymoku.instruments import FrequencyResponseAnalyzer
 import logging
 
 import matplotlib
@@ -31,9 +31,9 @@ averaging_cycles = 1
 settling_cycles = 1
 
 try:
-	# See whether there's already a Bode Analyzer running. If there is, take
-	# control of it; if not, deploy a new Bode Analyzer instrument
-	i = m.deploy_or_connect(BodeAnalyzer)
+	# See whether there's already a Frequency Response Analyzer running. If there is, take
+	# control of it; if not, deploy a new one. 
+	i = m.deploy_or_connect(FrequencyResponseAnalyzer)
 
 	# Many PCs struggle to plot magnitude and phase for both channels at the default
 	# 10fps, turn it down so it remains smooth, albeit slow. Turn the output to 'sweep'
