@@ -382,6 +382,8 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		:type phase: float [0.0, 360.0] deg
 		:param phase: phase difference between channel 1 and channel 2.
 		"""
+		_utils.check_parameter_valid('set', ch, [1,2],'channel')
+		_utils.check_parameter_valid('range', phase, [0.0, 360.0], 'phase', 'degrees')
 		if ch == 1:
 			self.ch1_meas_phase = (phase / 360.0 ) * 2**64
 		else:
@@ -398,7 +400,8 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		:type multiplier: int; [0, 15]
 		:param multiplier: multiplier applied to fundemental.
 		"""
-
+		_utils.check_parameter_valid('set', ch, [1,2],'channel')
+		_utils.check_parameter_valid('set', multiplier, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],'harmonics select')
 		if ch == 1:
 			self.ch1_harmonic_mult = multiplier
 		elif ch == 2:
