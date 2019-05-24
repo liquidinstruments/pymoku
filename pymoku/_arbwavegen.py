@@ -470,6 +470,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 			return (float(self._sweep2.step) / self._sweep2.stop) * _ARB_SMPL_RATE
 
 	@needs_commit
+	@deprecated(target = 'method', message = "'gen_off' has been deprecated, use 'enable_output' instead.")
 	def gen_off(self, ch=None):
 		""" DEPRECATED Turn ArbitraryWaveGen output(s) off.
 
