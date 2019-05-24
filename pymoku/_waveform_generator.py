@@ -525,6 +525,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.sine_trigdly_ch2 = 0
 
 	@needs_commit
+	@deprecated(target = 'param', message="'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
 	def set_trigger(self, ch, mode, ncycles = 1, sweep_start_freq = None, sweep_end_freq = 0, sweep_duration = 1.0e-3, trigger_source = 'adc1', trigger_threshold = 0.0, internal_trig_period = 1.0, internal_trig_high = 0.5):
 		""" Configure gated, start, ncycle or sweep trigger mode on target channel.
 
@@ -582,17 +583,13 @@ class WaveformGenerator(BasicWaveformGenerator):
 		if ch == 1:
 			if trigger_source == 'in':
 				trigger_source = 'adc1'
-				warnings.warn("'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 			elif trigger_source == 'out':
 				trigger_source = 'dac2'
-				warnings.warn("'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 		if ch == 2:
 			if trigger_source == 'in':
 				trigger_source = 'adc2'
-				warnings.warn("'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 			elif trigger_source == 'out':
 				trigger_source = 'dac1'
-				warnings.warn("'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 
 		# Can't use current channel as trigger mode source:
 		if ch == 1 and trigger_source == 'dac1':
@@ -872,7 +869,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.range_shift_ch2 = range_shift
 
 	@needs_commit
-	@deprecated(message="'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.")
+	@deprecated(target = 'method', message="'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.")
 	def gen_modulate_off(self, ch=None):
 		"""
 		'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.
@@ -889,7 +886,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		self.set_modulate_trig_off(ch)
 
 	@needs_commit
-	@deprecated(message="'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.")
+	@deprecated(target = 'method', message="'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.")
 	def gen_trigger_off(self, ch=None):
 		"""
 		'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead."
@@ -921,6 +918,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		self._init_trig_modulation(ch)
 
 	@needs_commit
+	@deprecated(target = 'param', message="'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
 	def gen_modulate(self, ch, mtype, source, depth, frequency=0.0):
 		"""
 		Set up modulation on an output channel.
@@ -951,17 +949,13 @@ class WaveformGenerator(BasicWaveformGenerator):
 		if ch == 1:
 			if source == 'in':
 				source = 'adc1'
-				warnings.warn("'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 			elif source == 'out':
 				source = 'dac2'
-				warnings.warn("'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 		if ch == 2:
 			if source == 'in':
 				source = 'adc2'
-				warnings.warn("'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 			elif source == 'out':
 				source = 'dac1'
-				warnings.warn("'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.", DeprecationWarning)
 
 		# Can't use current channel as trigger mode source:
 		if ch == 1 and source == 'dac1':
