@@ -814,14 +814,9 @@ class WaveformGenerator(BasicWaveformGenerator):
 		mod_duration_FPGAcycles = math.floor(sweep_duration * 125e6)
 		mod_stop_freq = mod_step * 1e9 * sweep_duration
 
-		if mod_step < 300.0:
-			range_scaler = 300.0 / mod_step
-			for n in range(0, 25):
-				if 2**n >= range_scaler:
-					range_shift = n
-					mod_step *= 2**range_shift
-					mod_stop_freq *= 2**range_shift
-					break
+		range_shift = min(math.floor(abs(math.log(max(mod_step/2.0**64, mod_stop_freq/2.0**64), 2))), 63)
+		mod_step *= 2**range_shift
+		mod_stop_freq *= 2**range_shift
 
 		# check if reverse sweep:
 		if (sweep_end_freq - channel_frequency) < 0:
