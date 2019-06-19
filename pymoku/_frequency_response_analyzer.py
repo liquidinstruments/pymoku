@@ -230,9 +230,9 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.dac2_en = False
 		self.adc1_en = False
 
+	@needs_commit
 	def _restart_sweep(self):
 		self.sweep_reset = True
-		self._reset_channel_buffers()
 
 	@needs_commit
 	def set_output(self, ch, amplitude, offset=0):
