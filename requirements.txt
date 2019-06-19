@@ -2,4 +2,3 @@ future
 pyzmq
 requests
 decorator
-
