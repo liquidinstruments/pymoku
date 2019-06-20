@@ -9,37 +9,43 @@ from ._frequency_response_analyzer_data import FRAData
 
 log = logging.getLogger(__name__)
 
-REG_FRA_SWEEP_FREQ_MIN_L 	= 64
-REG_FRA_SWEEP_FREQ_MIN_H 	= 65
-REG_FRA_SWEEP_FREQ_DELTA_L 	= 66
-REG_FRA_SWEEP_FREQ_DELTA_H 	= 67
-REG_FRA_LOG_EN				= 68
-REG_FRA_HOLD_OFF_L			= 69
-REG_FRA_SWEEP_LENGTH			= 71
-REG_FRA_AVERAGE_TIME			= 72
-REG_FRA_ENABLES				= 73
-REG_FRA_SWEEP_AMP_MULT		= 74
-REG_FRA_SETTLE_CYCLES		= 76
-REG_FRA_AVERAGE_CYCLES		= 77
-REG_FRA_SWEEP_OFF_MULT		= 78
+REG_FRA_SWEEP_FREQ_MIN_L   = 64
+REG_FRA_SWEEP_FREQ_MIN_H   = 65
+REG_FRA_SWEEP_FREQ_DELTA_L = 66
+REG_FRA_SWEEP_FREQ_DELTA_H = 67
+REG_FRA_LOG_EN             = 68
+REG_FRA_HOLD_OFF_L         = 69
+REG_FRA_SWEEP_LENGTH       = 71
+REG_FRA_AVERAGE_TIME       = 72
+REG_FRA_ENABLES            = 73
+REG_FRA_SWEEP_AMP_MULT     = 74
+REG_FRA_SETTLE_CYCLES      = 76
+REG_FRA_AVERAGE_CYCLES     = 77
+REG_FRA_SWEEP_OFF_MULT     = 78
+REG_FRA_PHASE_OFF_CH1_LSB  = 79
+REG_FRA_PHASE_OFF_CH1_MSB  = 80
+REG_FRA_HARMONIC_MULT_CH1  = 81
+REG_FRA_PHASE_OFF_CH2_LSB  = 82
+REG_FRA_PHASE_OFF_CH2_MSB  = 83
+REG_FRA_HARMONIC_MULT_CH2  = 84
 
-_FRA_FPGA_CLOCK 		= 125e6
-_FRA_DAC_SMPS 		= 1e9
-_FRA_DAC_VRANGE 		= 1
-_FRA_DAC_BITDEPTH 	= 2**16
-_FRA_DAC_BITS2V		= _FRA_DAC_BITDEPTH/_FRA_DAC_VRANGE
-_FRA_SCREEN_WIDTH	= 1024
-_FRA_FREQ_SCALE		= 2**48 / _FRA_DAC_SMPS
-_FRA_FXP_SCALE 		= 2.0**30
-
-
+_FRA_FPGA_CLOCK   = 125e6
+_FRA_DAC_SMPS     = 1e9
+_FRA_DAC_VRANGE   = 1
+_FRA_DAC_BITDEPTH = 2**16
+_FRA_DAC_BITS2V   = _FRA_DAC_BITDEPTH/_FRA_DAC_VRANGE
+_FRA_SCREEN_WIDTH = 1024
+_FRA_FREQ_SCALE   = 2**48 / _FRA_DAC_SMPS
+_FRA_FXP_SCALE    = 2.0**30
 
 class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
-	""" Frequency Response Analyzer instrument object. This should be instantiated and attached to a :any:`Moku` instance.
+	""" Frequency Response Analyzer instrument object.
+
+	This should be instantiated and attached to a :any:`Moku` instance.
 	"""
 	def __init__(self):
 		super(FrequencyResponseAnalyzer, self).__init__()
-		self._register_accessors(_na_reg_handlers)
+		self._register_accessors(_fra_reg_handlers)
 
 		self.scales = {}
 		self._set_frame_class(FRAData, instrument=self, scales=self.scales)
@@ -49,6 +55,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		self.sweep_amp_volts_ch1 = 0
 		self.sweep_amp_volts_ch2 = 0
+
 
 	def _calculate_sweep_delta(self, start_frequency, end_frequency, sweep_length, log_scale):
 		if log_scale:
@@ -215,7 +222,8 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		""" Stop sweeping.
 
 		This will stop new data frames from being received, so ensure you implement a timeout
-		on :any:`get_data<pymoku.instruments.FrequencyResponseAnalyzer.get_data>` calls. """
+		on :any:`get_data<pymoku.instruments.FrequencyResponseAnalyzer.get_data>` calls.
+		"""
 		self.single_sweep = self.loop_sweep = False
 
 		self.adc2_en = False
@@ -223,6 +231,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.dac2_en = False
 		self.adc1_en = False
 
+	@needs_commit
 	def _restart_sweep(self):
 		self.sweep_reset = True
 
@@ -242,7 +251,6 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		:type offset: float; [-1.0, 1.0] Volts
 		:param offset: Sweep offset
-
 		"""
 		_utils.check_parameter_valid('set', ch, [1, 2], 'output channel')
 		_utils.check_parameter_valid('range', amplitude, [0.001, 2.0], 'sweep amplitude', 'Vpp')
@@ -310,7 +318,6 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 		:type ch: int; {1,2}
 		:param ch: Channel number to turn off (None, or leave blank, for both)
-
 		"""
 		_utils.check_parameter_valid('set', ch, [1,2,None],'output sweep channel')
 		if ch is None or ch == 1:
@@ -352,17 +359,59 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.set_frontend(2, fiftyr=True, atten=False, ac=False)
 
 		self.set_sweep()
+		self.set_ch_phase(1)
+		self.set_ch_phase(2)
 
+		self.set_harmonic_multiplier(1)
+		self.set_harmonic_multiplier(2)
 		# 100mVpp swept outputs
 		self.set_output(1, 0.1, 0.0)
 		self.set_output(2, 0.1, 0.0)
 
 		self.start_sweep()
 
+	@needs_commit
+	def set_ch_phase(self, ch, phase = 0.0):
+		""" set the phase of the measurement with respect to the output signal.
+
+		:type ch: int; {1, 2}
+		:param ch: selects the channel to apply settings.
+
+		:type phase: float [0.0, 360.0] deg
+		:param phase: phase difference between channel 1 and channel 2.
+		"""
+		_utils.check_parameter_valid('set', ch, [1,2],'channel')
+		_utils.check_parameter_valid('range', phase, [0.0, 360.0], 'phase', 'degrees')
+		if ch == 1:
+			self.ch1_meas_phase = (phase / 360.0 ) * 2**64
+		else:
+			self.ch2_meas_phase = (phase / 360.0 ) * 2**64
+
+
+	@needs_commit
+	def set_harmonic_multiplier(self, ch, multiplier = 1):
+		""" set the harmonic multiplier to demodulate at integer harmonic of output.
+
+		:type ch: int; {1, 2}
+		:param ch: selects the channel to apply settings.
+
+		:type multiplier: int; [0, 15]
+		:param multiplier: multiplier applied to fundemental.
+		"""
+		_utils.check_parameter_valid('set', ch, [1,2],'channel')
+		_utils.check_parameter_valid('set', multiplier,
+			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],'harmonics select')
+		if ch == 1:
+			self.ch1_harmonic_mult = multiplier
+		elif ch == 2:
+			self.ch2_harmonic_mult = multiplier
+
+
 	def get_data(self, timeout=None, wait=True):
 		""" Get current sweep data.
 		In the FrequencyResponseAnalyzer this is an alias for ``get_realtime_data`` as the data
-		is never downsampled. """
+		is never downsampled.
+		"""
 		return super(FrequencyResponseAnalyzer, self).get_realtime_data(timeout, wait)
 
 	def commit(self):
@@ -377,48 +426,50 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 	commit.__doc__ = MokuInstrument.commit.__doc__
 
 
-_na_reg_handlers = {
-	'loop_sweep':				(REG_FRA_ENABLES, to_reg_bool(0), from_reg_bool(0)),
-	'single_sweep':				(REG_FRA_ENABLES, to_reg_bool(1), from_reg_bool(1)),
-	'sweep_reset':				(REG_FRA_ENABLES, to_reg_bool(2), from_reg_bool(2)),
-	'channel1_en':				(REG_FRA_ENABLES, to_reg_bool(3), from_reg_bool(3)),
-	'channel2_en':				(REG_FRA_ENABLES, to_reg_bool(4), from_reg_bool(4)),
-
-	'adc1_en':					(REG_FRA_ENABLES, to_reg_bool(5), from_reg_bool(5)),
-	'adc2_en':					(REG_FRA_ENABLES, to_reg_bool(6), from_reg_bool(6)),
-	'dac1_en':					(REG_FRA_ENABLES, to_reg_bool(7), from_reg_bool(7)),
-	'dac2_en':					(REG_FRA_ENABLES, to_reg_bool(8), from_reg_bool(8)),
-
-	'sweep_freq_min':			((REG_FRA_SWEEP_FREQ_MIN_H, REG_FRA_SWEEP_FREQ_MIN_L),
-											to_reg_unsigned(0, 48, xform=lambda obj, f: f * _FRA_FREQ_SCALE),
-											from_reg_unsigned(0, 48, xform=lambda obj, f: f / _FRA_FREQ_SCALE)),
-	'sweep_freq_delta':			((REG_FRA_SWEEP_FREQ_DELTA_H, REG_FRA_SWEEP_FREQ_DELTA_L),
-											to_reg_signed(0, 48),
-											from_reg_signed(0, 48)),
-
-	'log_en':					(REG_FRA_LOG_EN, to_reg_bool(0), from_reg_bool(0)),
-	'sweep_length':				(REG_FRA_SWEEP_LENGTH, to_reg_unsigned(0, 10), from_reg_unsigned(0, 10)),
-
-	'settling_time':			(REG_FRA_HOLD_OFF_L,
-											to_reg_unsigned(0, 32, xform=lambda obj, t: t * _FRA_FPGA_CLOCK),
-											from_reg_unsigned(0, 32, xform=lambda obj, t: t / _FRA_FPGA_CLOCK)),
-	'averaging_time':			(REG_FRA_AVERAGE_TIME,
-											to_reg_unsigned(0, 32, xform=lambda obj, t: t * _FRA_FPGA_CLOCK),
-											from_reg_unsigned(0, 32, xform=lambda obj, t: t / _FRA_FPGA_CLOCK)),
-	'sweep_amplitude_ch1':		(REG_FRA_SWEEP_AMP_MULT,
-											to_reg_unsigned(0, 16, xform=lambda obj, a: a / obj._dac_gains()[0]),
-											from_reg_unsigned(0, 16, xform=lambda obj, a: a * obj._dac_gains()[0])),
-	'sweep_amplitude_ch2':		(REG_FRA_SWEEP_AMP_MULT,
-											to_reg_unsigned(16, 16, xform=lambda obj, a: a / obj._dac_gains()[1]),
-											from_reg_unsigned(16, 16, xform=lambda obj, a: a * obj._dac_gains()[1])),
-
-	'sweep_offset_ch1':		(REG_FRA_SWEEP_OFF_MULT,
-											to_reg_signed(0, 16, xform=lambda obj, a: a / obj._dac_gains()[0]),
-											from_reg_signed(0, 16, xform=lambda obj, a: a * obj._dac_gains()[0])),
-	'sweep_offset_ch2':		(REG_FRA_SWEEP_OFF_MULT,
-											to_reg_signed(16, 16, xform=lambda obj, a: a / obj._dac_gains()[1]),
-											from_reg_signed(16, 16, xform=lambda obj, a: a * obj._dac_gains()[1])),
-
-	'settling_cycles':			(REG_FRA_SETTLE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
-	'averaging_cycles':			(REG_FRA_AVERAGE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32))
+_fra_reg_handlers = {
+	'loop_sweep':          (REG_FRA_ENABLES, to_reg_bool(0), from_reg_bool(0)),
+	'single_sweep':        (REG_FRA_ENABLES, to_reg_bool(1), from_reg_bool(1)),
+	'sweep_reset':         (REG_FRA_ENABLES, to_reg_bool(2), from_reg_bool(2)),
+	'channel1_en':         (REG_FRA_ENABLES, to_reg_bool(3), from_reg_bool(3)),
+	'channel2_en':         (REG_FRA_ENABLES, to_reg_bool(4), from_reg_bool(4)),
+	'adc1_en':             (REG_FRA_ENABLES, to_reg_bool(5), from_reg_bool(5)),
+	'adc2_en':             (REG_FRA_ENABLES, to_reg_bool(6), from_reg_bool(6)),
+	'dac1_en':             (REG_FRA_ENABLES, to_reg_bool(7), from_reg_bool(7)),
+	'dac2_en':             (REG_FRA_ENABLES, to_reg_bool(8), from_reg_bool(8)),
+	'sweep_freq_min':     ((REG_FRA_SWEEP_FREQ_MIN_H, REG_FRA_SWEEP_FREQ_MIN_L),
+	                        to_reg_unsigned(0, 48, xform=lambda obj, f: f * _FRA_FREQ_SCALE),
+	                        from_reg_unsigned(0, 48, xform=lambda obj, f: f / _FRA_FREQ_SCALE)),
+	'sweep_freq_delta':   ((REG_FRA_SWEEP_FREQ_DELTA_H, REG_FRA_SWEEP_FREQ_DELTA_L),
+	                        to_reg_signed(0, 48),
+	                        from_reg_signed(0, 48)),
+	'log_en':              (REG_FRA_LOG_EN, to_reg_bool(0), from_reg_bool(0)),
+	'sweep_length':        (REG_FRA_SWEEP_LENGTH, to_reg_unsigned(0, 10), from_reg_unsigned(0, 10)),
+	'settling_time':       (REG_FRA_HOLD_OFF_L,
+	                        to_reg_unsigned(0, 32, xform=lambda obj, t: t * _FRA_FPGA_CLOCK),
+	                        from_reg_unsigned(0, 32, xform=lambda obj, t: t / _FRA_FPGA_CLOCK)),
+	'averaging_time':      (REG_FRA_AVERAGE_TIME,
+	                        to_reg_unsigned(0, 32, xform=lambda obj, t: t * _FRA_FPGA_CLOCK),
+	                        from_reg_unsigned(0, 32, xform=lambda obj, t: t / _FRA_FPGA_CLOCK)),
+	'sweep_amplitude_ch1': (REG_FRA_SWEEP_AMP_MULT,
+	                        to_reg_unsigned(0, 16, xform=lambda obj, a: a / obj._dac_gains()[0]),
+	                        from_reg_unsigned(0, 16, xform=lambda obj, a: a * obj._dac_gains()[0])),
+	'sweep_amplitude_ch2': (REG_FRA_SWEEP_AMP_MULT,
+	                        to_reg_unsigned(16, 16, xform=lambda obj, a: a / obj._dac_gains()[1]),
+	                        from_reg_unsigned(16, 16, xform=lambda obj, a: a * obj._dac_gains()[1])),
+	'sweep_offset_ch1':    (REG_FRA_SWEEP_OFF_MULT,
+	                        to_reg_signed(0, 16, xform=lambda obj, a: a / obj._dac_gains()[0]),
+	                        from_reg_signed(0, 16, xform=lambda obj, a: a * obj._dac_gains()[0])),
+	'sweep_offset_ch2':    (REG_FRA_SWEEP_OFF_MULT,
+	                        to_reg_signed(16, 16, xform=lambda obj, a: a / obj._dac_gains()[1]),
+	                        from_reg_signed(16, 16, xform=lambda obj, a: a * obj._dac_gains()[1])),
+	'settling_cycles':     (REG_FRA_SETTLE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
+	'averaging_cycles':    (REG_FRA_AVERAGE_CYCLES, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
+	'ch1_harmonic_mult':   (REG_FRA_HARMONIC_MULT_CH1, to_reg_unsigned(0,4), from_reg_unsigned(0, 4)),
+	'ch2_harmonic_mult':   (REG_FRA_HARMONIC_MULT_CH2, to_reg_unsigned(0,4), from_reg_unsigned(0, 4)),
+	'ch1_meas_phase':     ((REG_FRA_PHASE_OFF_CH1_MSB, REG_FRA_PHASE_OFF_CH1_LSB),
+	                        to_reg_unsigned(0, 64),
+	                        from_reg_unsigned(0, 64)),
+	'ch2_meas_phase':     ((REG_FRA_PHASE_OFF_CH2_MSB, REG_FRA_PHASE_OFF_CH2_LSB),
+	                        to_reg_unsigned(0, 64),
+	                        from_reg_unsigned(0,64))
 }
