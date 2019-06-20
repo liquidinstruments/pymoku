@@ -36,6 +36,28 @@ class SweepGenerator(object):
 			           SweepGenerator.WAVE_TYPE_TRIANGLE]), value)
 
 	@property
+	def direction(self):
+		r1 = self.reg_base + SweepGenerator._REG_CONFIG
+		return self._instr._accessor_get(r, from_reg_unsigned(5, 1))
+
+	@direction.setter
+	def direction(self, value):
+		r = self.reg_base + SweepGenerator._REG_CONFIG
+		self._instr._accessor_set(r, to_reg_unsigned(5, 1,
+			allow_set=[0,1]), value)
+
+	@property
+	def logsweep(self):
+		r1 = self.reg_base + SweepGenerator._REG_CONFIG
+		return self._instr._accessor_get(r, from_reg_unsigned(6, 1))
+
+	@logsweep.setter
+	def logsweep(self, value):
+		r = self.reg_base + SweepGenerator._REG_CONFIG
+		self._instr._accessor_set(r, to_reg_unsigned(6, 1,
+			allow_set=[0,1]), value)
+
+	@property
 	def start(self):
 		r1 = self.reg_base + SweepGenerator._REG_START_LSB
 		r2 = self.reg_base + SweepGenerator._REG_START_MSB

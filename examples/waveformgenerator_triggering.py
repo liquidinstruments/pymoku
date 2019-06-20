@@ -1,8 +1,8 @@
 #
-# pymoku example: trigger modes for waveform generation
+# pymoku example: Waveform Generator Triggering
 #
 # This example demonstrates how you can use the Waveform Generator instrument to
-# generate a triggered sinewave on Channel 1 and 2 using different tigger sources
+# generate a gated sinewave on Channel 1, and a swept frequency squarewave on Channel 2.
 #
 # (c) 2019 Liquid Instruments Pty. Ltd.
 #
@@ -14,19 +14,20 @@ from pymoku.instruments import WaveformGenerator
 m = Moku.get_by_name('Moku')
 
 try:
-	i = m.deploy_or_connect(WaveformGenerator)
+	# Deploy the Signal Generator to your Moku
+	i = m.deploy_instrument(WaveformGenerator)
 
-	# Channel 1 generates a 1.0Vpp 5Hz Sinewave
-	i.gen_sinewave(1, 1.0, 5)
-	# Channel 2 generates a Squarewave 2.0Vpp 1Hz
-	i.gen_squarewave(2, 2.0, 1)
+	# Generate a sinewave (amp = 1Vpp, freq = 10 Hz) on channel 1. Squarewave (amp = 1 Vpp, freq = 500 Hz) on channel 2.
+	i.gen_sinewave(1, amplitude=1.0, frequency=10)
+	i.gen_squarewave(2, amplitude=1.0, frequency=500)
 
-	# Channel 1's sinewave is gated on ADC Input 1 exceeding 0.5V
-	i.set_trigger(1, 'gated', trigger_source='in', trigger_threshold=0.5)
+	# Configure the Moku's frontend
+	i._set_frontend(channel=1, fiftyr=True, atten=True, ac=False)
+	i._set_frontend(channel=2, fiftyr=True, atten=True, ac=False)
 
-	# Channel 2's square wave will sweep from 1Hz to 5Hz over 10 seconds after being triggered
-	# at 0.5V from ADC Input 2 (the input paired with this output)
-	i.set_trigger(2, 'sweep', sweep_start_freq=1.0, sweep_end_freq=5.0, sweep_duration=10.0, trigger_source='in', trigger_threshold=0.5)
+	# Configure gated trigger mode on channel 1. Sweep trigger mode on channel 2.
+	i.set_trigger(1, mode='gated', trigger_source='internal', internal_trig_period=2.0, internal_trig_high=0.5)
+	i.set_trigger(2, mode='sweep', trigger_source='adc1', sweep_end_freq=10.0, sweep_duration=2.0, trigger_threshold=0.1)
 
 finally:
 	m.close()
