@@ -11,69 +11,69 @@ from ._sweep_generator import SweepGenerator
 
 log = logging.getLogger(__name__)
 
-REG_BASE_MOD_0				= 43
-REG_BASE_MOD_1				= 60
-REG_BASE_WAV_0				= 80
-REG_BASE_WAV_1				= 104
+REG_BASE_MOD_0       = 43
+REG_BASE_MOD_1       = 60
+REG_BASE_WAV_0       = 80
+REG_BASE_WAV_1       = 104
 
-REG_GATETHRESH_L_CH1		= 76
-REG_GATETHRESH_H_CH1		= 77
-REG_GATETHRESH_L_CH2		= 78
-REG_GATETHRESH_H_CH2		= 79
+REG_GATETHRESH_L_CH1 = 76
+REG_GATETHRESH_H_CH1 = 77
+REG_GATETHRESH_L_CH2 = 78
+REG_GATETHRESH_H_CH2 = 79
 
-_WG_WAVE_SINE		= 0
-_WG_WAVE_SQUARE		= 1
+_WG_WAVE_SINE        = 0
+_WG_WAVE_SQUARE      = 1
 
-_WG_MOD_NONE		= 0
-_WG_MOD_AMPL		= 1
-_WG_MOD_FREQ		= 2
-_WG_MOD_PHASE		= 4
+_WG_MOD_NONE         = 0
+_WG_MOD_AMPL         = 1
+_WG_MOD_FREQ         = 2
+_WG_MOD_PHASE        = 4
 
-_WG_MODSOURCE_INT	= 0
-_WG_MODSOURCE_ADC	= 1
-_WG_MODSOURCE_DAC	= 2
+_WG_MODSOURCE_INT    = 0
+_WG_MODSOURCE_ADC    = 1
+_WG_MODSOURCE_DAC    = 2
 
-_WG_FREQSCALE		= 1.0e9 / 2**64
-_WG_FREQSCALE_SQR	= 1.0e9 / 2**48
-_WG_PERIODSCALE_SQR = 2**48 - 1
-_WG_RISESCALE		= 2**24
+_WG_FREQSCALE        = 1.0e9 / 2**64
+_WG_FREQSCALE_SQR    = 1.0e9 / 2**48
+_WG_PERIODSCALE_SQR  = 2**48 - 1
+_WG_RISESCALE        = 2**24
 
-_WG_MAX_RISE		= 1.0/(2**39 - 1)
-_WG_TIMESCALE 		= 1.0 / (2**32 - 1) # Doesn't wrap
+_WG_MAX_RISE         = 1.0/(2**39 - 1)
+_WG_TIMESCALE        = 1.0 / (2**32 - 1) # Doesn't wrap
 
-_WG_MOD_FREQ_MAX 	= 62.5e6
-_WG_MOD_DEPTH_MAX	= 2.0**31-1 # 100% modulation depth in bits
+_WG_MOD_FREQ_MAX     = 62.5e6
+_WG_MOD_DEPTH_MAX    = 2.0**31-1 # 100% modulation depth in bits
 
-_WG_TRIG_ADC1		= 0
-_WG_TRIG_ADC2		= 1
-_WG_TRIG_DAC1		= 2
-_WG_TRIG_DAC2		= 3
-_WG_TRIG_EXT		= 4
-_WG_TRIG_INTER		= 5
+_WG_TRIG_ADC1        = 0
+_WG_TRIG_ADC2        = 1
+_WG_TRIG_DAC1        = 2
+_WG_TRIG_DAC2        = 3
+_WG_TRIG_EXT         = 4
+_WG_TRIG_INTER       = 5
 
-_WG_MOD_ADC1 		= 0
-_WG_MOD_ADC2 		= 1
-_WG_MOD_DAC1		= 2
-_WG_MOD_DAC2		= 3
-_WG_MOD_INTER		= 4
-_WG_MOD_GATE		= 5
+_WG_MOD_ADC1         = 0
+_WG_MOD_ADC2         = 1
+_WG_MOD_DAC1         = 2
+_WG_MOD_DAC2         = 3
+_WG_MOD_INTER        = 4
+_WG_MOD_GATE         = 5
 
-_WG_GATE_ADC 		= 0
-_WG_GATE_DAC		= 1
-_WG_GATE_SWEEP		= 2
-_WG_GATE_EXT		= 3
+_WG_GATE_ADC         = 0
+_WG_GATE_DAC         = 1
+_WG_GATE_SWEEP       = 2
+_WG_GATE_EXT         = 3
 
-_WG_TRIG_MODE_OFF 	= 0
-_WG_TRIG_MODE_GATE	= 1
-_WG_TRIG_MODE_START = 2
-_WG_TRIG_MODE_NCYCLE= 3
-_WG_TRIG_MODE_SWEEP = 4
+_WG_TRIG_MODE_OFF    = 0
+_WG_TRIG_MODE_GATE   = 1
+_WG_TRIG_MODE_START  = 2
+_WG_TRIG_MODE_NCYCLE = 3
+_WG_TRIG_MODE_SWEEP  = 4
 
-_WG_TRIGLVL_ADC_MAX = 5.0
-_WG_TRIGLVL_ADC_MIN = -5.0
+_WG_TRIGLVL_ADC_MAX  = 5.0
+_WG_TRIGLVL_ADC_MIN  = -5.0
 
-_WG_TRIGLVL_DAC_MAX = 1.0
-_WG_TRIGLVL_DAC_MIN = -1.0
+_WG_TRIGLVL_DAC_MAX  = 1.0
+_WG_TRIGLVL_DAC_MIN  = -1.0
 
 class BasicWaveformGenerator(MokuInstrument):
 	"""
@@ -112,7 +112,9 @@ class BasicWaveformGenerator(MokuInstrument):
 		self._set_frontend(channel = 1, fiftyr=True, atten=False, ac=False)
 		self._set_frontend(channel = 2, fiftyr=True, atten=False, ac=False)
 
-	def _set_sweepgenerator(self, sweepgen, waveform=None, waitfortrig=None, frequency=None, offset=None, logsweep=None, duration=None, holdlast = None):
+	def _set_sweepgenerator(self, sweepgen, waveform=None, waitfortrig=None,
+		                    frequency=None, offset=None, logsweep=None,
+		                    duration=None, holdlast = None):
 		sweepgen.waveform = 2
 		sweepgen.stop = (2**64 - 1)
 		sweepgen.direction = 0
@@ -162,8 +164,8 @@ class BasicWaveformGenerator(MokuInstrument):
 		_utils.check_parameter_valid('range', phase, [0, 360], 'sinewave phase', 'degrees')
 
 		# Ensure offset does not cause signal to exceed allowable 2.0Vpp range
-		upper_voltage = offset + (amplitude/2.0)
-		lower_voltage = offset - (amplitude/2.0)
+		upper_voltage = offset + (amplitude / 2.0)
+		lower_voltage = offset - (amplitude / 2.0)
 		if (upper_voltage > 1.0) or (lower_voltage < -1.0):
 			raise ValueOutOfRangeException("Sinewave offset limited by amplitude (max output range 2.0Vpp).")
 
@@ -209,20 +211,19 @@ class BasicWaveformGenerator(MokuInstrument):
 
 		:type phase: float, degrees 0-360
 		:param phase: Phase offset of the wave
-
 		"""
-		_utils.check_parameter_valid('set', ch, [1,2],'output channel')
+		_utils.check_parameter_valid('set', ch, [1, 2],'output channel')
 		_utils.check_parameter_valid('range', amplitude, [0.0, 2.0],'squarewave amplitude','Volts')
-		_utils.check_parameter_valid('range', frequency, [0,100e6],'squarewave frequency', 'Hz')
-		_utils.check_parameter_valid('range', offset, [-1.0,1.0], 'squarewave offset', 'Volts')
-		_utils.check_parameter_valid('range', duty, [0,1.0], 'squarewave duty', 'cycles')
-		_utils.check_parameter_valid('range', risetime, [0,1.0], 'squarewave risetime', 'cycles')
-		_utils.check_parameter_valid('range', falltime, [0,1.0], 'squarewave falltime', 'cycles')
-		_utils.check_parameter_valid('range', phase, [0,360], 'squarewave phase', 'degrees')
+		_utils.check_parameter_valid('range', frequency, [0, 100e6],'squarewave frequency', 'Hz')
+		_utils.check_parameter_valid('range', offset, [-1.0, 1.0], 'squarewave offset', 'Volts')
+		_utils.check_parameter_valid('range', duty, [0, 1.0], 'squarewave duty', 'cycles')
+		_utils.check_parameter_valid('range', risetime, [0, 1.0], 'squarewave risetime', 'cycles')
+		_utils.check_parameter_valid('range', falltime, [0, 1.0], 'squarewave falltime', 'cycles')
+		_utils.check_parameter_valid('range', phase, [0, 360], 'squarewave phase', 'degrees')
 
 		# Ensure offset does not cause signal to exceed allowable 2.0Vpp range
-		upper_voltage = offset + (amplitude/2.0)
-		lower_voltage = offset - (amplitude/2.0)
+		upper_voltage = offset + (amplitude / 2.0)
+		lower_voltage = offset - (amplitude / 2.0)
 		if (upper_voltage > 1.0) or (lower_voltage < -1.0):
 			raise ValueOutOfRangeException("Squarewave offset limited by amplitude (max output range 2.0Vpp).")
 
@@ -276,7 +277,7 @@ class BasicWaveformGenerator(MokuInstrument):
 		if ch == 1:
 			self.waveform_type_ch1 = _WG_WAVE_SQUARE
 			self.enable_ch1 = True
-			self._set_sweepgenerator(sweepgen = self._sweep1, frequency = frequency, offset = phase, holdlast = 0)
+			self._set_sweepgenerator(sweepgen=self._sweep1, frequency=frequency, offset=phase, holdlast=0)
 			self.amplitude_ch1 = amplitude
 			self.offset_ch1 = offset
 
@@ -291,7 +292,7 @@ class BasicWaveformGenerator(MokuInstrument):
 		elif ch == 2:
 			self.waveform_type_ch2 = _WG_WAVE_SQUARE
 			self.enable_ch2 = True
-			self._set_sweepgenerator(sweepgen = self._sweep2, frequency = frequency, offset = phase, holdlast = 0)
+			self._set_sweepgenerator(sweepgen=self._sweep2, frequency=frequency, offset=phase, holdlast=0)
 			self.amplitude_ch2 = amplitude
 			self.offset_ch2 = offset
 			self.t0_ch2 = t0
@@ -325,18 +326,17 @@ class BasicWaveformGenerator(MokuInstrument):
 
 		:type phase: float, degrees [0, 360]
 		:param phase: Phase offset of the wave
-
 		"""
-		_utils.check_parameter_valid('set', ch, [1,2],'output channel')
+		_utils.check_parameter_valid('set', ch, [1, 2],'output channel')
 		_utils.check_parameter_valid('range', amplitude, [0.0, 2.0],'rampwave amplitude','Volts')
-		_utils.check_parameter_valid('range', frequency, [0,100e6],'rampwave frequency', 'Hz')
-		_utils.check_parameter_valid('range', offset, [-1.0,1.0], 'rampwave offset', 'cycles')
-		_utils.check_parameter_valid('range', symmetry, [0,1.0], 'rampwave symmetry', 'fraction')
-		_utils.check_parameter_valid('range', phase, [0,360], 'rampwave phase', 'degrees')
+		_utils.check_parameter_valid('range', frequency, [0, 100e6],'rampwave frequency', 'Hz')
+		_utils.check_parameter_valid('range', offset, [-1.0, 1.0], 'rampwave offset', 'cycles')
+		_utils.check_parameter_valid('range', symmetry, [0, 1.0], 'rampwave symmetry', 'fraction')
+		_utils.check_parameter_valid('range', phase, [0, 360], 'rampwave phase', 'degrees')
 
 		# Ensure offset does not cause signal to exceed allowable 2.0Vpp range
-		upper_voltage = offset + (amplitude/2.0)
-		lower_voltage = offset - (amplitude/2.0)
+		upper_voltage = offset + (amplitude / 2.0)
+		lower_voltage = offset - (amplitude / 2.0)
 		if (upper_voltage > 1.0) or (lower_voltage < -1.0):
 			raise ValueOutOfRangeException("Rampwave offset limited by amplitude (max output range 2.0Vpp).")
 
@@ -351,7 +351,6 @@ class BasicWaveformGenerator(MokuInstrument):
 		"""	Synchronize the phase of both output channels.
 
 		The phase of both channels is reset to their respestive phase offset values.
-
 		"""
 		self.enable_reset_ch1 = True
 		self.enable_reset_ch2 = True
@@ -366,7 +365,6 @@ class BasicWaveformGenerator(MokuInstrument):
 
 		:type ch: int; {1,2} or None
 		:param ch: Channel to turn off, or both.
-
 		"""
 		_utils.check_parameter_valid('set', ch, [1,2],'output channel', allow_none=True)
 
@@ -391,7 +389,6 @@ class WaveformGenerator(BasicWaveformGenerator):
 		:annotation: = "signal_generator"
 
 		Name of this instrument.
-
 	"""
 	def __init__(self):
 		""" Create a new WaveformGenerator instance, ready to be attached to a Moku."""
@@ -525,8 +522,10 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.sine_trigdly_ch2 = 0
 
 	@needs_commit
-	@deprecated(target = 'param', message="'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
-	def set_trigger(self, ch, mode, ncycles = 1, sweep_start_freq = None, sweep_end_freq = 0, sweep_duration = 1.0e-3, trigger_source = 'adc1', trigger_threshold = 0.0, internal_trig_period = 1.0, internal_trig_high = 0.5):
+	@deprecated(target='param', message="'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
+	def set_trigger(self, ch, mode, ncycles = 1, sweep_start_freq = None, sweep_end_freq = 0,
+		            sweep_duration = 1.0e-3, trigger_source = 'adc1', trigger_threshold = 0.0,
+		            internal_trig_period = 1.0, internal_trig_high = 0.5):
 		""" Configure gated, start, ncycle or sweep trigger mode on target channel.
 
 		The trigger event can come from an ADC input channel, the opposite generated waveform, the external
@@ -571,13 +570,13 @@ class WaveformGenerator(BasicWaveformGenerator):
 		:param internal_trig_high: High time of the internal trigger clock, if used. Must be less than the internal trigger period.
 		"""
 
-		_utils.check_parameter_valid('set', ch, [1,2], 'output channel')
+		_utils.check_parameter_valid('set', ch, [1, 2], 'output channel')
 		_utils.check_parameter_valid('set', mode, ['gated', 'start', 'ncycle', 'sweep'],'trigger mode')
 		_utils.check_parameter_valid('set', trigger_source, ['adc1','adc2', 'dac1', 'dac2', 'external', 'internal', 'in', 'out'], 'trigger source')
-		_utils.check_parameter_valid('range', ncycles, [1,1e6],'ncycles')
-		_utils.check_parameter_valid('range', sweep_duration, [0.001,1000.0],'sweep duration', 'seconds')
-		_utils.check_parameter_valid('range', internal_trig_period, [100.0e-9,1000.0],'internal trigger period', 'seconds')
-		_utils.check_parameter_valid('range', internal_trig_high, [10.0e-9,1000.0],'internal trigger high time', 'seconds')
+		_utils.check_parameter_valid('range', ncycles, [1, 1e6],'ncycles')
+		_utils.check_parameter_valid('range', sweep_duration, [0.001, 1000.0],'sweep duration', 'seconds')
+		_utils.check_parameter_valid('range', internal_trig_period, [100.0e-9, 1000.0],'internal trigger period', 'seconds')
+		_utils.check_parameter_valid('range', internal_trig_high, [10.0e-9, 1000.0],'internal trigger high time', 'seconds')
 
 		#'in' and 'out' trigger sources are deprecated sources. Convert to adc/dac source type:
 		if ch == 1:
@@ -610,10 +609,10 @@ class WaveformGenerator(BasicWaveformGenerator):
 
 
 		_str_to_trigger_source = {
-			'adc1' 	: _WG_TRIG_ADC1,
-			'adc2' 	: _WG_TRIG_ADC2,
-			'dac1'	: _WG_TRIG_DAC1,
-			'dac2'	: _WG_TRIG_DAC2,
+			'adc1'     : _WG_TRIG_ADC1,
+			'adc2'     : _WG_TRIG_ADC2,
+			'dac1'     : _WG_TRIG_DAC1,
+			'dac2'     : _WG_TRIG_DAC2,
 			'external' : _WG_TRIG_EXT,
 			'internal' : _WG_TRIG_INTER
 		}
@@ -668,11 +667,11 @@ class WaveformGenerator(BasicWaveformGenerator):
 
 		#if waveform is a sinewave certain ranges do change
 		if waveform == _WG_WAVE_SINE:
-			_utils.check_parameter_valid('range', sweep_end_freq, [0.0,250.0e6],'sweep finishing frequency','frequency')
-			_utils.check_parameter_valid('range', channel_frequency, [0.0,250.0e6],'sweep starting frequency','frequency')
+			_utils.check_parameter_valid('range', sweep_end_freq, [0.0, 250.0e6],'sweep finishing frequency','frequency')
+			_utils.check_parameter_valid('range', channel_frequency, [0.0, 250.0e6],'sweep starting frequency','frequency')
 		else:
-			_utils.check_parameter_valid('range', sweep_end_freq, [0.0,100.0e6],'sweep finishing frequency','frequency')
-			_utils.check_parameter_valid('range', channel_frequency, [0.0,100.0e6],'sweep starting frequency','frequency')
+			_utils.check_parameter_valid('range', sweep_end_freq, [0.0, 100.0e6],'sweep finishing frequency','frequency')
+			_utils.check_parameter_valid('range', channel_frequency, [0.0, 100.0e6],'sweep starting frequency','frequency')
 
 		# minimum frequency deviation in sweep mode is 1 mHz
 		if abs(channel_frequency - sweep_end_freq) < 1.0e-3:
@@ -721,7 +720,6 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.gate_mode_ch2 = 1
 
 	def _set_trigger_start(self, ch, trigger_source, trigger_threshold):
-
 		# Internal trigger source cannot be used for burst start mode:
 		if trigger_source == _WG_TRIG_INTER:
 			raise ValueOutOfRangeException("The internal trigger source cannot be used in start burst mode.")
@@ -763,10 +761,12 @@ class WaveformGenerator(BasicWaveformGenerator):
 		elif trigger_source == _WG_TRIG_INTER:
 			trigger_threshold = 0
 			if ch == 1:
-				self._set_sweepgenerator(sweepgen = self._sweepmod1, waveform = 2, waitfortrig = 0, frequency = 1.0/internal_trig_period, offset = 0, logsweep = 0, duration = 0, holdlast = 0)
+				self._set_sweepgenerator(sweepgen=self._sweepmod1, waveform=2,
+					waitfortrig=0, frequency=1.0/internal_trig_period, offset=0, logsweep=0, duration=0, holdlast=0)
 				self._sweepmod1.direction = 1
 			elif ch == 2:
-				self._set_sweepgenerator(sweepgen = self._sweepmod2, waveform = 2, waitfortrig = 0, frequency = 1.0/internal_trig_period, offset = 0, logsweep = 0, duration = 0, holdlast = 0)
+				self._set_sweepgenerator(sweepgen=self._sweepmod2, waveform=2,
+					waitfortrig=0, frequency=1.0/internal_trig_period, offset=0, logsweep=0, duration=0, holdlast=0)
 				self._sweepmod2.direction = 1
 
 		# ensure combination of signal frequency and Ncycles doesn't cause 64 bit register overflow:
@@ -814,7 +814,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		mod_duration_FPGAcycles = math.floor(sweep_duration * 125e6)
 		mod_stop_freq = mod_step * 1e9 * sweep_duration
 
-		range_shift = min(math.floor(abs(math.log(max(mod_step/2.0**64, mod_stop_freq/2.0**64), 2))), 63)
+		range_shift = min(math.floor(abs(math.log(max(mod_step / 2.0**64, mod_stop_freq / 2.0**64), 2))), 63)
 		mod_step *= 2**range_shift
 		mod_stop_freq *= 2**range_shift
 
@@ -825,7 +825,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 			mod_direction = 0
 
 		if ch == 1:
-			self._set_sweepgenerator(sweepgen = self._sweep1, frequency = channel_frequency, waitfortrig = 0)
+			self._set_sweepgenerator(sweepgen=self._sweep1, frequency=channel_frequency, waitfortrig=0)
 			self._sweepmod1.waitfortrig = mod_continuous_sweep
 			self._sweepmod1.start = mod_start_freq
 			self._sweepmod1.stop = mod_stop_freq
@@ -844,7 +844,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 
 			self.range_shift_ch1 = range_shift
 		else:
-			self._set_sweepgenerator(sweepgen = self._sweep2, frequency = channel_frequency, waitfortrig = 0)
+			self._set_sweepgenerator(sweepgen=self._sweep2, frequency=channel_frequency, waitfortrig=0)
 			self._sweepmod2.waitfortrig = mod_continuous_sweep
 			self._sweepmod2.start = mod_start_freq
 			self._sweepmod2.stop = mod_stop_freq
@@ -864,7 +864,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.range_shift_ch2 = range_shift
 
 	@needs_commit
-	@deprecated(target = 'method', message="'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.")
+	@deprecated(target='method', message="'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.")
 	def gen_modulate_off(self, ch=None):
 		"""
 		'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.
@@ -881,7 +881,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		self.set_modulate_trig_off(ch)
 
 	@needs_commit
-	@deprecated(target = 'method', message="'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.")
+	@deprecated(target='method', message="'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.")
 	def gen_trigger_off(self, ch=None):
 		"""
 		'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead."
@@ -908,12 +908,12 @@ class WaveformGenerator(BasicWaveformGenerator):
 		:type ch: int; {1,2} or None
 		:param ch: Output channel to turn modulation off.
 		"""
-		_utils.check_parameter_valid('set', ch, [1,2],'output channel', allow_none=True)
+		_utils.check_parameter_valid('set', ch, [1, 2],'output channel', allow_none=True)
 
 		self._init_trig_modulation(ch)
 
 	@needs_commit
-	@deprecated(target = 'param', message="'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
+	@deprecated(target='param', message="'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
 	def gen_modulate(self, ch, mtype, source, depth, frequency=0.0):
 		"""
 		Set up modulation on an output channel.
@@ -935,8 +935,8 @@ class WaveformGenerator(BasicWaveformGenerator):
 
 		:raises ValueOutOfRangeException: if the channel number is invalid or modulation parameters can't be achieved
 		"""
-		_utils.check_parameter_valid('set', ch, [1,2],'modulation channel')
-		_utils.check_parameter_valid('range', frequency, [0,250e6],'internal modulation frequency')
+		_utils.check_parameter_valid('set', ch, [1, 2],'modulation channel')
+		_utils.check_parameter_valid('range', frequency, [0, 250e6],'internal modulation frequency')
 		_utils.check_parameter_valid('set', mtype, ['amplitude', 'frequency', 'phase'],'modulation type')
 		_utils.check_parameter_valid('set', source, ['adc1', 'adc2', 'dac1', 'dac2', 'internal', 'in', 'out'],'modulation source')
 
@@ -959,17 +959,17 @@ class WaveformGenerator(BasicWaveformGenerator):
 			raise ValueOutOfRangeException("dac2 cannot be used as the modulation source for channel 2.")
 
 		_str_to_modsource = {
-			'adc1'		: _WG_MOD_ADC1,
-			'adc2'		: _WG_MOD_ADC2,
-			'dac1'		: _WG_MOD_DAC1,
-			'dac2'		: _WG_MOD_DAC2,
-			'internal'  : _WG_MOD_INTER
+			'adc1'     : _WG_MOD_ADC1,
+			'adc2'     : _WG_MOD_ADC2,
+			'dac1'     : _WG_MOD_DAC1,
+			'dac2'     : _WG_MOD_DAC2,
+			'internal' : _WG_MOD_INTER
 		}
 
 		_str_to_modtype = {
 			'amplitude' : _WG_MOD_AMPL,
 			'frequency' : _WG_MOD_FREQ,
-			'phase'	: _WG_MOD_PHASE
+			'phase'     : _WG_MOD_PHASE
 		}
 		source = _utils.str_to_val(_str_to_modsource, source, 'modulation source')
 		mtype = _utils.str_to_val(_str_to_modtype, mtype, 'modulation source')
@@ -983,16 +983,16 @@ class WaveformGenerator(BasicWaveformGenerator):
 		# Calculate the depth value depending on modulation source and type. Calibration calculations for frontend variations done in _update_dependent_regs.
 		depth_parameter = 0.0
 		if mtype == _WG_MOD_AMPL:
-			_utils.check_parameter_valid('range', depth, [0.0,1.0], 'amplitude modulation depth', 'fraction')
+			_utils.check_parameter_valid('range', depth, [0.0, 1.0], 'amplitude modulation depth', 'fraction')
 			depth_parameter = depth
 
 		elif mtype == _WG_MOD_FREQ:
 			_utils.check_parameter_valid('range', depth, [0.0,_WG_MOD_FREQ_MAX], 'frequency modulation depth', 'Hz/V')
-			depth_parameter = depth/(DAC_SMP_RATE/8.0)
+			depth_parameter = depth / (DAC_SMP_RATE / 8.0)
 
 		elif mtype == _WG_MOD_PHASE:
 			_utils.check_parameter_valid('range', depth, [0.0, 360.0], 'phase modulation depth', 'degrees/V')
-			depth_parameter = depth/360.0
+			depth_parameter = depth / 360.0
 
 		# Can't use trigger/sweep modes at the same time as modulation
 		self.set_modulate_trig_off(ch)
@@ -1005,7 +1005,8 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.pmod_enable_ch1 = True if mtype == _WG_MOD_PHASE else False
 			self.sweep_enable_ch1 = False
 			if source == _WG_MOD_INTER:
-				self._set_sweepgenerator(sweepgen = self._sweepmod1, waveform = 2, waitfortrig = 0, frequency = frequency, offset = 0, logsweep = 0, duration = 0)
+				self._set_sweepgenerator(sweepgen=self._sweepmod1, waveform=2, waitfortrig=0,
+					frequency=frequency, offset=0, logsweep=0, duration=0)
 			self.adc1_statuslight = True if source == _WG_MODSOURCE_ADC else False
 		elif ch == 2:
 			self.mod_depth_uncalibrated_ch2 = depth_parameter
@@ -1015,7 +1016,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.pmod_enable_ch2 = True if mtype == _WG_MOD_PHASE else False
 			self.sweep_enable_ch2 = False
 			if source == _WG_MOD_INTER:
-				self._set_sweepgenerator(sweepgen = self._sweepmod2, waveform = 2, waitfortrig = 0, frequency = frequency, offset = 0, logsweep = 0, duration = 0)
+				self._set_sweepgenerator(sweepgen=self._sweepmod2, waveform=2, waitfortrig=0, frequency=frequency, offset=0, logsweep=0, duration=0)
 			self.adc2_statuslight = True if source == _WG_MODSOURCE_ADC else False
 
 	def _get_mod_depth_uncalibrated(self, ch):
@@ -1025,11 +1026,11 @@ class WaveformGenerator(BasicWaveformGenerator):
 		adc1, adc2 = self._adc_gains()
 
 		mod_source_scalers = [2.0**11 / (8.0 if self.atten_compensate_ch1 else 1.0) * adc1,
-							2.0**11 / (8.0 if self.atten_compensate_ch2 else 1.0) * adc2,
-							2.0**14 * dac1,
-							2.0**14 * dac2,
-							1.0,
-							1.0]
+		                      2.0**11 / (8.0 if self.atten_compensate_ch2 else 1.0) * adc2,
+		                      2.0**14 * dac1,
+		                      2.0**14 * dac2,
+		                      1.0,
+		                      1.0]
 
 		if ch == 1:
 			mod_depth_uncalibrated = self.mod_depth_ch1 / mod_source_scalers[self.mod_source_ch1] / _WG_MOD_DEPTH_MAX
@@ -1043,7 +1044,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		dac1, dac2 = self._dac_gains()
 		adc1, adc2 = self._adc_gains()
 
-		gate_source_scalers = [adc1, adc2, dac1*16, dac2*16, 1.0, 1.0]
+		gate_source_scalers = [adc1, adc2, dac1 * 16, dac2 * 16, 1.0, 1.0]
 
 		if ch == 1:
 			gate_thresh_uncalibrated = self.gate_thresh_ch1 * gate_source_scalers[self.trig_source_ch1]
@@ -1057,7 +1058,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		dac1, dac2 = self._dac_gains()
 		adc1, adc2 = self._adc_gains()
 
-		trig_source_scalers = [adc1, adc2, dac1*16, dac2*16, 1.0, 1.0]
+		trig_source_scalers = [adc1, adc2, dac1 * 16, dac2 * 16, 1.0, 1.0]
 
 		if ch == 1:
 			trig_threshold_uncalibrated = self._trigger1.level * trig_source_scalers[self.trig_source_ch1]
@@ -1067,7 +1068,6 @@ class WaveformGenerator(BasicWaveformGenerator):
 
 
 	def _update_dependent_regs(self):
-
 		# Get the calibration coefficients of the front end
 		dac1, dac2 = self._dac_gains()
 		adc1, adc2 = self._adc_gains()
@@ -1078,13 +1078,13 @@ class WaveformGenerator(BasicWaveformGenerator):
 
 		# Scaling source parameter arrays for each trigger/modulation mode.
 		mod_source_scalers = [2.0**11 / (8.0 if self.atten_compensate_ch1 else 1.0) * adc1,
-							2.0**11 / (8.0 if self.atten_compensate_ch2 else 1.0) * adc2,
-							2.0**14 * dac1,
-							2.0**14 * dac2,
-							1.0,
-							1.0]
-		gate_source_scalers = [adc1, adc2, dac1*16, dac2*16, 1.0, 1.0]
-		trig_source_scalers = [adc1, adc2, dac1*16, dac2*16, 1.0, 1.0]
+		                      2.0**11 / (8.0 if self.atten_compensate_ch2 else 1.0) * adc2,
+		                      2.0**14 * dac1,
+		                      2.0**14 * dac2,
+		                      1.0,
+		                      1.0]
+		gate_source_scalers = [adc1, adc2, dac1 * 16, dac2 * 16, 1.0, 1.0]
+		trig_source_scalers = [adc1, adc2, dac1 * 16, dac2 * 16, 1.0, 1.0]
 
 		# Channel 1 modulation depth
 		if (self.amod_enable_ch1 == True or self.pmod_enable_ch1 == True or self.fmod_enable_ch1 == True):
@@ -1159,102 +1159,99 @@ _wavegen_reg_handlers = {
 	# channel 1 control:
 
 	# modulation controls
-	'adc1_statuslight':	(REG_BASE_MOD_0,	to_reg_unsigned(0,1),		from_reg_unsigned(0,1)),
-	'amod_enable_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(1,1),		from_reg_unsigned(1,1)),
-	'fmod_enable_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(2,1),		from_reg_unsigned(2,1)),
-	'pmod_enable_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(3,1),		from_reg_unsigned(3,1)),
-	'sweep_enable_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(4,1),		from_reg_unsigned(4,1)),
-	'reverse_sweep_ch1':(REG_BASE_MOD_0,	to_reg_unsigned(5,1),		from_reg_unsigned(5,1)),
-	'mod_source_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(6,3),		from_reg_unsigned(6,3)),
-	'atten_compensate_ch1':(REG_BASE_MOD_0,	to_reg_unsigned(9,1),		from_reg_unsigned(9,1)),
-	'trig_source_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(10,3),		from_reg_unsigned(10,3)),
-	'range_shift_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(13,6),		from_reg_unsigned(13,6)),
-	'sine_trigdly_ch1': (REG_BASE_MOD_0,	to_reg_unsigned(19,1),		from_reg_unsigned(19,1)),
-	'phasedly_en_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(20,1),		from_reg_unsigned(20,1)),
-	'trig_sweep_mode_ch1': (REG_BASE_MOD_0, to_reg_unsigned(29,1),          from_reg_unsigned(29,1)),
-	'gate_mode_ch1':	(REG_BASE_MOD_0,	to_reg_unsigned(30,1),		from_reg_unsigned(30,1)),
-	'mod_depth_ch1':	(REG_BASE_MOD_0 + 1, 	to_reg_unsigned(0,32),
-												from_reg_unsigned(0,32)),
-	'gate_thresh_ch1':	((REG_GATETHRESH_H_CH1, REG_GATETHRESH_L_CH1),
-						to_reg_signed(16,48), from_reg_signed(16,48)),
+	'adc1_statuslight':     (REG_BASE_MOD_0, to_reg_unsigned(0,1),  from_reg_unsigned(0,1)),
+	'amod_enable_ch1':      (REG_BASE_MOD_0, to_reg_unsigned(1,1),  from_reg_unsigned(1,1)),
+	'fmod_enable_ch1':      (REG_BASE_MOD_0, to_reg_unsigned(2,1),  from_reg_unsigned(2,1)),
+	'pmod_enable_ch1':      (REG_BASE_MOD_0, to_reg_unsigned(3,1),  from_reg_unsigned(3,1)),
+	'sweep_enable_ch1':     (REG_BASE_MOD_0, to_reg_unsigned(4,1),  from_reg_unsigned(4,1)),
+	'reverse_sweep_ch1':    (REG_BASE_MOD_0, to_reg_unsigned(5,1),  from_reg_unsigned(5,1)),
+	'mod_source_ch1':       (REG_BASE_MOD_0, to_reg_unsigned(6,3),  from_reg_unsigned(6,3)),
+	'atten_compensate_ch1': (REG_BASE_MOD_0, to_reg_unsigned(9,1),  from_reg_unsigned(9,1)),
+	'trig_source_ch1':      (REG_BASE_MOD_0, to_reg_unsigned(10,3), from_reg_unsigned(10,3)),
+	'range_shift_ch1':      (REG_BASE_MOD_0, to_reg_unsigned(13,6), from_reg_unsigned(13,6)),
+	'sine_trigdly_ch1':     (REG_BASE_MOD_0, to_reg_unsigned(19,1), from_reg_unsigned(19,1)),
+	'phasedly_en_ch1':      (REG_BASE_MOD_0, to_reg_unsigned(20,1), from_reg_unsigned(20,1)),
+	'trig_sweep_mode_ch1':  (REG_BASE_MOD_0, to_reg_unsigned(29,1), from_reg_unsigned(29,1)),
+	'gate_mode_ch1':        (REG_BASE_MOD_0, to_reg_unsigned(30,1), from_reg_unsigned(30,1)),
+	'mod_depth_ch1':        (REG_BASE_MOD_0 + 1, to_reg_unsigned(0,32), from_reg_unsigned(0,32)),
+	'gate_thresh_ch1':     ((REG_GATETHRESH_H_CH1, REG_GATETHRESH_L_CH1),
+	                           to_reg_signed(16,48), from_reg_signed(16,48)),
 
 	# waveform controls
-	'enable_ch1':		(REG_BASE_WAV_0,	to_reg_unsigned(0,1),		from_reg_unsigned(0,1)),
-	'waveform_type_ch1':(REG_BASE_WAV_0,	to_reg_unsigned(1,1),		from_reg_unsigned(1,1)),
+	'enable_ch1':        (REG_BASE_WAV_0, to_reg_unsigned(0,1), from_reg_unsigned(0,1)),
+	'waveform_type_ch1': (REG_BASE_WAV_0, to_reg_unsigned(1,1), from_reg_unsigned(1,1)),
 
-	'amplitude_ch1':	(REG_BASE_WAV_0 + 1,
-											to_reg_signed(0, 18, xform=lambda obj, a: 2 * a / obj._dac_gains()[0]),
-											from_reg_signed(0, 18, xform=lambda obj, a: 2 * a * obj._dac_gains()[0])),
-	'offset_ch1': 		(REG_BASE_WAV_0 + 2,
-											to_reg_signed(0,16, xform=lambda obj, a: a / obj._dac_gains()[0]),
-											from_reg_signed(0,16, xform=lambda obj, a: a * obj._dac_gains()[0])),
-	't0_ch1':			((REG_BASE_WAV_0 + 13, REG_BASE_WAV_0 + 12),
-											to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
-											from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
-	't1_ch1':			((REG_BASE_WAV_0 + 15, REG_BASE_WAV_0 + 14),
-											to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
-											from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
-	't2_ch1':			((REG_BASE_WAV_0 + 17, REG_BASE_WAV_0 + 16),
-											to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
-											from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
-	'riserate_ch1':		((REG_BASE_WAV_0 + 19, REG_BASE_WAV_0 + 18),
-											to_reg_signed(0, 64, xform = lambda obj, o: (o**-1) * _WG_RISESCALE),
-											from_reg_signed(0, 64, xform = lambda obj, o: (o / _WG_RISESCALE)**-1)),
-	'fallrate_ch1':		((REG_BASE_WAV_0 + 21, REG_BASE_WAV_0 + 20),
-											to_reg_signed(0, 64, xform = lambda obj, o: (o**-1) * _WG_RISESCALE),
-											from_reg_signed(0, 64, xform = lambda obj, o: (o / _WG_RISESCALE)**-1)),
-	'enable_reset_ch1':	(REG_BASE_WAV_0 + 22,	to_reg_unsigned(0,1), from_reg_unsigned(0,1)),
-	'phase_dly_ch1':	(REG_BASE_WAV_0 + 23,	to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
+	'amplitude_ch1':     (REG_BASE_WAV_0 + 1,
+	                        to_reg_signed(0, 18, xform=lambda obj, a: 2 * a / obj._dac_gains()[0]),
+	                        from_reg_signed(0, 18, xform=lambda obj, a: 2 * a * obj._dac_gains()[0])),
+	'offset_ch1':        (REG_BASE_WAV_0 + 2,
+	                        to_reg_signed(0,16, xform=lambda obj, a: a / obj._dac_gains()[0]),
+	                        from_reg_signed(0,16, xform=lambda obj, a: a * obj._dac_gains()[0])),
+	't0_ch1':           ((REG_BASE_WAV_0 + 13, REG_BASE_WAV_0 + 12),
+	                        to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
+	                        from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
+	't1_ch1':           ((REG_BASE_WAV_0 + 15, REG_BASE_WAV_0 + 14),
+	                        to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
+	                        from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
+	't2_ch1':           ((REG_BASE_WAV_0 + 17, REG_BASE_WAV_0 + 16),
+	                        to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
+	                        from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
+	'riserate_ch1':     ((REG_BASE_WAV_0 + 19, REG_BASE_WAV_0 + 18),
+	                        to_reg_signed(0, 64, xform = lambda obj, o: (o**-1) * _WG_RISESCALE),
+	                        from_reg_signed(0, 64, xform = lambda obj, o: (o / _WG_RISESCALE)**-1)),
+	'fallrate_ch1':     ((REG_BASE_WAV_0 + 21, REG_BASE_WAV_0 + 20),
+	                        to_reg_signed(0, 64, xform = lambda obj, o: (o**-1) * _WG_RISESCALE),
+	                        from_reg_signed(0, 64, xform = lambda obj, o: (o / _WG_RISESCALE)**-1)),
+	'enable_reset_ch1':  (REG_BASE_WAV_0 + 22, to_reg_unsigned(0,1), from_reg_unsigned(0,1)),
+	'phase_dly_ch1':     (REG_BASE_WAV_0 + 23, to_reg_unsigned(0, 32), from_reg_unsigned(0, 32)),
 
 	# channel 2 control:
 
 	# modulation controls
-	'adc2_statuslight':	(REG_BASE_MOD_1,	to_reg_unsigned(0,1),		from_reg_unsigned(0,1)),
-	'amod_enable_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(1,1),		from_reg_unsigned(1,1)),
-	'fmod_enable_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(2,1),		from_reg_unsigned(2,1)),
-	'pmod_enable_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(3,1),		from_reg_unsigned(3,1)),
-	'sweep_enable_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(4,1),		from_reg_unsigned(4,1)),
-	'reverse_sweep_ch2':(REG_BASE_MOD_1,	to_reg_unsigned(5,1),		from_reg_unsigned(5,1)),
-	'mod_source_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(6,3),		from_reg_unsigned(6,3)),
-	'atten_compensate_ch2':(REG_BASE_MOD_1,	to_reg_unsigned(9,1),		from_reg_unsigned(9,1)),
-	'trig_source_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(10,3),		from_reg_unsigned(10,3)),
-	'range_shift_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(13,6),		from_reg_unsigned(13,6)),
-	'sine_trigdly_ch2': (REG_BASE_MOD_1,	to_reg_unsigned(19,1),		from_reg_unsigned(19,1)),
-	'phasedly_en_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(20,1),		from_reg_unsigned(20,1)),
-	'trig_sweep_mode_ch2': (REG_BASE_MOD_1, to_reg_unsigned(29,1),          from_reg_unsigned(29,1)),
-	'gate_mode_ch2':	(REG_BASE_MOD_1,	to_reg_unsigned(30,1),		from_reg_unsigned(30,1)),
-	'mod_depth_ch2':	((REG_BASE_MOD_1 + 1), to_reg_unsigned(0,32),
-											 from_reg_unsigned(0,32)),
-	'gate_thresh_ch2':	((REG_GATETHRESH_H_CH2, REG_GATETHRESH_L_CH2),
-						to_reg_signed(16,48), from_reg_signed(16,48)),
+	'adc2_statuslight':     (REG_BASE_MOD_1, to_reg_unsigned(0,1),  from_reg_unsigned(0,1)),
+	'amod_enable_ch2':      (REG_BASE_MOD_1, to_reg_unsigned(1,1),  from_reg_unsigned(1,1)),
+	'fmod_enable_ch2':      (REG_BASE_MOD_1, to_reg_unsigned(2,1),  from_reg_unsigned(2,1)),
+	'pmod_enable_ch2':      (REG_BASE_MOD_1, to_reg_unsigned(3,1),  from_reg_unsigned(3,1)),
+	'sweep_enable_ch2':     (REG_BASE_MOD_1, to_reg_unsigned(4,1),  from_reg_unsigned(4,1)),
+	'reverse_sweep_ch2':    (REG_BASE_MOD_1, to_reg_unsigned(5,1),  from_reg_unsigned(5,1)),
+	'mod_source_ch2':       (REG_BASE_MOD_1, to_reg_unsigned(6,3),  from_reg_unsigned(6,3)),
+	'atten_compensate_ch2': (REG_BASE_MOD_1, to_reg_unsigned(9,1),  from_reg_unsigned(9,1)),
+	'trig_source_ch2':      (REG_BASE_MOD_1, to_reg_unsigned(10,3), from_reg_unsigned(10,3)),
+	'range_shift_ch2':      (REG_BASE_MOD_1, to_reg_unsigned(13,6), from_reg_unsigned(13,6)),
+	'sine_trigdly_ch2':     (REG_BASE_MOD_1, to_reg_unsigned(19,1), from_reg_unsigned(19,1)),
+	'phasedly_en_ch2':      (REG_BASE_MOD_1, to_reg_unsigned(20,1), from_reg_unsigned(20,1)),
+	'trig_sweep_mode_ch2':  (REG_BASE_MOD_1, to_reg_unsigned(29,1), from_reg_unsigned(29,1)),
+	'gate_mode_ch2':        (REG_BASE_MOD_1, to_reg_unsigned(30,1), from_reg_unsigned(30,1)),
+	'mod_depth_ch2':       ((REG_BASE_MOD_1 + 1), to_reg_unsigned(0,32), from_reg_unsigned(0,32)),
+	'gate_thresh_ch2':     ((REG_GATETHRESH_H_CH2, REG_GATETHRESH_L_CH2),
+	                           to_reg_signed(16,48), from_reg_signed(16,48)),
 
 	#waveform controls
-	'enable_ch2':		(REG_BASE_WAV_1,	to_reg_unsigned(0,1),		from_reg_unsigned(0,1)),
-	'waveform_type_ch2':(REG_BASE_WAV_1,	to_reg_unsigned(1,1),		from_reg_unsigned(1,1)),
-
-	'amplitude_ch2':	((REG_BASE_WAV_1 + 1),
-											to_reg_signed(0, 18, xform=lambda obj, a: 2 * a / obj._dac_gains()[1]),
-											from_reg_signed(0, 18, xform=lambda obj, a: 2 * a * obj._dac_gains()[1])),
-	'offset_ch2': 		((REG_BASE_WAV_1 + 2),
-											to_reg_signed(0,16, xform=lambda obj, a: a / obj._dac_gains()[1]),
-											from_reg_signed(0,16, xform=lambda obj, a: a * obj._dac_gains()[1])),
-	't0_ch2':			(((REG_BASE_WAV_1 + 13), (REG_BASE_WAV_1 + 12)),
-											to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
-											from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
-	't1_ch2':			((REG_BASE_WAV_1 + 15, REG_BASE_WAV_1 + 14),
-											to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
-											from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
-	't2_ch2':			((REG_BASE_WAV_1 + 17, REG_BASE_WAV_1 + 16),
-											to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
-											from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
-	'riserate_ch2':		((REG_BASE_WAV_1 + 19, REG_BASE_WAV_1 + 18),
-											to_reg_signed(0, 64, xform = lambda obj, o: (o**-1) * _WG_RISESCALE),
-											from_reg_signed(0, 64, xform = lambda obj, o: (o / _WG_RISESCALE)**-1)),
-	'fallrate_ch2':		((REG_BASE_WAV_1 + 21, REG_BASE_WAV_1 + 20),
-											to_reg_signed(0, 64, xform = lambda obj, o: (o**-1) * _WG_RISESCALE),
-											from_reg_signed(0, 64, xform = lambda obj, o: (o / _WG_RISESCALE)**-1)),
-	'enable_reset_ch2':	(REG_BASE_WAV_1 + 22,	to_reg_unsigned(0,1), from_reg_unsigned(0,1)),
-	'phase_dly_ch2':	(REG_BASE_WAV_1 + 23,	to_reg_unsigned(0, 32), from_reg_unsigned(0, 32))
+	'enable_ch2':        (REG_BASE_WAV_1, to_reg_unsigned(0,1), from_reg_unsigned(0,1)),
+	'waveform_type_ch2': (REG_BASE_WAV_1, to_reg_unsigned(1,1), from_reg_unsigned(1,1)),
+	'amplitude_ch2':    ((REG_BASE_WAV_1 + 1),
+	                        to_reg_signed(0, 18, xform=lambda obj, a: 2 * a / obj._dac_gains()[1]),
+	                        from_reg_signed(0, 18, xform=lambda obj, a: 2 * a * obj._dac_gains()[1])),
+	'offset_ch2':       ((REG_BASE_WAV_1 + 2),
+	                        to_reg_signed(0,16, xform=lambda obj, a: a / obj._dac_gains()[1]),
+	                        from_reg_signed(0,16, xform=lambda obj, a: a * obj._dac_gains()[1])),
+	't0_ch2':           (((REG_BASE_WAV_1 + 13), (REG_BASE_WAV_1 + 12)),
+	                        to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
+	                        from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
+	't1_ch2':           ((REG_BASE_WAV_1 + 15, REG_BASE_WAV_1 + 14),
+	                        to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
+	                        from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
+	't2_ch2':           ((REG_BASE_WAV_1 + 17, REG_BASE_WAV_1 + 16),
+	                        to_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR),
+	                        from_reg_unsigned(0, 48, xform = lambda obj, o: o * _WG_PERIODSCALE_SQR)),
+	'riserate_ch2':     ((REG_BASE_WAV_1 + 19, REG_BASE_WAV_1 + 18),
+	                        to_reg_signed(0, 64, xform = lambda obj, o: (o**-1) * _WG_RISESCALE),
+	                        from_reg_signed(0, 64, xform = lambda obj, o: (o / _WG_RISESCALE)**-1)),
+	'fallrate_ch2':     ((REG_BASE_WAV_1 + 21, REG_BASE_WAV_1 + 20),
+	                        to_reg_signed(0, 64, xform = lambda obj, o: (o**-1) * _WG_RISESCALE),
+	                        from_reg_signed(0, 64, xform = lambda obj, o: (o / _WG_RISESCALE)**-1)),
+	'enable_reset_ch2': (REG_BASE_WAV_1 + 22,	to_reg_unsigned(0,1), from_reg_unsigned(0,1)),
+	'phase_dly_ch2':    (REG_BASE_WAV_1 + 23,	to_reg_unsigned(0, 32), from_reg_unsigned(0, 32))
 }
 
 _wavegen_mod_reg_handlers = {}
