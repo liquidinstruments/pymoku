@@ -36,33 +36,11 @@ class SweepGenerator(object):
 			           SweepGenerator.WAVE_TYPE_TRIANGLE]), value)
 
 	@property
-	def waitfortrig(self):
-		r1 = self.reg_base + SweepGenerator._REG_CONFIG
-		return self._instr._accessor_get(r, from_reg_unsigned(2, 1))
-
-	@waveform.setter
-	def waitfortrig(self, value):
-		r = self.reg_base + SweepGenerator._REG_CONFIG
-		self._instr._accessor_set(r, to_reg_unsigned(2, 1,
-			allow_set=[0,1]), value)
-
-	@property
-	def holdlast(self):
-		r1 = self.reg_base + SweepGenerator._REG_CONFIG
-		return self._instr._accessor_get(r, from_reg_unsigned(3, 1))
-
-	@waveform.setter
-	def holdlast(self, value):
-		r = self.reg_base + SweepGenerator._REG_CONFIG
-		self._instr._accessor_set(r, to_reg_unsigned(3, 1,
-			allow_set=[0,1]), value)
-
-	@property
 	def direction(self):
 		r1 = self.reg_base + SweepGenerator._REG_CONFIG
 		return self._instr._accessor_get(r, from_reg_unsigned(5, 1))
 
-	@waveform.setter
+	@direction.setter
 	def direction(self, value):
 		r = self.reg_base + SweepGenerator._REG_CONFIG
 		self._instr._accessor_set(r, to_reg_unsigned(5, 1,
@@ -73,7 +51,7 @@ class SweepGenerator(object):
 		r1 = self.reg_base + SweepGenerator._REG_CONFIG
 		return self._instr._accessor_get(r, from_reg_unsigned(6, 1))
 
-	@waveform.setter
+	@logsweep.setter
 	def logsweep(self, value):
 		r = self.reg_base + SweepGenerator._REG_CONFIG
 		self._instr._accessor_set(r, to_reg_unsigned(6, 1,
