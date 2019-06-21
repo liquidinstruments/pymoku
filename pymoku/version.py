@@ -13,4 +13,4 @@ compat_packs = []
 protocol_version = '7'
 
 # Official release name
-release = pkr.resource_stream(__name__, "version.txt").read().decode('utf-8')
+release = pkr.get_distribution("pymoku").version

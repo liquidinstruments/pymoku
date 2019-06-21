@@ -12,8 +12,10 @@ import warnings
 
 from pymoku.tools import compat as cp
 
+__version__ = pkg_resources.get_distribution("pymoku").version
+
 DATAPATH = os.path.expanduser(os.environ.get('PYMOKU_INSTR_PATH', None) or pkg_resources.resource_filename('pymoku', 'data'))
-PYMOKU_VERSION = pkg_resources.get_distribution("pymoku").version
+PYMOKU_VERSION = __version__
 MOKUDATAFILE = 'mokudata-%s-%s.tar.gz' % (pymoku.version.compat_fw[0], pymoku.version.compat_patch[0])
 
 log = logging.getLogger(__name__)
