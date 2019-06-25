@@ -141,7 +141,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		"""
 
 		_utils.check_parameter_valid('set', ch, [1,2],'input channel', allow_none=True)
-		_utils.check_parameter_valid('set', ch, [1,10],'input range', allow_none=False)		
+		_utils.check_parameter_valid('set', input_range, [1,10],'input range', allow_none=False)
 
 		if ch == 1:
 			front_end_setting = self.get_frontend(1)
