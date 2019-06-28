@@ -1,5 +1,5 @@
 from . import _frequency_response_analyzer
-from _instrument import deprecated
+from ._instrument import deprecated
 
 
 class BodeAnalyzer(_frequency_response_analyzer.FrequencyResponseAnalyzer):

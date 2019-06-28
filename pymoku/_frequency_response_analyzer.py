@@ -56,7 +56,6 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.sweep_amp_volts_ch1 = 0
 		self.sweep_amp_volts_ch2 = 0
 
-
 	def _calculate_sweep_delta(self, start_frequency, end_frequency, sweep_length, log_scale):
 		if log_scale:
 			sweep_freq_delta = round(((float(end_frequency)/float(start_frequency))**(1.0/(sweep_length - 1)) - 1) * _FRA_FXP_SCALE)
@@ -129,6 +128,23 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 				gain_scale[f] = average_gain[f]
 
 		return gain_scale
+
+	@needs_commit
+	def set_input_range(self, ch, input_range):
+		"""Set the input range for a channel.
+
+		:type ch: int; {1,2}
+		:param ch: channel
+
+		:type input_range: {1, 10}
+		"param input_range: the peak to peak voltage (Vpp) range of the inputs.
+		"""
+
+		_utils.check_parameter_valid('set', ch, [1, 2], 'input channel', allow_none=True)
+		_utils.check_parameter_valid('set', input_range, [1, 10], 'input range', allow_none=False)
+
+		front_end_setting = self.get_frontend(ch)
+		self.set_frontend(ch, fiftyr=front_end_setting[0], atten=(input_range == 10), ac=front_end_setting[2])
 
 	def _calculate_scales(self):
 		g1, g2 = self._adc_gains()
@@ -368,6 +384,9 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.set_output(1, 0.1, 0.0)
 		self.set_output(2, 0.1, 0.0)
 
+		self.set_input_range(1, 10)
+		self.set_input_range(2, 10)
+
 		self.start_sweep()
 
 	@needs_commit
@@ -417,7 +436,6 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 	def commit(self):
 		# Restart the sweep as instrument settings are being changed
 		self._restart_sweep()
-
 		super(FrequencyResponseAnalyzer, self).commit()
 
 		# Update the scaling factors for processing of incoming frames
