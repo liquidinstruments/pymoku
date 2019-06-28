@@ -44,7 +44,7 @@ Instruments
    arbwave
    specan
    phasemeter
-   bodeanalyzer
+   fra
    pid
    lockin
    iirfilterbox
