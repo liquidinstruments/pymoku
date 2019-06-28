@@ -140,21 +140,11 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		"param input_range: the peak to peak voltage (Vpp) range of the inputs.
 		"""
 
-		_utils.check_parameter_valid('set', ch, [1,2],'input channel', allow_none=True)
-		_utils.check_parameter_valid('set', input_range, [1,10],'input range', allow_none=False)
+		_utils.check_parameter_valid('set', ch, [1, 2], 'input channel', allow_none=True)
+		_utils.check_parameter_valid('set', input_range, [1, 10], 'input range', allow_none=False)
 
-		if ch == 1:
-			front_end_setting = self.get_frontend(1)
-			self.set_frontend(1, fiftyr = front_end_setting[0], atten=(input_range == 10), ac = front_end_setting[2])
-		elif ch ==2:
-			front_end_setting = self.get_frontend(2)
-			self.set_frontend(2, fiftyr = front_end_setting[0], atten=(input_range == 10), ac = front_end_setting[2])
-		else:
-			front_end_setting = self.get_frontend(1)
-			self.set_frontend(1, fiftyr = front_end_setting[0], atten=(input_range == 10), ac = front_end_setting[2])
-
-			front_end_setting = self.get_frontend(2)
-			self.set_frontend(2, fiftyr = front_end_setting[0], atten=(input_range == 10), ac = front_end_setting[2])
+		front_end_setting = self.get_frontend(ch)
+		self.set_frontend(ch, fiftyr=front_end_setting[0], atten=(input_range == 10), ac=front_end_setting[2])
 
 	def _calculate_scales(self):
 		g1, g2 = self._adc_gains()
@@ -394,7 +384,8 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.set_output(1, 0.1, 0.0)
 		self.set_output(2, 0.1, 0.0)
 
-		self.set_input_range(10)
+		self.set_input_range(1, 10)
+		self.set_input_range(2, 10)
 
 		self.start_sweep()
 
