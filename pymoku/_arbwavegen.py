@@ -192,7 +192,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
 		byte_data = bytearray()
 		for step in range(steps):
-			byte_data += bytearray(b''.join([struct.pack('<hh', math.ceil((2.0 ** 15 - 1) * d), 0) for d in data]))
+			byte_data += bytearray(b''.join([struct.pack('<hh', int(math.ceil((2.0 ** 15 - 1) * d)), 0) for d in data]))
 			byte_data += bytearray(b'\0' * (stepsize * 4 - (len(data) * 4)))
 
 		# Write the data to AWG memory map
