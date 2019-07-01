@@ -33,7 +33,6 @@ setup(
 		'future',
 		'pyzmq>=15.3.0',
 		'requests>=2.18.0',
-		'decorator',
 	],
 
 	zip_safe=False, # Due to bitstream download
