@@ -483,7 +483,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
 		:raises ValueError: Invalid parameters
 		"""
-		self.output_enable(ch, en=False)
+		self.enable_output(ch, en=False)
 
 	@needs_commit
 	def enable_output(self, ch=None, en=True):
