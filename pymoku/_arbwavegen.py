@@ -387,7 +387,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 			trig_channels[ch-1].trigtype = Trigger.TYPE_EDGE
 
 	@needs_commit
-	def set_waveform_trigger_output(self, ch, trig_en = True, single = False, duration = 0, hold_last = False):
+	def set_waveform_trigger_output(self, ch, trig_en=True, single=False, duration=0, hold_last=False):
 		""" Enables triggered output mode on the specified channel and configures 'how' to output the
 			set waveform on a trigger event.
 
@@ -470,7 +470,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 			return (float(self._sweep2.step) / self._sweep2.stop) * _ARB_SMPL_RATE
 
 	@needs_commit
-	@deprecated(target = 'method', message = "'gen_off' has been deprecated, use 'enable_output' instead.")
+	@deprecated(target='method', message="'gen_off' has been deprecated, use 'enable_output' instead.")
 	def gen_off(self, ch=None):
 		""" DEPRECATED Turn ArbitraryWaveGen output(s) off.
 
