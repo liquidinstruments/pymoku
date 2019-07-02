@@ -192,7 +192,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
 		byte_data = bytearray()
 		for step in range(steps):
-			byte_data += bytearray(b''.join([struct.pack('<hh', math.ceil((2.0 ** 15 - 1) * d), 0) for d in data]))
+			byte_data += bytearray(b''.join([struct.pack('<hh', int(math.ceil((2.0 ** 15 - 1) * d)), 0) for d in data]))
 			byte_data += bytearray(b'\0' * (stepsize * 4 - (len(data) * 4)))
 
 		# Write the data to AWG memory map
@@ -387,7 +387,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 			trig_channels[ch-1].trigtype = Trigger.TYPE_EDGE
 
 	@needs_commit
-	def set_waveform_trigger_output(self, ch, trig_en = True, single = False, duration = 0, hold_last = False):
+	def set_waveform_trigger_output(self, ch, trig_en=True, single=False, duration=0, hold_last=False):
 		""" Enables triggered output mode on the specified channel and configures 'how' to output the
 			set waveform on a trigger event.
 
@@ -470,6 +470,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 			return (float(self._sweep2.step) / self._sweep2.stop) * _ARB_SMPL_RATE
 
 	@needs_commit
+	@deprecated(target='method', message="'gen_off' has been deprecated, use 'enable_output' instead.")
 	def gen_off(self, ch=None):
 		""" DEPRECATED Turn ArbitraryWaveGen output(s) off.
 
@@ -482,7 +483,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
 		:raises ValueError: Invalid parameters
 		"""
-		self.output_enable(ch, en=False)
+		self.enable_output(ch, en=False)
 
 	@needs_commit
 	def enable_output(self, ch=None, en=True):
