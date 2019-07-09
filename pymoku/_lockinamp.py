@@ -644,6 +644,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			# Only ever output on Channel 2.
 			self.sineout_amp = (self._lo_amp if self.aux_source=='sine' else self._demod_amp) / self._dac_gains()[1]
 
+	@deprecated(target='method', message="Deprecated.")
 	def set_control_matrix(self):
 		""" DEPRECATED """
 		# This function is merely here because LIA inherits PID which has a control matrix

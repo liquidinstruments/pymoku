@@ -1,4 +1,5 @@
-import threading, collections, time, struct, socket, logging, decorator
+import threading, collections, time, struct, socket, logging
+from functools import wraps
 
 from pymoku import *
 from pymoku import _get_autocommit, _set_autocommit
@@ -243,34 +244,35 @@ def from_reg_bool(_offset):
 
 _awaiting_commit = False
 
-@decorator.decorator
-def needs_commit(func, self, *args, **kwargs):
+def needs_commit(func):
 	""" Wrapper function which checks whether settings should be committed automatically.
 	"""
-	if not _get_autocommit():
-		# Not auto-committing
-		return func(self, *args, **kwargs)
-	else:
-		# Auto-committing
-		global _awaiting_commit
+	@wraps(func)
+	def wrapper(self, *args, **kwargs):
+		if not _get_autocommit():
+			# Not auto-committing
+			return func(self, *args, **kwargs)
+		else:
+			# Auto-committing
+			global _awaiting_commit
 
-		was_awaiting = _awaiting_commit # Remember if a commit was already being waited on
-		if not _awaiting_commit:
-			_awaiting_commit = True # Lock the commit
+			was_awaiting = _awaiting_commit # Remember if a commit was already being waited on
+			if not _awaiting_commit:
+				_awaiting_commit = True # Lock the commit
 
-		try:
-			# Attempt to call the wrapped function
-			res = func(self, *args, **kwargs)
-		finally:
-			# Do this even if the function raises an Exception
+			try:
+				# Attempt to call the wrapped function
+				res = func(self, *args, **kwargs)
+			finally:
+				# Do this even if the function raises an Exception
 
-			# Commit if we weren't already waiting for one before
-			if not was_awaiting:
-				self.commit()
-				# Reset the intention to commit
-				_awaiting_commit = False
-
-		return res
+				# Commit if we weren't already waiting for one before
+				if not was_awaiting:
+					self.commit()
+					# Reset the intention to commit
+					_awaiting_commit = False
+			return res
+	return wrapper
 
 
 
@@ -370,7 +372,6 @@ class MokuInstrument(object):
 			self._stateid = (self._stateid + 1) % 256 # Some statid docco says 8-bits, some 16.
 			self.state_id = self._stateid
 			self.state_id_alt = self._stateid
-
 		regs = [ (i, d) for i, d in enumerate(self._localregs) if d is not None ]
 		# TODO: Save this register set against stateid to be retrieved later
 		log.debug("Committing reg set %s", str(regs))
