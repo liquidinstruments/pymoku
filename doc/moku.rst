@@ -20,11 +20,6 @@ Example Usage
 
 For more details on searching for your Moku:Lab and retrieving device configuration information, see the `Bonjour Moku guide <https://liquidinstruments.atlassian.net/wiki/x/foME>`_. The following example code and a wide range of other pymoku demo scripts can be found at the `pymoku Github repository <https://github.com/liquidinstruments/pymoku>`_.
 
-.. literalinclude:: ../examples/moku_basic.py
-	:language: python
-	:caption: moku_basic.py
-
-
 --------------
 The Moku Class
 --------------

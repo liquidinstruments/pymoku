@@ -39,10 +39,10 @@ class FRAData(_frame_instrument.InstrumentData):
 	"""
 	Object representing a frame of dual-channel (amplitude and phase) vs frequency response data.
 
-	This is the native output format of the :any:`Frequency Response Analyzer` instrument.
+	This is the native output format of the :any:`FrequencyResponseAnalyzer` instrument.
 
 	This object should not be instantiated directly, but will be returned by a call to
-	:any:`get_data <pymoku.instruments.FrequencyResponseAnalyzer.get_data>` on the associated :any:`FrequencyResponseAnalyzer `
+	:any:`get_data <pymoku.instruments.FrequencyResponseAnalyzer.get_data>` on the associated :any:`FrequencyResponseAnalyzer`
 	instrument.
 
 	- ``ch1.magnitude`` = ``[CH1_MAG_DATA]``

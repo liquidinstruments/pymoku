@@ -137,7 +137,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 		:param ch: channel
 
 		:type input_range: {1, 10}
-		"param input_range: the peak to peak voltage (Vpp) range of the inputs.
+		:param input_range: the peak to peak voltage (Vpp) range of the inputs.
 		"""
 
 		_utils.check_parameter_valid('set', ch, [1, 2], 'input channel', allow_none=True)

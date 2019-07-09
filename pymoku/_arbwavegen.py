@@ -300,8 +300,9 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
 	@needs_commit
 	def set_waveform_trigger(self, ch, source, edge, level, minwidth=None, maxwidth=None, hysteresis=False):
-		""" Specify what constitutes a trigger event for the given output channel. This takes effect
-			only when the channel has triggered output mode enabled (see :any:`set_waveform_trigger_mode').
+		""" Specify what constitutes a trigger event for the given output channel.
+		This takes effect only when the channel has triggered output mode enabled (see :any:`set_waveform_trigger_output <pymoku.instruments.ArbitraryWaveGen.set_waveform_trigger_output>`
+		).
 
 		:type ch: int; {1,2}
 		:param ch: Output channel to set triggering on
@@ -388,8 +389,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
 	@needs_commit
 	def set_waveform_trigger_output(self, ch, trig_en=True, single=False, duration=0, hold_last=False):
-		""" Enables triggered output mode on the specified channel and configures 'how' to output the
-			set waveform on a trigger event.
+		""" Enables triggered output mode on the specified channel and configures 'how' to output the set waveform on a trigger event.
 
 		:type ch: int; {1,2}
 		:param ch: Output channel to configure
@@ -398,7 +398,7 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 		:param trig_en: Enables triggering mode on the specified output channel
 
 		:type single: bool;
-		:param single; Enables single mode. Outputs a single waveform (vs continuous) per trigger event.
+		:param single: Enables single mode. Outputs a single waveform (vs continuous) per trigger event.
 
 		:type duration: float; [0.0, 1e11] seconds
 		:param duration: Total time that the triggered output should be generated (leave 0 for continuous).
@@ -470,9 +470,9 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 			return (float(self._sweep2.step) / self._sweep2.stop) * _ARB_SMPL_RATE
 
 	@needs_commit
-	@deprecated(target='method', message="'gen_off' has been deprecated, use 'enable_output' instead.")
+	@deprecated(category='method', message="'gen_off' has been deprecated, use 'enable_output' instead.")
 	def gen_off(self, ch=None):
-		""" DEPRECATED Turn ArbitraryWaveGen output(s) off.
+		""" Turn ArbitraryWaveGen output(s) off.
 
 		The channel will be turned on when configuring the waveform type but can be turned off
 		using this function. If *ch* is None (the default), both channels will be turned off,

@@ -50,3 +50,14 @@ In some cases it may be desirable to wait until many settings have been configur
 		# Settings have not yet been sent to the Moku
 		i.commit()
 		# Timebase and samplerate settings have now been sent to the Moku
+
+
+InstrumentData
+---------------
+
+.. autoclass:: pymoku.instruments.InstrumentData
+
+MokuInstrument
+----------------
+
+.. autoclass:: pymoku.instruments.MokuInstrument
