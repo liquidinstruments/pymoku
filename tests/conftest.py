@@ -117,6 +117,7 @@ def _get_properties(self, properties):
 		results.append((prop, d))
 	return results
 
+# TODO can't use this unbound method hack in 3.7
 unmocks = {
 	'get_serial'            : pymoku.Moku.get_serial.__func__,
 	'get_name'              : pymoku.Moku.get_name.__func__,

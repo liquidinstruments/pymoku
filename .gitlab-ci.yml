@@ -1,0 +1,63 @@
+stages:
+    - test
+
+.template-pytest:
+    tags:
+        - docker
+    stage: test
+    before_script:
+      - python -m pip install pytest
+      - python -m pip install .
+    script:
+      - pytest --junitxml=pytest.xml tests
+    artifacts:
+        untracked: true
+    artifacts:
+        reports:
+            junit:
+                - pytest.xml
+
+.template-flake8:
+    tags:
+        - docker
+    stage: test
+    before_script:
+      - python -m pip install flake8
+      - python -m pip install .
+    script:
+      - flake8 --ignore W191 ./
+
+style:python2.7:
+    extends: .template-flake8
+    image: python:2.7
+
+tests:python2.7:
+    extends: .template-pytest
+    before_script:
+      - python -m pip install pytest mock
+      - python -m pip install .
+    image: python:2.7
+
+style:python3.5:
+    extends: .template-flake8
+    image: python:3.5
+
+tests:python3.5:
+    extends: .template-pytest
+    image: python:3.5
+
+style:python3.6:
+    extends: .template-flake8
+    image: python:3.6
+
+tests:python3.6:
+    extends: .template-pytest
+    image: python:3.6
+
+style:python3.7:
+    extends: .template-flake8
+    image: python:3.7
+
+tests:python3.7:
+    extends: .template-pytest
+    image: python:3.7
