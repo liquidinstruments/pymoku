@@ -21,32 +21,32 @@ filt_coeff2 = [1.0 / 400.0] * 400
 m = Moku.get_by_name('Moku')
 
 try:
-	i = m.deploy_or_connect(FIRFilter)
+    i = m.deploy_or_connect(FIRFilter)
 
-	# Configure the Moku:Lab's frontend settings
-	i.set_frontend(1, fiftyr=True, atten=False, ac=False)
-	i.set_frontend(2, fiftyr=True, atten=False, ac=False)
+    # Configure the Moku:Lab's frontend settings
+    i.set_frontend(1, fiftyr=True, atten=False, ac=False)
+    i.set_frontend(2, fiftyr=True, atten=False, ac=False)
 
-	# Load the coefficients for each FIR filter channel.
-	#
-	# The channel's decimation factor determines the filter sample rate (Fs) and
-	# the maximum number of filter kernel coefficients (N) for the channel.
-	# The defining equations are given by:
-	#
-	#   3 <= decimation_factor <= 10,
-	# 	Fs = 125 MHz / 2^decimation_factor,
-	# 	N  = 2^(decimation_factor) * 29.
-	#
-	# To implement 50 FIR taps, N = 2^(3) * 29 = 232 > 50
-	i.set_filter(1, decimation_factor=3, filter_coefficients=filt_coeff1)
-	# To implement 400 FIR taps, N = 2^(4) * 29 = 464 > 400
-	i.set_filter(2, decimation_factor=4, filter_coefficients=filt_coeff2)
+    # Load the coefficients for each FIR filter channel.
+    #
+    # The channel's decimation factor determines the filter sample rate (Fs) and
+    # the maximum number of filter kernel coefficients (N) for the channel.
+    # The defining equations are given by:
+    #
+    #   3 <= decimation_factor <= 10,
+    #   Fs = 125 MHz / 2^decimation_factor,
+    #   N  = 2^(decimation_factor) * 29.
+    #
+    # To implement 50 FIR taps, N = 2^(3) * 29 = 232 > 50
+    i.set_filter(1, decimation_factor=3, filter_coefficients=filt_coeff1)
+    # To implement 400 FIR taps, N = 2^(4) * 29 = 464 > 400
+    i.set_filter(2, decimation_factor=4, filter_coefficients=filt_coeff2)
 
-	# Both channels have unity gain and no offsets
-	i.set_gains_offsets(1, input_gain=1.0, output_gain=1.0, input_offset=0,
-		output_offset=0)
-	i.set_gains_offsets(2, input_gain=1.0, output_gain=1.0, input_offset=0,
-		output_offset=0)
+    # Both channels have unity gain and no offsets
+    i.set_gains_offsets(1, input_gain=1.0, output_gain=1.0, input_offset=0,
+        output_offset=0)
+    i.set_gains_offsets(2, input_gain=1.0, output_gain=1.0, input_offset=0,
+        output_offset=0)
 
 finally:
-	m.close()
+    m.close()

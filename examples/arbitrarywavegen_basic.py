@@ -32,15 +32,15 @@ m = Moku.get_by_name('Moku')
 i = m.deploy_or_connect(ArbitraryWaveGen)
 
 try:
-	# Load the waveforms to the device. This doesn't yet generate an output as we haven't
-	# set the amplitude, frequency etc; this only defines the shape.
-	i.write_lut(1, not_sq)
-	i.write_lut(2, sq_wave)
+    # Load the waveforms to the device. This doesn't yet generate an output as we haven't
+    # set the amplitude, frequency etc; this only defines the shape.
+    i.write_lut(1, not_sq)
+    i.write_lut(2, sq_wave)
 
-	# We have configurable on-device linear interpolation between LUT points. Normally
-	# interpolation is a good idea, but for sharp edges like square waves it will
-	# improve jitter but reduce rise-time. Configure whatever's suitable for your application.
-	i.gen_waveform(1, period=1e-6, amplitude=1, interpolation=True)
-	i.gen_waveform(2, period=1e-6, amplitude=2, interpolation=False)
+    # We have configurable on-device linear interpolation between LUT points. Normally
+    # interpolation is a good idea, but for sharp edges like square waves it will
+    # improve jitter but reduce rise-time. Configure whatever's suitable for your application.
+    i.gen_waveform(1, period=1e-6, amplitude=1, interpolation=True)
+    i.gen_waveform(2, period=1e-6, amplitude=2, interpolation=False)
 finally:
-	m.close()
+    m.close()

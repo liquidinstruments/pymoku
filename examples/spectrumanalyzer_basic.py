@@ -15,15 +15,15 @@ m = Moku.get_by_name('Moku')
 
 # Deploy the Spectrum Analyzer to your Moku
 try:
-	i = m.deploy_or_connect(SpectrumAnalyzer)
+    i = m.deploy_or_connect(SpectrumAnalyzer)
 
-	# DC to 10MHz span
-	i.set_span(0, 10e6)
+    # DC to 10MHz span
+    i.set_span(0, 10e6)
 
-	# Get the scan results and print them out (power vs frequency, two channels)
-	data = i.get_data()
-	print(data.ch1, data.ch2, data.frequency)
+    # Get the scan results and print them out (power vs frequency, two channels)
+    data = i.get_data()
+    print(data.ch1, data.ch2, data.frequency)
 
 finally:
-	# Close the connection to the Moku.
-	m.close()
+    # Close the connection to the Moku.
+    m.close()

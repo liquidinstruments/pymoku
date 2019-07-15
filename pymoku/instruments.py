@@ -44,20 +44,20 @@ FIRFilter = _firfilter.FIRFilter
 LaserLockBox = _laser_lock_box.LaserLockBox
 
 id_table = {
-	1: Oscilloscope,
-	2: SpectrumAnalyzer,
-	3: Phasemeter,
-	4: WaveformGenerator,
-	5: PIDController,
-	6: IIRFilterBox,
-	7: Datalogger,
-	8: LockInAmp,
-	9: FrequencyResponseAnalyzer,
-	10: FIRFilter,
-	11: None,
-	12: None,
-	13: None,
-	14: None,
-	15: ArbitraryWaveGen,
-	16: LaserLockBox
+    1: Oscilloscope,
+    2: SpectrumAnalyzer,
+    3: Phasemeter,
+    4: WaveformGenerator,
+    5: PIDController,
+    6: IIRFilterBox,
+    7: Datalogger,
+    8: LockInAmp,
+    9: FrequencyResponseAnalyzer,
+    10: FIRFilter,
+    11: None,
+    12: None,
+    13: None,
+    14: None,
+    15: ArbitraryWaveGen,
+    16: LaserLockBox
 }
