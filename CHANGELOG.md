@@ -1,4 +1,12 @@
 # Release Notes
+
+## 2.7.0
+- Renamed BodeAnalyzer to FrequencyResponseAnalyzer.
+- FrequencyResponseAnalyzer
+    - can set phase difference between outputs
+    - can demodulate at up to 15th harmonic
+- minor bug fixes
+
 ## 2.6.0
 - Update for Moku:Lab firmware version 1.8 (501)
 - minor bug fixes
