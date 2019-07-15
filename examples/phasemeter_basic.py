@@ -7,7 +7,7 @@
 #
 # (c) 2019 Liquid Instruments Pty. Ltd.
 #
-from pymoku import Moku
+from pymoku import Moku, StreamException
 from pymoku.instruments import Phasemeter
 import time
 
@@ -27,10 +27,11 @@ try:
     # Restart the frequency-tracking loop on Channel 1
     i.reacquire(ch=1)
 
-    # Stop an existing log, if any, then start a new one. 10 seconds of both channels to the
-    # SD Card (rather than internal storage). Using CSV format.
+    # Stop an existing log, if any, then start a new one. 10 seconds of both
+    # channels to the SD Card (rather than internal storage). Using CSV format.
     i.stop_data_log()
-    i.start_data_log(duration=10, use_sd=True, ch1=True, ch2=False, filetype='csv')
+    i.start_data_log(duration=10, use_sd=True, ch1=True,
+                     ch2=False, filetype='csv')
 
     # Track progress percentage of the data logging session
     progress = 0
@@ -45,7 +46,8 @@ try:
     i.upload_data_log()
     print("Uploaded log file to local directory.")
 
-    # Denote that we are done with the data logging session so resources may be cleand up
+    # Denote that we are done with the data logging session so resources may
+    # be cleand up
     i.stop_data_log()
 
 except StreamException as e:

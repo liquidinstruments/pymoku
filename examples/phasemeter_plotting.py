@@ -8,9 +8,10 @@
 #
 # (c) 2019 Liquid Instruments Pty. Ltd.
 #
-from pymoku import Moku
+from pymoku import Moku, StreamException
 from pymoku.instruments import Phasemeter
-import math, numpy
+import math
+import numpy
 import matplotlib.pyplot as plt
 
 # Connect to your Moku by its device name
@@ -30,7 +31,8 @@ try:
     i.gen_sinewave(2, 1.0, 10e6)
 
     # Restart the phase-lock loop for both channels, and automatically
-    # resolve the starting frequency (as opposed to manually setting a seed frequency)
+    # resolve the starting frequency (as opposed to manually setting a seed
+    # frequency)
     i.auto_acquire()
 
     # Stop any existing streaming session and start a new one
@@ -61,7 +63,8 @@ try:
     plt.ylabel('Amplitude (V)')
     plt.xlabel('Time (s)')
 
-    # This loop gets and plots the samples being streamed by the Phasemeter over the network
+    # This loop gets and plots the samples being streamed by the Phasemeter
+    # over the network
     while True:
 
         # Get samples off the network
@@ -74,8 +77,8 @@ try:
         # Each sample has format [fs, f, count, phase, I, Q]
         # Convert I,Q to amplitude and append to line graph
         ch1_samples = data[0]
-        ydata1 += [ math.sqrt(s[4]**2 + s[5]**2) for s in data[0] ]
-        ydata2 += [ math.sqrt(s[4]**2 + s[5]**2) for s in data[1] ]
+        ydata1 += [math.sqrt(s[4]**2 + s[5]**2) for s in data[0]]
+        ydata2 += [math.sqrt(s[4]**2 + s[5]**2) for s in data[1]]
 
         ydata1 = ydata1[-plot_points:]
         ydata2 = ydata2[-plot_points:]
