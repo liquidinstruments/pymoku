@@ -1,6 +1,9 @@
-import socket, select, struct, logging
-import os, os.path
-import zmq, zmq.auth
+import socket
+import struct
+import logging
+import os
+import zmq
+import zmq.auth
 import pymoku.version
 
 import pkg_resources
@@ -11,62 +14,186 @@ from functools import wraps
 import warnings
 
 from pymoku.tools import compat as cp
+from pymoku import dataparser
 
 __version__ = pkg_resources.get_distribution("pymoku").version
 
-DATAPATH = os.path.expanduser(os.environ.get('PYMOKU_INSTR_PATH', None) or pkg_resources.resource_filename('pymoku', 'data'))
+DATAPATH = os.path.expanduser(
+                os.environ.get('PYMOKU_INSTR_PATH', None) or
+                pkg_resources.resource_filename('pymoku', 'data'))
 PYMOKU_VERSION = __version__
-MOKUDATAFILE = 'mokudata-%s-%s.tar.gz' % (pymoku.version.compat_fw[0], pymoku.version.compat_patch[0])
+MOKUDATAFILE = 'mokudata-%s-%s.tar.gz' % (pymoku.version.compat_fw[0],
+                                          pymoku.version.compat_patch[0])
 
 log = logging.getLogger(__name__)
 
 try:
     from pymoku.finders import BonjourFinder
 except Exception as e:
-    print("Can't import the Bonjour libraries, I won't be able to automatically detect Mokus ({:s}).  Please install DNSSD libraries (e.g. libavahi-dnssd-compat on Linux)".format(str(e)))
+    print("Can't import the Bonjour libraries, I won't be able to "
+          "automatically detect Mokus ({:s}).  Please install DNSSD libraries "
+          "(e.g. libavahi-dnssd-compat on Linux)".format(str(e)))
 
-from pymoku import dataparser
 
-class MokuException(Exception): """Base class for other Exceptions""";  pass
-class MokuNotFound(MokuException): """Can't find Moku. Raised from discovery factory functions."""; pass
-class NetworkError(MokuException): """Network connection to Moku failed"""; pass
-class DeployException(MokuException): """Couldn't start instrument. Moku may not be licenced to use that instrument"""; pass
-class InvalidOperationException(MokuException): """Can't perform that operation at this time"""; pass
-class InvalidParameterException(MokuException): """Invalid parameter type or value for this operation"""; pass
-class ValueOutOfRangeException(MokuException): """Invalid value for this operation"""; pass
-class NotDeployedException(MokuException): """Tried to perform an action on an Instrument before it was deployed to a Moku"""; pass
-class FrameTimeout(MokuException): """No new :any:`InstrumentData` arrived within the given timeout"""; pass
-class NoDataException(MokuException): """A request has been made for data but none will be generated """; pass
-class InvalidConfigurationException(MokuException): """A request for an invalid instrument configuration has been made."""; pass
+class MokuException(Exception):
+    """
+    Base class for other Exceptions
+    """
+    pass
+
+
+class MokuNotFound(MokuException):
+    """
+    Can't find Moku. Raised from discovery factory functions.
+    """
+    pass
+
+
+class NetworkError(MokuException):
+    """
+    Network connection to Moku failed
+    """
+    pass
+
+
+class DeployException(MokuException):
+    """
+    Couldn't start instrument. Moku may not be licenced to use that instrument
+    """
+    pass
+
+
+class InvalidOperationException(MokuException):
+    """
+    Can't perform that operation at this time
+    """
+    pass
+
+
+class InvalidParameterException(MokuException):
+    """
+    Invalid parameter type or value for this operation
+    """
+    pass
+
+
+class ValueOutOfRangeException(MokuException):
+    """
+    Invalid value for this operation
+    """
+    pass
+
+
+class NotDeployedException(MokuException):
+    """
+    Tried to perform an action on an Instrument before it was deployed to a
+    Moku
+    """
+    pass
+
+
+class FrameTimeout(MokuException):
+    """
+    No new :any:`InstrumentData` arrived within the given timeout
+    """
+    pass
+
+
+class NoDataException(MokuException):
+    """
+    A request has been made for data but none will be generated
+    """
+    pass
+
+
+class InvalidConfigurationException(MokuException):
+    """
+    A request for an invalid instrument configuration has been made.
+    """
+    pass
+
+
 class StreamException(MokuException):
     def __init__(self, message, err=None):
-        """Data logging was interrupted or failed"""
+        """
+        Data logging was interrupted or failed
+        """
         super(StreamException, self).__init__(message)
         self.err = err
-class FileNotFound(MokuException): """Requested file or directory could not be found"""; pass
-class InsufficientSpace(MokuException): """There is insufficient memory/disk space for the action being performed"""; pass
-class MPNotMounted(MokuException): """The requested mount point has not been mounted"""; pass
-class MPReadOnly(MokuException): """The requested mount point is Read Only"""; pass
-class UnknownAction(MokuException): """The request was unknown"""; pass
-class MokuBusy(MokuException): """The Moku is busy"""; pass
-class UncommittedSettings(MokuException): """Instrument settings are awaiting commit."""; pass
 
 
-# Re-export the exceptions that get raised by instruments, that aren't part of the instruments themselves.
-# XXX: Don't love it..
+class FileNotFound(MokuException):
+    """
+    Requested file or directory could not be found
+    """
+    pass
+
+
+class InsufficientSpace(MokuException):
+    """
+    There is insufficient memory/disk space for the action being performed
+    """
+    pass
+
+
+class MPNotMounted(MokuException):
+    """
+    The requested mount point has not been mounted
+    """
+    pass
+
+
+class MPReadOnly(MokuException):
+    """
+    The requested mount point is Read Only
+    """
+    pass
+
+
+class UnknownAction(MokuException):
+    """
+    The request was unknown
+    """
+    pass
+
+
+class MokuBusy(MokuException):
+    """
+    The Moku is busy
+    """
+    pass
+
+
+class UncommittedSettings(MokuException):
+    """
+    Instrument settings are awaiting commit.
+    """
+    pass
+
+
+# Re-export the exceptions that get raised by instruments, that aren't part of
+# the instruments themselves.
+# TODO Don't love it..
 InvalidFormatException = dataparser.InvalidFormatException
 InvalidFileException = dataparser.InvalidFileException
 DataIntegrityException = dataparser.DataIntegrityException
 
 autocommit = True
+
+
 def _get_autocommit():
     return autocommit
+
+
 def _set_autocommit(enable):
     global autocommit
     autocommit = enable
 
+
 # Allow environment variable override of bitstream path
-data_folder = os.path.expanduser(os.environ.get('PYMOKU_INSTR_PATH', None) or pkg_resources.resource_filename('pymoku', 'data'))
+data_folder = os.path.expanduser(os.environ.get('PYMOKU_INSTR_PATH', None) or
+                                 pkg_resources.resource_filename(
+                                    'pymoku', 'data'))
 
 # Network status codes
 _ERR_OK = 0
@@ -83,12 +210,14 @@ _ERR_UNKNOWN = 99
 # 4MB is a little larger than a bitstream so those uploads aren't chunked.
 _FS_CHUNK_SIZE = 1024 * 1024 * 4
 
+
 class Moku(object):
     """
     Core class representing a connection to a physical Moku:Lab unit.
 
-    This must always be created first. Once a :any:`Moku` object exists, it can be queried for running instruments
-    or new instruments deployed to the device.
+    This must always be created first. Once a :any:`Moku` object exists, it can
+    be queried for running instruments or new instruments deployed to the
+    device.
     """
     PORT = 27184
 
@@ -96,15 +225,17 @@ class Moku(object):
         """Create a connection to the Moku:Lab unit at the given IP address
 
         :type ip_addr: string
-        :param ip_addr: The address to connect to. This should be in IPv4 dotted notation.
+        :param ip_addr: The address to connect to. This should be in IPv4
+        dotted notation.
 
         :type load_instruments: bool or None
-        :param load_instruments: Leave default (*None*) unless you know what you're doing.
+        :param load_instruments: Leave default (*None*) unless you know what
+        you're doing.
 
         :type force: bool
-        :param force: Ignore firmware and network compatibility checks and force the instrument
-        to deploy. This is dangerous on many levels, leave *False* unless you know what you're doing.
-
+        :param force: Ignore firmware and network compatibility checks and
+        force the instrument to deploy. This is dangerous on many levels, leave
+        *False* unless you know what you're doing.
         """
         self._ip = ip_addr
         self._seq = 0
@@ -117,12 +248,15 @@ class Moku(object):
         try:
             self._conn = self._ctx.socket(zmq.REQ)
             self._conn.setsockopt(zmq.LINGER, 5000)
-            self._conn.curve_publickey, self._conn.curve_secretkey = zmq.curve_keypair()
-            self._conn.curve_serverkey, _ = zmq.auth.load_certificate(os.path.join(data_folder, '000'))
+            self._conn.curve_publickey, \
+                self._conn.curve_secretkey = zmq.curve_keypair()
+            self._conn.curve_serverkey, _ = \
+                zmq.auth.load_certificate(os.path.join(data_folder, '000'))
             self._conn.connect("tcp://%s:%d" % (self._ip, Moku.PORT))
 
-            # Getting the serial should be fairly quick; it's a simple operation. More importantly we
-            # don't wait to block the fall-back operation for too long
+            # Getting the serial should be fairly quick; it's a simple
+            # operation. More importantly we don't wait to block the fall-back
+            # operation for too long
             self._conn.setsockopt(zmq.SNDTIMEO, 1000)
             self._conn.setsockopt(zmq.RCVTIMEO, 1000)
 
@@ -130,7 +264,8 @@ class Moku(object):
             self._set_timeout()
         except zmq.error.Again:
             if not force:
-                print("Connection failed, either the Moku cannot be reached or the firmware is out of date")
+                print("Connection failed, either the Moku cannot be reached "
+                      "or the firmware is out of date")
                 raise
 
             # If we're force-connecting, try falling back to non-encrypted.
@@ -148,25 +283,34 @@ class Moku(object):
 
         # Check that pymoku is compatible with the Moku:Lab's firmware version
         if not force:
-            if cp.firmware_is_compatible(self) == False: # Might be None = unknown, don't print that.
-                raise MokuException("Moku:Lab firmware {} incompatible with Pymoku v{}. "
-                    "Please update using\n moku update fetch\n moku --ip={} update install"
-                    .format(self.get_firmware_build(), PYMOKU_VERSION, self.get_ip()))
+            # Might be None = unknown, don't print that.
+            if cp.firmware_is_compatible(self) is False:
+                raise MokuException(
+                    "Moku:Lab firmware {} incompatible with Pymoku v{}. "
+                    "Please update using\n moku update fetch\n moku --ip={} "
+                    "update install"
+                    .format(self.get_firmware_build(), PYMOKU_VERSION,
+                            self.get_ip()))
 
-        self.load_instruments = load_instruments if load_instruments is not None else self.get_bootmode() == 'normal'
+        if load_instruments is not None:
+            self.load_instruments = load_instruments
+        else:
+            self.load_instruments = self.get_bootmode() == 'normal'
 
     @staticmethod
     def list_mokus(timeout=5, all_versions=True):
         """ Discovers all compatible Moku instances on the network.
 
-        For most applications, the user should use the *get_by_* functions. These
-        functions are faster to return as they don't have to wait to find and validate
-        all Moku devices on the network, they can look for a specific one.
+        For most applications, the user should use the *get_by_* functions.
+        These functions are faster to return as they don't have to wait to find
+        and validate all Moku devices on the network, they can look for a
+        specific one.
 
         :type timeout: float
         :param timeout: time for which to search for Moku devices
         :type all_versions: bool
-        :param all_versions: list all Moku:Labs on the network, ignoring compatibility
+        :param all_versions: list all Moku:Labs on the network, ignoring
+        compatibility
 
         :rtype: [(ip, serial, name),...]
         :return: List of tuples, one per Moku
@@ -181,7 +325,7 @@ class Moku(object):
                 ser = m.get_serial()
                 known_mokus.append((ip, ser, name))
                 m.close()
-            except Exception as e:
+            except Exception:
                 continue
 
         return known_mokus
@@ -189,7 +333,8 @@ class Moku(object):
     @staticmethod
     def get_by_ip(ip_addr, timeout=10, force=False, *args, **kwargs):
         """
-        Factory function, returns a :any:`Moku` instance with the given IP address.
+        Factory function, returns a :any:`Moku` instance with the given IP
+        address.
 
         :type serial: str
         :param serial: Target IP address i.e. '192.168.73.1'
@@ -198,27 +343,34 @@ class Moku(object):
         :param timeout: Operation timeout
 
         :type force: bool
-        :param force: Ignore firmware compatibility checks and force the instrument to deploy.
+        :param force: Ignore firmware compatibility checks and force the
+        instrument to deploy.
 
         :rtype: :any:`Moku`
-        :return: Connected :any:`Moku <pymoku.Moku>` object with specified IP address.
+        :return: Connected :any:`Moku <pymoku.Moku>` object with specified IP
+        address.
 
-        :raises *MokuNotFound*: If no such Moku:Lab is found within the timeout period.
+        :raises *MokuNotFound*: If no such Moku:Lab is found within the timeout
+        period.
         """
         def _filter(ip):
             return ip == ip_addr
 
-        mokus = BonjourFinder().find_all(max_results=1, filter_type='ip', filter_callback=_filter, timeout=timeout)
+        mokus = BonjourFinder().find_all(max_results=1, filter_type='ip',
+                                         filter_callback=_filter,
+                                         timeout=timeout)
 
         if len(mokus):
             return Moku(mokus[0], force=force, *args, **kwargs)
 
-        raise MokuNotFound("Couldn't find Moku:Lab with IP address: %s" % ip_addr)
+        raise MokuNotFound("Couldn't find Moku:Lab with IP address: %s"
+                           "" % ip_addr)
 
     @staticmethod
     def get_by_serial(serial, timeout=10, force=False, *args, **kwargs):
         """
-        Factory function, returns a :any:`Moku` instance with the given serial number.
+        Factory function, returns a :any:`Moku` instance with the given serial
+        number.
 
         :type serial: str
         :param serial: Target serial number i.e. '000123'
@@ -227,39 +379,49 @@ class Moku(object):
         :param timeout: Operation timeout
 
         :type force: bool
-        :param force: Ignore firmware compatibility checks and force the instrument to deploy.
+        :param force: Ignore firmware compatibility checks and force the
+        instrument to deploy.
 
         :rtype: :any:`Moku`
-        :return: Connected :any:`Moku <pymoku.Moku>` object with specified serial number.
+        :return: Connected :any:`Moku <pymoku.Moku>` object with specified
+        serial number.
 
-        :raises *MokuNotFound*: if no such Moku:Lab is found within the timeout period.
+        :raises *MokuNotFound*: if no such Moku:Lab is found within the timeout
+        period.
         """
         try:
             serial_num = int(serial)
         except ValueError:
-            raise InvalidParameterException("Moku:Lab serial number must be an integer e.g. '000231'. See base plate of your device.")
+            raise InvalidParameterException(
+                "Moku:Lab serial number must be an integer e.g. '000231'. "
+                "See base plate of your device.")
 
         def _filter(txtrecord):
             try:
                 txt_serial = int(txtrecord['device.serial'])
                 return txt_serial == serial_num
             except ValueError:
-                log.warning("Discovered a Moku:Lab with invalid serial number '%s'." % txtrecord['device.serial'])
+                log.warning("Discovered a Moku:Lab with invalid serial number"
+                            " '%s'." % txtrecord['device.serial'])
                 return False
             except KeyError:
                 return False
 
-        mokus = BonjourFinder().find_all(max_results=1, filter_type='serial', filter_callback=_filter, timeout=timeout)
+        mokus = BonjourFinder().find_all(max_results=1, filter_type='serial',
+                                         filter_callback=_filter,
+                                         timeout=timeout)
 
         if len(mokus):
             return Moku(mokus[0], force=force, *args, **kwargs)
 
-        raise MokuNotFound("Couldn't find Moku:Lab with serial number: %s" % serial)
+        raise MokuNotFound("Couldn't find Moku:Lab with serial number: %s"
+                           % serial)
 
     @staticmethod
     def get_by_name(name, timeout=10, force=False, *args, **kwargs):
         """
-        Factory function, returns a :any:`Moku` instance with the given device name.
+        Factory function, returns a :any:`Moku` instance with the given device
+        name.
 
         :type serial: str
         :param serial: Target device name i.e. 'MyMoku'
@@ -268,17 +430,22 @@ class Moku(object):
         :param timeout: Operation timeout
 
         :type force: bool
-        :param force: Ignore firmware compatibility checks and force the instrument to deploy.
+        :param force: Ignore firmware compatibility checks and force the
+        instrument to deploy.
 
         :rtype: :any:`Moku`
-        :return: Connected :any:`Moku <pymoku.Moku>` object with specified device name.
+        :return: Connected :any:`Moku <pymoku.Moku>` object with specified
+        device name.
 
-        :raises *MokuNotFound*: if no such Moku:Lab is found within the timeout period.
+        :raises *MokuNotFound*: if no such Moku:Lab is found within the timeout
+        period.
         """
         def _filter(devname):
-            return devname==name
+            return devname == name
 
-        mokus = BonjourFinder().find_all(max_results=1, filter_type='name', filter_callback=_filter, timeout=timeout)
+        mokus = BonjourFinder().find_all(max_results=1, filter_type='name',
+                                         filter_callback=_filter,
+                                         timeout=timeout)
 
         if len(mokus):
             return Moku(mokus[0], force=force, *args, **kwargs)
@@ -293,18 +460,19 @@ class Moku(object):
             if not short:
                 base *= 2
 
-        self._conn.setsockopt(zmq.SNDTIMEO, base) # A send should always be quick
-        self._conn.setsockopt(zmq.RCVTIMEO, 2 * base) # A receive might need to wait on processing
-
+        # A send should always be quick
+        self._conn.setsockopt(zmq.SNDTIMEO, base)
+        # A receive might need to wait on processing
+        self._conn.setsockopt(zmq.RCVTIMEO, 2 * base)
 
     def _get_seq(self):
         self._seq = (self._seq + 1) % 256
         return self._seq
 
-
     def _ownership(self, t, flags):
         name = socket.gethostname()[:255]
-        packet_data = struct.pack("<BBB", t, len(name) + 1, flags) + name.encode('ascii')
+        packet_data = struct.pack("<BBB", t, len(name) + 1, flags)
+        packet_data += name.encode('ascii')
         with self._conn_lock:
             self._conn.send(packet_data)
             rep = self._conn.recv()
@@ -325,32 +493,36 @@ class Moku(object):
         """
         Register your ownership of the connected Moku:Lab device.
 
-        Having ownership enables you to send commands to and receive data from the corresponding Moku:Lab.
+        Having ownership enables you to send commands to and receive data from
+        the corresponding Moku:Lab.
         """
-        return self._ownership(0x40, 1)[0] == 2 # 2 is "owner is me"
+        return self._ownership(0x40, 1)[0] == 2  # 2 is "owner is me"
 
     def relinquish_ownership(self):
         """
         Drop your claim to the connected Moku:Lab device.
 
-        This will allow other clients to connect immedaitely rather than waiting for a timeout
+        This will allow other clients to connect immedaitely rather than
+        waiting for a timeout
         """
         self._ownership(0x40, 0)
 
     def is_owned(self):
-        """ Checks whether the Moku:Lab device is currently owned by another user.
+        """ Checks whether the Moku:Lab device is currently owned by another
+        user.
 
         :rtype: bool
-        :return: True if someone, including you, currently owns the Moku:Lab device
+        :return: True if someone, including you, currently owns the Moku:Lab
+        device
         """
         return self._ownership(0x41, 0)[0] != 0
 
     def owned_by(self):
         """ Return the name of the device that currently owns the Moku:Lab.
 
-        This will be the iPad name or PC hostname of the device that most recently took
-        ownership of the Moku:Lab. This will be the current PC's hostname if
-        :any:`is_owner` returns *True*.
+        This will be the iPad name or PC hostname of the device that most
+        recently took ownership of the Moku:Lab. This will be the current PC's
+        hostname if :any:`is_owner` returns *True*.
 
         :rtype: str
         :return: String name of current owner
@@ -364,7 +536,6 @@ class Moku(object):
         :return: True if you are the owner of the device."""
         return self._ownership(0x41, 0)[0] == 2
 
-
     def _read_regs(self, commands):
         packet_data = bytearray([0x47, 0x00, len(commands)])
         packet_data += b''.join([struct.pack('<B', x) for x in commands])
@@ -373,25 +544,26 @@ class Moku(object):
             self._conn.send(packet_data)
             ack = self._conn.recv()
 
-        t, err, l = struct.unpack('<BBB', ack[:3])
+        t, err, length = struct.unpack('<BBB', ack[:3])
 
-        if t != 0x47 or l != len(commands) or err:
+        if t != 0x47 or length != len(commands) or err:
             raise NetworkError()
 
-        return [struct.unpack('<BI', ack[x:x + 5]) for x in range(3, len(commands) * 5, 5)]
-
+        return [struct.unpack('<BI', ack[x:x + 5])
+                for x in range(3, len(commands) * 5, 5)]
 
     def _write_regs(self, commands):
         packet_data = bytearray([0x47, 0x00, len(commands)])
-        packet_data += b''.join([struct.pack('<BI', x[0] + 0x80, x[1]) for x in commands])
+        packet_data += b''.join([struct.pack('<BI', x[0] + 0x80, x[1])
+                                 for x in commands])
 
         with self._conn_lock:
             self._conn.send(packet_data)
             ack = self._conn.recv()
 
-        t, err, l = struct.unpack('<BBB', ack[:3])
+        t, err, length = struct.unpack('<BBB', ack[:3])
 
-        if t != 0x47 or err or l:
+        if t != 0x47 or err or length:
             raise NetworkError()
 
     def _slotdata_write_commit(self):
@@ -408,11 +580,11 @@ class Moku(object):
         return struct.pack("<HII", addr, off, _len)
 
     def _slotdata_write_lut(self, off, data):
-        addr = 257 # Mirrored and unmirrored are the same for writing
+        addr = 257  # Mirrored and unmirrored are the same for writing
         return struct.pack("<HII", addr, off, len(data)) + data
 
     def _slotdata_read_maxi(self, addr):
-        return struct.pack("<H", addr + 1024) # Addr is 0-based, not 1024
+        return struct.pack("<H", addr + 1024)  # Addr is 0-based, not 1024
 
     def _slotdata_write_maxi(self, addr, data):
         return struct.pack("<HH", addr + 1024, len(data)) + data
@@ -441,14 +613,13 @@ class Moku(object):
         # built using the _slotdata_write_* helpers
         return self._slot_packet(data, False)
 
-
-
     def _deploy(self, sub_index=0, is_partial=False, use_external=False):
         if self._instrument is None:
             DeployException("No Instrument Selected")
 
-        # Deploy doesn't return until the deploy has completed which can take several
-        # seconds on the device. Set an appropriately long timeout for this case.
+        # Deploy doesn't return until the deploy has completed which can take
+        # several seconds on the device. Set an appropriately long timeout for
+        # this case.
         self._set_timeout(short=False)
         if sub_index < 0 or sub_index > 2**7:
             raise DeployException("Invalid sub-index %d" % sub_index)
@@ -470,7 +641,6 @@ class Moku(object):
 
         # Return bitstream version
         return struct.unpack("<H", ack[3:5])[0]
-
 
     def _reset_instrument(self):
         with self._conn_lock:
@@ -496,18 +666,18 @@ class Moku(object):
     def _get_actual_extclock(self):
         return self._get_clock_source()[1]
 
-
     def _get_properties(self, properties):
         ret = []
 
         if len(properties) > 255:
-            raise InvalidOperationException("Properties request too long (%d)" % len(properties))
+            raise InvalidOperationException("Properties request too long (%d)"
+                                            "" % len(properties))
         pkt = bytearray([0x46, self._get_seq(), len(properties)])
 
         for p in properties:
-            pkt += bytearray([1, len(p)]) # Read action
+            pkt += bytearray([1, len(p)])  # Read action
             pkt += p.encode('ascii')
-            pkt += bytearray([0]) # No data for reads
+            pkt += bytearray([0])  # No data for reads
 
         with self._conn_lock:
             self._conn.send(pkt)
@@ -521,10 +691,10 @@ class Moku(object):
 
         p, d = '', ''
         for n in range(nr):
-            plen = ord(reply[:1]); reply = reply[1:]
-            p = reply[:plen].decode('ascii'); reply = reply[plen:]
-            dlen = ord(reply[:1]); reply = reply[1:]
-            d = reply[:dlen].decode('ascii'); reply = reply[dlen:]
+            plen, reply = ord(reply[:1]), reply[1:]
+            p, reply = reply[:plen].decode('ascii'), reply[plen:]
+            dlen, reply = ord(reply[:1]), reply[1:]
+            d, reply = reply[:dlen].decode('ascii'), reply[dlen:]
 
             if stat == 0:
                 ret.append((p, d))
@@ -534,9 +704,10 @@ class Moku(object):
         # Reply should just contain the \r\n by this time.
 
         if stat:
-            # An error will have exactly one property reply, the property that caused
-            # the error with empty data
-            raise InvalidOperationException("Property Read Error, status %d on property %s" % (stat, p))
+            # An error will have exactly one property reply, the property that
+            # caused the error with empty data
+            raise InvalidOperationException(
+                "Property Read Error, status %d on property %s" % (stat, p))
 
         return ret
 
@@ -545,7 +716,7 @@ class Moku(object):
 
         pkt = struct.pack("<BBBBB", 0x46, self._get_seq(), 1, 3, len(section))
         pkt += section.encode('ascii')
-        pkt += bytearray([0]) # No data for reads
+        pkt += bytearray([0])  # No data for reads
 
         with self._conn_lock:
             self._conn.send(pkt)
@@ -556,12 +727,12 @@ class Moku(object):
         if hdr != 0x46:
             raise NetworkError("Bad header %d" % hdr)
 
-        p, d = '',''
+        p, d = '', ''
         for n in range(nr):
-            plen = ord(reply[:1]); reply = reply[1:]
-            p = reply[:plen].decode('ascii'); reply = reply[plen:]
-            dlen = ord(reply[:1]); reply = reply[1:]
-            d = reply[:dlen].decode('ascii'); reply = reply[dlen:]
+            plen, reply = ord(reply[:1]), reply[1:]
+            p, reply = reply[:plen].decode('ascii'), reply[plen:]
+            dlen, reply = ord(reply[:1]), reply[1:]
+            d, reply = reply[:dlen].decode('ascii'), reply[dlen:]
 
             if stat == 0:
                 ret.append((p, d))
@@ -569,9 +740,10 @@ class Moku(object):
                 break
 
         if stat:
-            # An error will have exactly one property reply, the property that caused
-            # the error with empty data
-            raise InvalidOperationException("Property Read Error, status %d on property %s" % (stat, p))
+            # An error will have exactly one property reply, the property that
+            # caused the error with empty data
+            raise InvalidOperationException("Property Read Error, status %d "
+                                            "on property %s" % (stat, p))
 
         return ret
 
@@ -582,7 +754,8 @@ class Moku(object):
     def _set_properties(self, properties):
         ret = []
         if len(properties) > 255:
-            raise InvalidOperationException("Properties request too long (%d)" % len(properties))
+            raise InvalidOperationException("Properties request too long (%d)"
+                                            % len(properties))
         pkt = struct.pack("<BBB", 0x46, self._get_seq(), len(properties))
 
         for p, d in properties:
@@ -601,10 +774,10 @@ class Moku(object):
             raise NetworkError("Bad header %d" % hdr)
 
         for n in range(nr):
-            plen = ord(reply[:1]); reply = reply[1:]
-            p = reply[:plen].decode('ascii'); reply = reply[plen:]
-            dlen = ord(reply[:1]); reply = reply[1:]
-            d = reply[:dlen].decode('ascii'); reply = reply[dlen:]
+            plen, reply = ord(reply[:1]), reply[1:]
+            p, reply = reply[:plen].decode('ascii'), reply[plen:]
+            dlen, reply = ord(reply[:1]), reply[1:]
+            d, reply = reply[:dlen].decode('ascii'), reply[dlen:]
 
             if stat == 0:
                 # Writes have the new value echoed back
@@ -613,9 +786,10 @@ class Moku(object):
                 break
 
         if stat:
-            # An error will have exactly one property reply, the property that caused
-            # the error with empty data
-            raise InvalidOperationException("Property Read Error, status %d on property %s" % (stat, p))
+            # An error will have exactly one property reply, the property that
+            # caused the error with empty data
+            raise InvalidOperationException("Property Read Error, status %d "
+                                            "on property %s" % (stat, p))
 
         return ret
 
@@ -623,24 +797,25 @@ class Moku(object):
         r = self._set_properties([(prop, val)])
         return r[0][1]
 
-
-    def _stream_prep(self, ch1, ch2, start, end, offset, timestep, tag, binstr, procstr, fmtstr, hdrstr, fname, ftype='csv', use_sd=True):
+    def _stream_prep(self, ch1, ch2, start, end, offset, timestep, tag, binstr,
+                     procstr, fmtstr, hdrstr, fname, ftype='csv', use_sd=True):
         mp = 'e' if use_sd else 'i'
 
         if start < 0 or end < start:
-            raise ValueOutOfRangeException("Invalid start/end times: %s/%s" %(str(start), str(end)))
+            raise ValueOutOfRangeException("Invalid start/end times: %s/%s"
+                                           % (str(start), str(end)))
 
         try:
-            ftype = { 'bin': 0, 'csv': 1, 'mat': 2, 'npy': 3, 'net': 31}[ftype]
+            ftype = {'bin': 0, 'csv': 1, 'mat': 2, 'npy': 3, 'net': 31}[ftype]
         except KeyError:
             raise ValueOutOfRangeException("Invalid file type %s" % ftype)
 
-        # TODO: Support multiple file types simultaneously
+        # TODO Support multiple file types simultaneously
         flags = ftype << 2
         flags |= int(ch2) << 1
         flags |= int(ch1)
 
-        pkt = struct.pack("<BB", 0, 1) #TODO: Proper sequence number
+        pkt = struct.pack("<BB", 0, 1)  # TODO Proper sequence number
         pkt += tag.encode('ascii')
         pkt += mp.encode('ascii')
         pkt += struct.pack("<IIdBd", start, end, offset, flags, timestep)
@@ -650,9 +825,9 @@ class Moku(object):
         pkt += binstr.encode('ascii')
 
         # Build up a single procstring with "|" as a delimiter
-        # TODO: Allow empty procstrings
+        # TODO Allow empty procstrings
         procstr_pkt = ''
-        for i,ch in enumerate([ch1,ch2]):
+        for i, ch in enumerate([ch1, ch2]):
             if ch:
                 if len(procstr_pkt):
                     procstr_pkt += '|'
@@ -674,7 +849,7 @@ class Moku(object):
 
         hdr, l, seq, ae, stat = struct.unpack("<BIBBB", reply[:8])
 
-        if stat not in [ 1, 2 ]:
+        if stat not in [1, 2]:
             raise StreamException("Stream start exception %d" % stat, stat)
 
     def _stream_start(self):
@@ -703,7 +878,8 @@ class Moku(object):
             self._conn.send(pkt)
             reply = self._conn.recv()
 
-        hdr, l, seq, ae, stat, bt, trems, treme, flags, fname_len = struct.unpack("<BIBBBQiiBH", reply[:27])
+        hdr, l, seq, ae, stat, bt, trems, treme, flags, fname_len = \
+            struct.unpack("<BIBBBQiiBH", reply[:27])
         fname = reply[27:27 + fname_len].decode('ascii')
         return stat, bt, trems, treme, fname
 
@@ -714,17 +890,19 @@ class Moku(object):
 
     def _fs_receive_generic(self, action):
         reply = self._conn.recv()
-        hdr, l = struct.unpack("<BQ", reply[:9])
+        hdr, length = struct.unpack("<BQ", reply[:9])
         pkt = reply[9:]
 
-        if l != len(pkt):
-            raise NetworkError("Unexpected file reply length %d/%d" % (l, len(pkt)))
+        if length != len(pkt):
+            raise NetworkError("Unexpected file reply length {d}/{d}"
+                               "".format(length, len(pkt)))
 
         act, status = struct.unpack("BB", pkt[:2])
 
         if status:
             if status == _ERR_INVAL:
-                ex = InvalidConfigurationException("Invalid fileserver request parameters.")
+                ex = InvalidConfigurationException("Invalid fileserver request"
+                                                   " parameters.")
             elif status == _ERR_NOTFOUND:
                 ex = FileNotFound("Could not find directory or file.")
             elif status == _ERR_NOSPC:
@@ -732,15 +910,17 @@ class Moku(object):
             elif status == _ERR_NOMP:
                 ex = MPNotMounted("Mount point has not been mounted.")
             elif status == _ERR_ACTION:
-                ex = InvalidOperationException("Unknown fileserver action requested.")
+                ex = InvalidOperationException("Unknown fileserver "
+                                               "action requested.")
             elif status == _ERR_BUSY:
                 ex = MokuBusy("Fileserver busy")
             elif status == _ERR_RO:
                 ex = MPReadOnly("Requested mount point was Read-Only.")
             elif status == _ERR_UNKNOWN:
-                ex = UnknownAction("Unknown fileserver action requested: %d" % act)
+                ex = UnknownAction("Unknown fileserver action requested: "
+                                   "%d" % act)
             else:
-                ex = NetworkError("Received invalid status ID: %d" % stat)
+                ex = NetworkError("Received invalid status ID: %d" % status)
 
             ex.dat = pkt[2:]
             raise ex
@@ -748,8 +928,9 @@ class Moku(object):
         return pkt[2:]
 
     def _send_file_bytes(self, mp, remotename, data, offset=0):
-        # NOTE: The calling function should also perform a "finalise request" on completion of
-        #       byte sending to ensure the file resource becomes available for use.
+        # NOTE: The calling function should also perform a "finalise request"
+        # on completion of byte sending to ensure the file resource becomes
+        # available for use.
         data = bytearray(data)
         data_length = len(data)
         fname = mp + ":" + remotename
@@ -773,7 +954,6 @@ class Moku(object):
             i += len(pkt_data)
 
         self._set_timeout(short=True)
-
 
     def _send_file(self, mp, localname, remotename=None):
         if remotename is None:
@@ -819,14 +999,11 @@ class Moku(object):
                     self._fs_send_generic(1, pkt)
                     reply = self._fs_receive_generic(1)
 
-                dl = struct.unpack("<Q", reply[:8])[0]
-
                 f.write(reply[8:])
 
                 i += to_transfer
 
         self._set_timeout(short=True)
-
 
     def _fs_chk(self, mp, fname):
         fname = mp + ":" + fname
@@ -916,7 +1093,6 @@ class Moku(object):
             self._fs_send_generic(7, pkt)
             self._fs_receive_generic(7)
 
-
     def _fs_finalise_fromlocal(self, mp, localname, remotename=None):
         fsize = os.path.getsize(localname)
         remotename = remotename or os.path.basename(localname)
@@ -939,7 +1115,6 @@ class Moku(object):
             rep = self._fs_receive_generic(8)
 
         return rep
-
 
     def _fs_rename_status(self):
 
@@ -969,14 +1144,16 @@ class Moku(object):
         self._fs_finalise(mp, path, 0)
 
     def _list_packs(self):
-        return [f[0] for f in self._fs_list('p') if f[0].endswith(('hgp','hgp.aes'))]
+        return [f[0] for f in self._fs_list('p')
+                if f[0].endswith(('hgp', 'hgp.aes'))]
 
     def _delete_packs(self):
         for p in self._list_packs():
             self._delete_file('p', p)
 
     def _list_running_packs(self):
-        return [(p[0].split('.')[1], p[1]) for p in self._get_property_section('packs')]
+        return [(p[0].split('.')[1], p[1]) for p in
+                self._get_property_section('packs')]
 
     def _load_bitstream(self, path, instr_id=None, sub_id=0):
         """
@@ -1015,7 +1192,8 @@ class Moku(object):
             hdr, reply = struct.unpack("<BB", self._conn.recv())
         self._set_timeout()
         if reply:
-            raise InvalidOperationException("Firmware update failure %d" % reply)
+            raise InvalidOperationException(
+                "Firmware update failure %d" % reply)
 
     def _restart_board(self):
         with self._conn_lock:
@@ -1040,88 +1218,118 @@ class Moku(object):
         try:
             self._trigger_fwload()
         except zmq.error.Again:
-            # Sometimes the network connection goes down before the ack can be received
+            # Sometimes the network connection goes down before the ack can be
+            # received
             pass
 
     def get_ip(self):
-        """ :return: IP address of the connected Moku:Lab """
+        """
+        :return: IP address of the connected Moku:Lab
+        """
         return self._ip
 
     def get_serial(self):
-        """ :return: Serial number of connected Moku:Lab """
+        """
+        :return: Serial number of connected Moku:Lab
+        """
         self.serial = self._get_property_single('device.serial')
         return self.serial
 
     def get_name(self):
-        """ :return: Name of connected Moku:Lab """
+        """
+        :return: Name of connected Moku:Lab
+        """
         self.name = self._get_property_single('system.name')
         return self.name
 
     def get_firmware_build(self):
-        """ :return: Build number of the current Moku:Lab firmware."""
+        """
+        :return: Build number of the current Moku:Lab firmware.
+        """
         return int(self._get_property_single('system.micro'))
 
     def get_version(self):
-        """ :return: Version of connected Moku:Lab """
+        """
+        :return: Version of connected Moku:Lab
+        """
         return version.release
 
     def get_hw_version(self):
-        """ :return: Hardware version of connected Moku:Lab """
+        """
+        :return: Hardware version of connected Moku:Lab
+        """
         return float(self._get_property_single('device.hw_version'))
 
     def set_name(self, name):
-        """ :param name: Set new name for the Moku:Lab. This can make it easier to discover the device if multiple Moku:Labs are on a network"""
+        """
+        :param name: Set new name for the Moku:Lab. This can make it easier to
+        discover the device if multiple Moku:Labs are on a network.
+        """
         self.name = self._set_property_single('system.name', name)
 
     def get_led_colour(self):
-        """ :return: The colour of the under-Moku "UFO" ring lights"""
+        """
+        :return: The colour of the under-Moku "UFO" ring lights
+        """
         self.led = self._get_property_single('leds.ufo1')
         return self.led
 
     def get_bootmode(self):
-        """ :return: A string representing the boot mode of the attached Moku:Lab """
+        """
+        :return: A string representing the boot mode of the attached
+        Moku:Lab
+        """
         return self._get_property_single('system.bootmode')
 
     def set_led_colour(self, colour):
         """
         :type colour: string
-        :param colour: New colour for the under-Moku "UFO" ring lights. Possible colours are listed by :any:`get_colour_list`"""
+        :param colour: New colour for the under-Moku "UFO" ring lights.
+        Possible colours are listed by :any:`get_colour_list`
+        """
         if self.led_colours is None:
             self.get_colour_list()
 
-        if not colour in self.led_colours:
+        if colour not in self.led_colours:
             raise InvalidOperationException("Invalid LED colour %s" % colour)
 
         self.led = self._set_properties([('leds.ufo1', colour),
-            ('leds.ufo2', colour),
-            ('leds.ufo3', colour),
-            ('leds.ufo4', colour)])[0][1]
+                                         ('leds.ufo2', colour),
+                                         ('leds.ufo3', colour),
+                                         ('leds.ufo4', colour)])[0][1]
 
     def get_colour_list(self):
         """
         :return: Available colours for the under-Moku "UFO" ring lights"""
         cols = self._get_property_section('colourtable')
-        self.led_colours = [ x.split('.')[1] for x in list(zip(*cols))[0] ]
+        self.led_colours = [x.split('.')[1] for x in list(zip(*cols))[0]]
         return self.led_colours
 
     def is_active(self):
-        """:return: True if the Moku currently is connected and has an instrument deployed and operating"""
+        """:return: True if the Moku currently is connected and has an
+        instrument deployed and operating
+        """
         return self._instrument is not None and self._instrument.is_active()
 
-    def deploy_instrument(self, instrument, set_default=True, use_external=False):
-        """
-        Attaches a :any:`MokuInstrument` to the Moku, deploying and activating an instrument.
+    def deploy_instrument(self, instrument, set_default=True,
+                          use_external=False):
+        """Attaches a :any:`MokuInstrument` to the Moku, deploying and
+        activating an instrument.
 
-        Either this function, :any:`deploy_or_connect` or :any:`discover_instrument` must be called before an
-        instrument can be manipulated.
+        Either this function, :any:`deploy_or_connect` or
+        :any:`discover_instrument` must be called before an instrument can be
+        manipulated.
 
-        The *instrument* parameter can be a class or object. In the former case, the class is instantiated
-        before being deployed, and the resulting object is returned.
+        The *instrument* parameter can be a class or object. In the former
+        case, the class is instantiated before being deployed, and the
+        resulting object is returned.
 
-        :type instrument: :any:`MokuInstrument` subclass or instantiation thereof
+        :type instrument: :any:`MokuInstrument` subclass or instantiation
+        thereof
         :param instrument: The instrument instance to attach.
         :type set_default: bool
-        :param set_default: Set the instrument to its default config upon connection, overwriting user changes before this point.
+        :param set_default: Set the instrument to its default config upon
+        connection, overwriting user changes before this point.
         :type use_external: bool
         :param use_external: Attempt to lock to an external reference clock.
 
@@ -1145,19 +1353,23 @@ class Moku(object):
         if self.load_instruments:
             log.debug("Loading instrument")
             try:
-                # HW version 2.0, instrument 1 -> 20.001.000 (no partial/sub-id support)
-                bs_name = "{:02d}.{:03d}.000".format(int(self.get_hw_version() * 10), instrument.id)
+                # HW version 2.0, instrument 1 -> 20.001.000
+                # (no partial/sub-id support)
+                bs_name = "{:02d}.{:03d}.000".format(
+                    int(self.get_hw_version() * 10), instrument.id)
 
                 tardata = tarfile.open(DATAPATH + '/' + MOKUDATAFILE)
                 bs_tarinfo = tardata.getmember(bs_name)
                 bs_file = tardata.extractfile(bs_tarinfo)
-                self._send_file_bytes('b', '.'.join(bs_name.split('.')[1:]), bs_file.read())
+                self._send_file_bytes('b', '.'.join(bs_name.split('.')[1:]),
+                                      bs_file.read())
                 bs_file.close()
                 tardata.close()
 
                 log.debug("Load complete.")
-            except:
-                log.exception("Unable to automatically load instrument, deploy may fail")
+            except Exception:
+                log.exception("Unable to automatically load instrument, "
+                              "deploy may fail")
         else:
             log.info("Moku in development mode, no instrument upload.")
 
@@ -1173,25 +1385,31 @@ class Moku(object):
 
         return self._instrument
 
-    def deploy_or_connect(self, instrument, set_default=True, use_external=False):
+    def deploy_or_connect(self, instrument, set_default=True,
+                          use_external=False):
         """
-        Ensures the Moku:Lab is running the given instrument, either by connecting to an already-running instance, or deploying a new one.
+        Ensures the Moku:Lab is running the given instrument, either by
+        connecting to an already-running instance, or deploying a new one.
 
-        *instrument* is the class of the instrument you wish to deploy, e.g. :any:`Oscilloscope`. This function
-        will check what instrument, if any, is already running on the Moku:Lab using :any:`discover_instrument`. If
-        that instrument is of the wrong type, a new instance of the given instrument class is created and deployed
-        using :any:`deploy_instrument`.
+        *instrument* is the class of the instrument you wish to deploy, e.g.
+        :any:`Oscilloscope`. This function will check what instrument, if any,
+        is already running on the Moku:Lab using :any:`discover_instrument`.
+        If that instrument is of the wrong type, a new instance of the given
+        instrument class is created and deployed using
+        :any:`deploy_instrument`.
 
         :param instrument: A Class representing the instrument type required
         :type instrument: :any:`MokuInstrument` subclass
 
         :type set_default: bool
-        :param set_default: Set the instrument to its default config upon connection, overwriting user changes before this point.
+        :param set_default: Set the instrument to its default config upon
+        connection, overwriting user changes before this point.
 
         :type use_external: bool
         :param use_external: Attempt to lock to an external reference clock.
 
-        :return: An object of type *instrument* representing the running Instrument.
+        :return:
+            An object of type *instrument* representing the running Instrument.
         """
         i = self.discover_instrument()
         if i is None or pymoku.instruments.id_table[i.id] != instrument:
@@ -1199,7 +1417,8 @@ class Moku(object):
             i = instrument()
             self.deploy_instrument(i, set_default, use_external)
         else:
-            log.debug("%s already deployed, taking ownership", instrument.__name__)
+            log.debug("%s already deployed, taking ownership",
+                      instrument.__name__)
             self.take_ownership()
 
         return i
@@ -1208,8 +1427,10 @@ class Moku(object):
         """
         Detaches the :any:`MokuInstrument` from this Moku.
 
-        This has little effect usually, as a new Instrument can be attached without detaching the old one. This is mostly
-        useful when you want to save network bandwidth between measurements without closing the entire Moku device
+        This has little effect usually, as a new Instrument can be attached
+        without detaching the old one. This is mostly useful when you want to
+        save network bandwidth between measurements without closing the entire
+        Moku device
         """
         if self._instrument:
             self._instrument._set_running(False)
@@ -1218,15 +1439,18 @@ class Moku(object):
     def get_instrument(self):
         """
         :return:
-            Currently running instrument object. If the user has not deployed the instrument themselves,
-            then :any:`discover_instrument` must be called first."""
+            Currently running instrument object. If the user has not deployed
+            the instrument themselves, then :any:`discover_instrument` must be
+            called first.
+        """
         return self._instrument
 
     def discover_instrument(self):
-        """Query a Moku:Lab device to see what instrument, if any, is currently running.
+        """Query a Moku:Lab device to see what instrument is currently running.
 
         :rtype: :any:`MokuInstrument` or `None`
-        :returns: The detected instrument ready to be controlled, otherwise None.
+        :returns:
+            The detected instrument ready to be controlled, otherwise None.
         """
         import pymoku.instruments
         i = int(self._get_property_single('system.instrument').split('.')[0])
@@ -1253,19 +1477,24 @@ class Moku(object):
         try:
             self.relinquish_ownership()
         except struct.error:
-            # This error occurs on earlier firmware versions (<=1.5) due to ownership packet format changes
+            # This error occurs on earlier firmware versions (<=1.5) due to
+            # ownership packet format changes
             pass
         finally:
             with self._conn_lock:
                 self._conn.close()
 
-        # Don't clobber the ZMQ context as it's global to the interpretter, if the user has multiple Moku
-        # objects then we don't want to mess with that.
+        # Don't clobber the ZMQ context as it's global to the interpretter,
+        # if the user has multiple Moku objects then we don't want to mess
+        # with that.
 
 
 def deprecated(category, message):
     def deprecate_warn(func):
-        header = 'Method Deprecation: ' if category == 'method' else 'Class Deprecation: ' if category == 'class' else 'Parameter Deprecation: '
+        header = 'Method Deprecation: ' if category == 'method' \
+            else 'Class Deprecation: ' if category == 'class' \
+            else 'Parameter Deprecation: '
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             if category != 'param':
@@ -1275,7 +1504,8 @@ def deprecated(category, message):
                     stacklevel=2
                 )
             return func(*args, **kwargs)
-        wrapper.__doc__ = '\n\t\t.. warning::\n\t\t\t{} {}\n\n\t\t'.format(header, message)
+        wrapper.__doc__ = \
+            "\n\t\t.. warning::\n\t\t\t{} {}\n\n\t\t".format(header, message)
         if func.__doc__ is not None:
             wrapper.__doc__ += func.__doc__.lstrip()
         return wrapper
