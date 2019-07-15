@@ -6,13 +6,18 @@ stages:
         - docker
     stage: test
     before_script:
-      - python -m pip install pytest
+      - python -m pip install pytest-cov
       - python -m pip install .
     script:
-      - pytest --junitxml=pytest.xml tests
+      - pytest --cov=pymoku --junitxml=pytest.xml tests
+      - coverage html
     artifacts:
         untracked: true
     artifacts:
+        paths:
+            # TODO publish with pages
+            # https://about.gitlab.com/2016/11/03/publish-code-coverage-report-with-gitlab-pages/
+            - htmlcov
         reports:
             junit:
                 - pytest.xml
@@ -34,7 +39,7 @@ style:python2.7:
 tests:python2.7:
     extends: .template-pytest
     before_script:
-      - python -m pip install pytest mock
+      - python -m pip install pytest-cov mock
       - python -m pip install .
     image: python:2.7
 
