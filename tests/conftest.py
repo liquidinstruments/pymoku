@@ -1,0 +1,144 @@
+import pytest
+import pymoku
+from functools import partial
+
+try:
+	from unittest.mock import patch
+	from unittest.mock import MagicMock
+except ImportError:
+	from mock import patch
+	from mock import MagicMock
+
+defaults = {
+	'system': {
+		'bootmode': 'normal'
+	},
+	'device': {
+		'hw_version': 2.0,
+	},
+	'calibration': {
+		'AO-1M-H-D-1': 0.0,
+		'AO-1M-H-A-1': 0.0,
+		'AO-1M-L-D-1': 0.0,
+		'AO-1M-L-A-1': 0.0,
+		'AO-50-H-D-1': 0.0,
+		'AO-50-H-A-1': 0.0,
+		'AO-50-L-D-1': 0.0,
+		'AO-50-L-A-1': 0.0,
+		'AO-1M-H-D-2': 0.0,
+		'AO-1M-H-A-2': 0.0,
+		'AO-1M-L-D-2': 0.0,
+		'AO-1M-L-A-2': 0.0,
+		'AO-50-H-D-2': 0.0,
+		'AO-50-H-A-2': 0.0,
+		'AO-50-L-D-2': 0.0,
+		'AO-50-L-A-2': 0.0,
+
+		'AOT-1M-H-D-1': 0.0,
+		'AOT-1M-H-A-1': 0.0,
+		'AOT-1M-L-D-1': 0.0,
+		'AOT-1M-L-A-1': 0.0,
+		'AOT-50-H-D-1': 0.0,
+		'AOT-50-H-A-1': 0.0,
+		'AOT-50-L-D-1': 0.0,
+		'AOT-50-L-A-1': 0.0,
+		'AOT-1M-H-D-2': 0.0,
+		'AOT-1M-H-A-2': 0.0,
+		'AOT-1M-L-D-2': 0.0,
+		'AOT-1M-L-A-2': 0.0,
+		'AOT-50-H-D-2': 0.0,
+		'AOT-50-H-A-2': 0.0,
+		'AOT-50-L-D-2': 0.0,
+		'AOT-50-L-A-2': 0.0,
+
+		'AG-1M-H-D-1': 3750.0,
+		'AG-1M-H-A-1': 3750.0,
+		'AG-1M-L-D-1': 375.0,
+		'AG-1M-L-A-1': 375.0,
+		'AG-50-H-D-1': 3750.0,
+		'AG-50-H-A-1': 3750.0,
+		'AG-50-L-D-1': 375.0,
+		'AG-50-L-A-1': 375.0,
+		'AG-1M-H-D-2': 3750.0,
+		'AG-1M-H-A-2': 3750.0,
+		'AG-1M-L-D-2': 375.0,
+		'AG-1M-L-A-2': 375.0,
+		'AG-50-H-D-2': 3750.0,
+		'AG-50-H-A-2': 3750.0,
+		'AG-50-L-D-2': 375.0,
+		'AG-50-L-A-2': 375.0,
+
+		'AGT-1M-H-D-1': 0.0,
+		'AGT-1M-H-A-1': 0.0,
+		'AGT-1M-L-D-1': 0.0,
+		'AGT-1M-L-A-1': 0.0,
+		'AGT-50-H-D-1': 0.0,
+		'AGT-50-H-A-1': 0.0,
+		'AGT-50-L-D-1': 0.0,
+		'AGT-50-L-A-1': 0.0,
+		'AGT-1M-H-D-2': 0.0,
+		'AGT-1M-H-A-2': 0.0,
+		'AGT-1M-L-D-2': 0.0,
+		'AGT-1M-L-A-2': 0.0,
+		'AGT-50-H-D-2': 0.0,
+		'AGT-50-H-A-2': 0.0,
+		'AGT-50-L-D-2': 0.0,
+		'AGT-50-L-A-2': 0.0,
+
+		'DO-1': 0.0,
+		'DO-2': 0.0,
+
+		'DG-1': 30000.0,
+		'DG-2': 30000.0,
+
+		'DOT-1': 0.0,
+		'DOT-2': 0.0,
+
+		'DGT-1': 0.0,
+		'DGT-2': 0.0,
+	}
+}
+
+# Side_effects for unmocked functions
+
+def _get_property_section(self, section):
+	#TODO needs to be recursive
+	d = {}
+	for k, v in defaults[section].items():
+		d['.'.join((section, k))] = v
+	return d
+
+def _get_properties(self, properties):
+	results = []
+	for prop in properties:
+		d = defaults
+		for p in prop.split('.'):
+			d = d[p]
+		results.append((prop, d))
+	return results
+
+unmocks = {
+	'get_serial'            : pymoku.Moku.get_serial.__func__,
+	'get_name'              : pymoku.Moku.get_name.__func__,
+	'get_firmware_build'    : pymoku.Moku.get_firmware_build.__func__,
+	'get_version'           : pymoku.Moku.get_version.__func__,
+	'get_hw_version'        : pymoku.Moku.get_hw_version.__func__,
+	'get_bootmode'          : pymoku.Moku.get_bootmode.__func__,
+	'deploy_instrument'     : pymoku.Moku.deploy_instrument.__func__,
+	'_get_property_single'  : pymoku.Moku._get_property_single.__func__,
+	'_get_properties'       : _get_properties,
+	'_get_property_section' : _get_property_section,
+}
+
+@pytest.fixture
+@patch('pymoku.Moku')
+def moku(*kwargs):
+	'''
+	We mock the entire Moku class, and the selectively unmock classmethods we need
+	side_effects for.
+	'''
+	m = pymoku.Moku('192.168.199.1')
+	for k, v in unmocks.items():
+		m.configure_mock(**{k + '.side_effect': partial(v, m)})
+
+	return m
