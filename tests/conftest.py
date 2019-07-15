@@ -117,6 +117,7 @@ def _get_properties(self, properties):
 		results.append((prop, d))
 	return results
 
+# Gather methods to wrap before we're in a mock context
 unmocks = {
 	'get_serial'            : pymoku.Moku.get_serial,
 	'get_name'              : pymoku.Moku.get_name,
@@ -131,13 +132,18 @@ unmocks = {
 }
 
 @pytest.fixture
-@patch('pymoku.Moku')
+@patch('pymoku.Moku', spec=pymoku.Moku)
 def moku(*kwargs):
 	'''
 	We mock the entire Moku class, and the selectively unmock classmethods we need
 	side_effects for.
 	'''
-	m = pymoku.Moku('192.168.199.1')
+	m = pymoku.Moku()
+
+	# TODO wrap init properly
+	m._instrument = None
+	m.load_instruments = False
+
 	for k, v in unmocks.items():
 		try:
 			# for Python 2.7
