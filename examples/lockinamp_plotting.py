@@ -9,7 +9,6 @@
 from pymoku import Moku
 from pymoku.instruments import LockInAmp
 
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
@@ -38,11 +37,11 @@ try:
     # Trigger on Monitor 'B' ('Q' signal), rising edge, 0V with 0.1V hysteresis
     i.set_trigger('B', 'rising', 0)
 
-     # View +- 0.1 second, i.e. trigger in the centre
+    # View +- 0.1 second, i.e. trigger in the centre
     i.set_timebase(-1e-6, 1e-6)
 
-    # Get initial data frame to set up plotting parameters. This can be done once
-    # if we know that the axes aren't going to change (otherwise we'd do
+    # Get initial data frame to set up plotting parameters. This can be done
+    # once if we know that the axes aren't going to change (otherwise we'd do
     # this in the loop)
     data = i.get_realtime_data()
 
@@ -50,7 +49,7 @@ try:
     plt.ion()
     plt.show()
     plt.grid(b=True)
-    plt.ylim([-1,1])
+    plt.ylim([-1, 1])
     plt.xlim([data.time[0], data.time[-1]])
 
     line1, = plt.plot([])
