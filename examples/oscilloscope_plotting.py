@@ -1,15 +1,14 @@
-#
-# pymoku example: Plotting Oscilloscope
-#
-# This example demonstrates how you can configure the Oscilloscope instrument,
-# and view triggered time-voltage data frames in real-time.
-#
-# (c) 2019 Liquid Instruments Pty. Ltd.
-#
+"""pymoku example: Plotting Oscilloscope
+
+This example demonstrates how you can configure the Oscilloscope instrument,
+and view triggered time-voltage data frames in real-time.
+
+(c) 2019 Liquid Instruments Pty. Ltd.
+"""
+
 from pymoku import Moku
 from pymoku.instruments import Oscilloscope
 
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
@@ -21,9 +20,9 @@ try:
     i = m.deploy_or_connect(Oscilloscope)
 
     # Trigger on input Channel 1, rising edge, 0V with 0.1V hysteresis
-    i.set_trigger('in1', 'rising', 0, hysteresis = 0.1)
+    i.set_trigger('in1', 'rising', 0, hysteresis=0.1)
 
-     # View +-5usec, i.e. trigger in the centre
+    # View +-5usec, i.e. trigger in the centre
     i.set_timebase(-5e-6, 5e-6)
 
     # Generate an output sinewave on Channel 2, 500mVpp, 1MHz, 0V offset
@@ -35,8 +34,8 @@ try:
     # Set the data source of Channel 2 to the generated output sinewave
     i.set_source(2, 'out2')
 
-    # Get initial data frame to set up plotting parameters. This can be done once
-    # if we know that the axes aren't going to change (otherwise we'd do
+    # Get initial data frame to set up plotting parameters. This can be done
+    # once if we know that the axes aren't going to change (otherwise we'd do
     # this in the loop)
     data = i.get_realtime_data()
 
