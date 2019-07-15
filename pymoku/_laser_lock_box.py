@@ -750,7 +750,7 @@ class LaserLockBox(_CoreOscilloscope):
 		monitoring points to either of these channels.
 
 		The source is one of:
-			- **error_signal**: error signal (after low-pass filter_
+			- **error_signal**: error signal (after low-pass filter)
 			- **pid_fast**: output of the fast pid
 			- **pid_slow**: output of the slow pid
 			- **offset_fast**: offset on the input to the fast pid

@@ -22,7 +22,7 @@ The following example code and a wide range of other pymoku demo scripts can be 
 
 
 The LockInAmp Class
------------------
+-------------------
 
 .. autoclass:: pymoku.instruments.LockInAmp
 	:members:

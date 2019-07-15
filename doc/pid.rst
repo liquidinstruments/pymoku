@@ -16,7 +16,7 @@ The following example code and a wide range of other pymoku demo scripts can be 
 	:caption: pidcontroller_basic.py
 
 The PIDController Class
-----------------------
+------------------------
 
 .. autoclass:: pymoku.instruments.PIDController
 	:members:

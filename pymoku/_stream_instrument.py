@@ -194,9 +194,7 @@ class StreamBasedInstrument(_input_instrument.InputInstrument, _instrument.MokuI
 		""" Estimates progress of a logging session started by a `start_data_log` call.
 
 		:rtype: float
-		:returns: [0.0-100.0] representing 0 - 100% completion of the current logging session.
-		Note that 100% is only returned when the session has completed, the progress may pause at 99% for a time
-		as internal buffers are flushed.
+		:returns: [0.0-100.0] representing 0 - 100% completion of the current logging session.Note that 100% is only returned when the session has completed, the progress may pause at 99% for a time as internal buffers are flushed.
 		:raises: StreamException: if an error occurred with the current logging session.
 		"""
 		stat, bt, time_since_start, time_to_end, fname = self._stream_status()

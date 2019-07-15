@@ -522,7 +522,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.sine_trigdly_ch2 = 0
 
 	@needs_commit
-	@deprecated(target='param', message="'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
+	@deprecated(category='param', message="'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
 	def set_trigger(self, ch, mode, ncycles = 1, sweep_start_freq = None, sweep_end_freq = 0,
 		            sweep_duration = 1.0e-3, trigger_source = 'adc1', trigger_threshold = 0.0,
 		            internal_trig_period = 1.0, internal_trig_high = 0.5):
@@ -569,7 +569,6 @@ class WaveformGenerator(BasicWaveformGenerator):
 		:type internal_trig_high: float, [0,1e11], seconds
 		:param internal_trig_high: High time of the internal trigger clock, if used. Must be less than the internal trigger period.
 		"""
-
 		_utils.check_parameter_valid('set', ch, [1, 2], 'output channel')
 		_utils.check_parameter_valid('set', mode, ['gated', 'start', 'ncycle', 'sweep'],'trigger mode')
 		_utils.check_parameter_valid('set', trigger_source, ['adc1','adc2', 'dac1', 'dac2', 'external', 'internal', 'in', 'out'], 'trigger source')
@@ -577,6 +576,13 @@ class WaveformGenerator(BasicWaveformGenerator):
 		_utils.check_parameter_valid('range', sweep_duration, [0.001, 1000.0],'sweep duration', 'seconds')
 		_utils.check_parameter_valid('range', internal_trig_period, [100.0e-9, 1000.0],'internal trigger period', 'seconds')
 		_utils.check_parameter_valid('range', internal_trig_high, [10.0e-9, 1000.0],'internal trigger high time', 'seconds')
+
+		if trigger_source in ['in', 'out']:
+			warnings.warn(
+				message="'in' and 'out' trigger sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.",
+				category=DeprecationWarning,
+				stacklevel=1
+			)
 
 		#'in' and 'out' trigger sources are deprecated sources. Convert to adc/dac source type:
 		if ch == 1:
@@ -864,7 +870,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 			self.range_shift_ch2 = range_shift
 
 	@needs_commit
-	@deprecated(target='method', message="'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.")
+	@deprecated(category='method', message="'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.")
 	def gen_modulate_off(self, ch=None):
 		"""
 		'gen_modulate_off' has been deprecated. Use set_modulate_trig_off instead.
@@ -881,7 +887,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		self.set_modulate_trig_off(ch)
 
 	@needs_commit
-	@deprecated(target='method', message="'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.")
+	@deprecated(category='method', message="'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead.")
 	def gen_trigger_off(self, ch=None):
 		"""
 		'gen_trigger_off' has been deprecated. Use set_modulate_trig_off instead."
@@ -913,7 +919,7 @@ class WaveformGenerator(BasicWaveformGenerator):
 		self._init_trig_modulation(ch)
 
 	@needs_commit
-	@deprecated(target='param', message="'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
+	@deprecated(category='param', message="'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.")
 	def gen_modulate(self, ch, mtype, source, depth, frequency=0.0):
 		"""
 		Set up modulation on an output channel.
@@ -939,6 +945,13 @@ class WaveformGenerator(BasicWaveformGenerator):
 		_utils.check_parameter_valid('range', frequency, [0, 250e6],'internal modulation frequency')
 		_utils.check_parameter_valid('set', mtype, ['amplitude', 'frequency', 'phase'],'modulation type')
 		_utils.check_parameter_valid('set', source, ['adc1', 'adc2', 'dac1', 'dac2', 'internal', 'in', 'out'],'modulation source')
+
+		if source in ['in', 'out']:
+			warnings.warn(
+				message="'in' and 'out' modulation sources have been deprecated. Use 'adc1', 'adc2', 'dac1' or 'dac2' instead.",
+				category=DeprecationWarning,
+				stacklevel=1
+			)
 
 		#'in' and 'out' sources are deprecated sources. Convert to adc/dac source type:
 		if ch == 1:

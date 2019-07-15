@@ -21,8 +21,8 @@ Contents
 
    moku
    arbwave
-   bodeanalyzer (deprecated)
-   frequencyresponseanalyzer
+   bodeanalyzer
+   fra
    datalogger
    firfilterbox
    iirfilterbox

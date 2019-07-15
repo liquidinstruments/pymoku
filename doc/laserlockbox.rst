@@ -21,7 +21,7 @@ The following example code and a wide range of other pymoku demo scripts can be 
 
 
 The LaserLockBox Class
------------------
+----------------------
 
 .. autoclass:: pymoku.instruments.LaserLockBox
 	:members:

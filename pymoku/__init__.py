@@ -12,8 +12,10 @@ import warnings
 
 from pymoku.tools import compat as cp
 
+__version__ = pkg_resources.get_distribution("pymoku").version
+
 DATAPATH = os.path.expanduser(os.environ.get('PYMOKU_INSTR_PATH', None) or pkg_resources.resource_filename('pymoku', 'data'))
-PYMOKU_VERSION = pkg_resources.get_distribution("pymoku").version
+PYMOKU_VERSION = __version__
 MOKUDATAFILE = 'mokudata-%s-%s.tar.gz' % (pymoku.version.compat_fw[0], pymoku.version.compat_patch[0])
 
 log = logging.getLogger(__name__)
@@ -1261,18 +1263,17 @@ class Moku(object):
 		# objects then we don't want to mess with that.
 
 
-def deprecated(target, message):
+def deprecated(category, message):
 	def deprecate_warn(func):
-		header = 'Method Deprecation: ' if target == 'method' else 'Class Deprecation: ' if target == 'class' else 'Parameter Deprecation: '
+		header = 'Method Deprecation: ' if category == 'method' else 'Class Deprecation: ' if category == 'class' else 'Parameter Deprecation: '
 		@wraps(func)
 		def wrapper(*args, **kwargs):
-			warnings.simplefilter('always', DeprecationWarning)
-			warnings.warn(
-				message=header+message,
-				category=DeprecationWarning,
-				stacklevel=2
-			)
-			warnings.simplefilter('default', DeprecationWarning)
+			if category != 'param':
+				warnings.warn(
+					message=header+message,
+					category=DeprecationWarning,
+					stacklevel=2
+				)
 			return func(*args, **kwargs)
 		wrapper.__doc__ = '\n\t\t.. warning::\n\t\t\t{} {}\n\n\t\t'.format(header, message)
 		if func.__doc__ is not None:
