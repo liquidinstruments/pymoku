@@ -117,16 +117,15 @@ def _get_properties(self, properties):
 		results.append((prop, d))
 	return results
 
-# TODO can't use this unbound method hack in 3.7
 unmocks = {
-	'get_serial'            : pymoku.Moku.get_serial.__func__,
-	'get_name'              : pymoku.Moku.get_name.__func__,
-	'get_firmware_build'    : pymoku.Moku.get_firmware_build.__func__,
-	'get_version'           : pymoku.Moku.get_version.__func__,
-	'get_hw_version'        : pymoku.Moku.get_hw_version.__func__,
-	'get_bootmode'          : pymoku.Moku.get_bootmode.__func__,
-	'deploy_instrument'     : pymoku.Moku.deploy_instrument.__func__,
-	'_get_property_single'  : pymoku.Moku._get_property_single.__func__,
+	'get_serial'            : pymoku.Moku.get_serial,
+	'get_name'              : pymoku.Moku.get_name,
+	'get_firmware_build'    : pymoku.Moku.get_firmware_build,
+	'get_version'           : pymoku.Moku.get_version,
+	'get_hw_version'        : pymoku.Moku.get_hw_version,
+	'get_bootmode'          : pymoku.Moku.get_bootmode,
+	'deploy_instrument'     : pymoku.Moku.deploy_instrument,
+	'_get_property_single'  : pymoku.Moku._get_property_single,
 	'_get_properties'       : _get_properties,
 	'_get_property_section' : _get_property_section,
 }
@@ -140,6 +139,10 @@ def moku(*kwargs):
 	'''
 	m = pymoku.Moku('192.168.199.1')
 	for k, v in unmocks.items():
-		m.configure_mock(**{k + '.side_effect': partial(v, m)})
+		try:
+			# for Python 2.7
+			m.configure_mock(**{k + '.side_effect': partial(v.__func__, m)})
+		except AttributeError:
+			m.configure_mock(**{k + '.side_effect': partial(v, m)})
 
 	return m
