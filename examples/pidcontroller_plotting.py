@@ -13,13 +13,14 @@
 from pymoku import Moku
 from pymoku.instruments import PIDController
 
-import math
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
+
 
 def from_dB(dB):
     # Helper function that converts from dB to linear scale
     return 10**(dB/20.0)
+
 
 # Connect to your Moku by its device name
 # Alternatively, use Moku.get_by_serial('#####') or Moku('192.168.###.###')
@@ -28,7 +29,8 @@ m = Moku.get_by_name('Moku')
 try:
     i = m.deploy_or_connect(PIDController)
 
-    # Configure the Channel 1 PID Controller using frequency response characteristics
+    # Configure the Channel 1 PID Controller using frequency response
+    # characteristics
     #   P = -10dB
     #   I Crossover = 100Hz
     #   D Crossover = 10kHz
@@ -36,7 +38,8 @@ try:
     #   D Saturation = 10dB
     #   Double-I = OFF
     # Note that gains must be converted from dB first
-    i.set_by_frequency(1, kp=from_dB(-10), i_xover=1e2, ii_xover=None, d_xover =1e4, si=from_dB(10), sd=from_dB(10))
+    i.set_by_frequency(1, kp=from_dB(-10), i_xover=1e2, ii_xover=None,
+                       d_xover=1e4, si=from_dB(10), sd=from_dB(10))
 
     # Configure the Channel 2 PID Controller using gain characteristics
     #   Overall Gain = 6dB
@@ -57,8 +60,8 @@ try:
     i.enable_output(1, True)
     i.enable_output(2, True)
 
-    # Get initial data frame to set up plotting parameters. This can be done once
-    # if we know that the axes aren't going to change (otherwise we'd do
+    # Get initial data frame to set up plotting parameters. This can be done
+    # once if we know that the axes aren't going to change (otherwise we'd do
     # this in the loop)
     data = i.get_realtime_data()
 
@@ -66,7 +69,7 @@ try:
     plt.ion()
     plt.show()
     plt.grid(b=True)
-    plt.ylim([-1,1])
+    plt.ylim([-1, 1])
     plt.xlim([data.time[0], data.time[-1]])
 
     line1, = plt.plot([])
