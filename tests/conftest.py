@@ -4,10 +4,8 @@ from functools import partial
 
 try:
     from unittest.mock import patch
-    from unittest.mock import MagicMock
 except ImportError:
     from mock import patch
-    from mock import MagicMock
 
 defaults = {
     'system': {
@@ -99,14 +97,15 @@ defaults = {
     }
 }
 
-# Side_effects for unmocked functions
 
+# Side_effects for unmocked functions
 def _get_property_section(self, section):
-    #TODO needs to be recursive
+    # TODO needs to be recursive
     d = {}
     for k, v in defaults[section].items():
         d['.'.join((section, k))] = v
     return d
+
 
 def _get_properties(self, properties):
     results = []
@@ -117,26 +116,28 @@ def _get_properties(self, properties):
         results.append((prop, d))
     return results
 
+
 # Gather methods to wrap before we're in a mock context
 unmocks = {
-    'get_serial'            : pymoku.Moku.get_serial,
-    'get_name'              : pymoku.Moku.get_name,
-    'get_firmware_build'    : pymoku.Moku.get_firmware_build,
-    'get_version'           : pymoku.Moku.get_version,
-    'get_hw_version'        : pymoku.Moku.get_hw_version,
-    'get_bootmode'          : pymoku.Moku.get_bootmode,
-    'deploy_instrument'     : pymoku.Moku.deploy_instrument,
-    '_get_property_single'  : pymoku.Moku._get_property_single,
-    '_get_properties'       : _get_properties,
-    '_get_property_section' : _get_property_section,
+    'get_serial':            pymoku.Moku.get_serial,
+    'get_name':              pymoku.Moku.get_name,
+    'get_firmware_build':    pymoku.Moku.get_firmware_build,
+    'get_version':           pymoku.Moku.get_version,
+    'get_hw_version':        pymoku.Moku.get_hw_version,
+    'get_bootmode':          pymoku.Moku.get_bootmode,
+    'deploy_instrument':     pymoku.Moku.deploy_instrument,
+    '_get_property_single':  pymoku.Moku._get_property_single,
+    '_get_properties':       _get_properties,
+    '_get_property_section': _get_property_section,
 }
+
 
 @pytest.fixture
 @patch('pymoku.Moku', spec=pymoku.Moku)
 def moku(*kwargs):
     '''
-    We mock the entire Moku class, and the selectively unmock classmethods we need
-    side_effects for.
+    We mock the entire Moku class, and the selectively unmock classmethods we
+    need side_effects for.
     '''
     m = pymoku.Moku()
 

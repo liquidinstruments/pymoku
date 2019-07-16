@@ -4,9 +4,9 @@ from pymoku.instruments import ArbitraryWaveGen
 from pymoku import _arbwavegen
 
 try:
-    from unittest.mock import patch, ANY
+    from unittest.mock import ANY
 except ImportError:
-    from mock import patch, ANY
+    from mock import ANY
 
 
 @pytest.fixture

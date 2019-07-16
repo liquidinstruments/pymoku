@@ -8,13 +8,15 @@ try:
 except ImportError:
     from mock import patch, ANY
 
+
 @pytest.fixture
 def dut(moku):
-    with patch('pymoku._frame_instrument.FrameBasedInstrument._set_running') as fbi:
+    with patch('pymoku._frame_instrument.FrameBasedInstrument._set_running'):
         i = Oscilloscope()
         moku.deploy_instrument(i)
         moku.reset_mock()
         return i
+
 
 def test_set_timebase(dut, moku):
     '''
@@ -22,6 +24,7 @@ def test_set_timebase(dut, moku):
     '''
     dut.set_timebase(-1.0, 1.0)
     moku._write_regs.assert_called_with(ANY)
+
 
 def test_set_samplerate(dut, moku):
     '''
@@ -31,12 +34,14 @@ def test_set_samplerate(dut, moku):
     dut.get_samplerate()
     moku._write_regs.assert_called_with(ANY)
 
+
 def test_set_xmode(dut, moku):
     '''
     TODO Default test
     '''
     dut.set_xmode('roll')
     moku._write_regs.assert_called_with(ANY)
+
 
 def test_set_precision_mode(dut, moku):
     '''
@@ -46,12 +51,14 @@ def test_set_precision_mode(dut, moku):
     dut.is_precision_mode()
     moku._write_regs.assert_called_with(ANY)
 
+
 def test_set_defaults(dut, moku):
     '''
     TODO Default test
     '''
     dut.set_defaults()
     moku._write_regs.assert_called_with(ANY)
+
 
 def test_set_trigger(dut, moku):
     '''
@@ -60,12 +67,14 @@ def test_set_trigger(dut, moku):
     dut.set_trigger('in1', 'rising', 0.0)
     moku._write_regs.assert_called_with(ANY)
 
+
 def test_set_source(dut, moku):
     '''
     TODO Default test
     '''
     dut.set_source(1, 'in1', 0.0)
     moku._write_regs.assert_called_with(ANY)
+
 
 @pytest.mark.parametrize('attr, value', [
     ('source_ch1', _oscilloscope._OSC_SOURCE_CH1),

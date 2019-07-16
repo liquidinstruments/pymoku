@@ -31,6 +31,7 @@ def test_gen_sinewave(dut, moku):
     dut.gen_sinewave(1, 1.0, 100e3)
     moku._write_regs.assert_called_with(ANY)
 
+
 def test_gen_off(dut, moku):
     '''
     TODO Default test
