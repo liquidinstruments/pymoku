@@ -11,11 +11,10 @@ except ImportError:
 
 @pytest.fixture
 def dut(moku):
-    with patch('pymoku._frame_instrument.FrameBasedInstrument._set_running'):
-        i = ArbitraryWaveGen()
-        moku.deploy_instrument(i)
-        moku.reset_mock()
-        return i
+    i = ArbitraryWaveGen()
+    moku.deploy_instrument(i)
+    moku.reset_mock()
+    return i
 
 
 def test_set_defaults(dut, moku):
