@@ -12,7 +12,6 @@ from pymoku import Moku
 from pymoku.instruments import SpectrumAnalyzer
 import logging
 
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
@@ -33,7 +32,7 @@ try:
     i.set_defaults()
     i.set_dbmscale(dbm)
     i.set_span(0, 70e6)
-    i.set_rbw() # Auto-mode
+    i.set_rbw()  # Auto-mode
 
     # Set up the embedded signal generator
     i.gen_sinewave(1, 1.0, 0, sweep=True)
@@ -53,7 +52,7 @@ try:
         plt.ylim([-200, 100])
     else:
         plt.ylim([-0.5, 1.0])
-    plt.autoscale(axis='x',tight=True)
+    plt.autoscale(axis='x', tight=True)
 
     # Get an initial frame of data to set any frame-specific plot parameters
     frame = i.get_realtime_data()

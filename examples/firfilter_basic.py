@@ -1,10 +1,10 @@
-# pymoku example: Basic FIR Filter Box
-#
-# This example demonstrates how to run the FIR Filter Box and configure its
-# individual filter channel coefficients.
-#
-# (c) 2019 Liquid Instruments Pty. Ltd.
-#
+"""pymoku example: Basic FIR Filter Box
+
+This example demonstrates how to run the FIR Filter Box and configure its
+individual filter channel coefficients.
+
+(c) 2019 Liquid Instruments Pty. Ltd.
+"""
 from pymoku import Moku
 from pymoku.instruments import FIRFilter
 
@@ -29,8 +29,8 @@ try:
 
     # Load the coefficients for each FIR filter channel.
     #
-    # The channel's decimation factor determines the filter sample rate (Fs) and
-    # the maximum number of filter kernel coefficients (N) for the channel.
+    # The channel's decimation factor determines the filter sample rate (Fs)
+    # and the maximum number of filter kernel coefficients (N) for the channel.
     # The defining equations are given by:
     #
     #   3 <= decimation_factor <= 10,
@@ -44,9 +44,9 @@ try:
 
     # Both channels have unity gain and no offsets
     i.set_gains_offsets(1, input_gain=1.0, output_gain=1.0, input_offset=0,
-        output_offset=0)
+                        output_offset=0)
     i.set_gains_offsets(2, input_gain=1.0, output_gain=1.0, input_offset=0,
-        output_offset=0)
+                        output_offset=0)
 
 finally:
     m.close()

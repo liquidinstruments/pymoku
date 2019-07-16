@@ -1,12 +1,11 @@
-#
-# pymoku example: Livestream Datalogger
-#
-# This example demonstrates how you can use the Datalogger to live-stream
-# dual-channel voltage data over the network.
-#
-# (c) 2019 Liquid Instruments Pty. Ltd.
-#
-from pymoku import Moku
+"""pymoku example: Livestream Datalogger
+
+This example demonstrates how you can use the Datalogger to live-stream
+dual-channel voltage data over the network.
+
+(c) 2019 Liquid Instruments Pty. Ltd.
+"""
+from pymoku import Moku, StreamException
 from pymoku.instruments import Datalogger
 
 # Connect to your Moku by its device name
@@ -20,8 +19,8 @@ try:
     # 10Hz sample rate
     i.set_samplerate(10)
 
-    # Stop a previous session, if any, then start a new dual-channel data stream in real
-    # time over the network.
+    # Stop a previous session, if any, then start a new dual-channel data
+    # stream in real time over the network.
     i.stop_stream_data()
     i.start_stream_data(duration=10, ch1=True, ch2=True)
 
@@ -31,12 +30,15 @@ try:
 
         # Break out of this loop if we received no samples
         # This denotes the end of the streaming session
-        if not any(samples): break
+        if not any(samples):
+            break
 
         # Print out the new samples
-        print("Received: Channel 1 (%d smps), Channel 2 (%d smps)" % (len(samples[0]),len(samples[1])))
+        print("Received: Channel 1 (%d smps), Channel 2 (%d smps)"
+              "" % (len(samples[0]), len(samples[1])))
 
-    # Denote that we are done with the data streaming session so resources may be cleand up
+    # Denote that we are done with the data streaming session so resources may
+    # be cleand up
     i.stop_stream_data()
 
 except StreamException as e:

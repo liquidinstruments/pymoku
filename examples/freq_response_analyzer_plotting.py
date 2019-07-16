@@ -1,16 +1,14 @@
-#
-# pymoku example: Plotting Frequency Response Analyzer
-#
-# This example demonstrates how you can generate output sweeps using the
-# Frequency Response Analyzer instrument, and view transfer function data in real-time.
-#
-# (c) 2019 Liquid Instruments Pty. Ltd.
-#
+"""pymoku example: Plotting Frequency Response Analyzer
+
+This example demonstrates how you can generate output sweeps using the
+Frequency Response Analyzer instrument, and view transfer function data in
+real-time.
+
+(c) 2019 Liquid Instruments Pty. Ltd.
+"""
 from pymoku import Moku
 from pymoku.instruments import FrequencyResponseAnalyzer
-import logging
 
-import matplotlib
 import matplotlib.pyplot as plt
 
 # Connect to your Moku by its device name
@@ -18,27 +16,28 @@ import matplotlib.pyplot as plt
 m = Moku.get_by_name('Moku')
 
 # Define output sweep parameters here for readability
-f_start = 10 # Hz
-f_end = 100e6 # Hz
+f_start = 10  # Hz
+f_end = 100e6  # Hz
 sweep_length = 512
 log_scale = True
 single_sweep = False
-amp_ch1 = 0.5 # Vpp
-amp_ch2 = 0.5 # Vpp
-averaging_time = 1e-6 # sec
-settling_time = 1e-6 # sec
+amp_ch1 = 0.5  # Vpp
+amp_ch2 = 0.5  # Vpp
+averaging_time = 1e-6  # sec
+settling_time = 1e-6  # sec
 averaging_cycles = 1
 settling_cycles = 1
 
 try:
-    # See whether there's already a Frequency Response Analyzer running. If there is, take
-    # control of it; if not, deploy a new one.
+    # See whether there's already a Frequency Response Analyzer running. If
+    # there is, take control of it; if not, deploy a new one.
     i = m.deploy_or_connect(FrequencyResponseAnalyzer)
 
-    # Many PCs struggle to plot magnitude and phase for both channels at the default
-    # 10fps, turn it down so it remains smooth, albeit slow. Turn the output to 'sweep'
-    # mode so we can see the in-progress sweep (set to 'full_frame' or leave blank if
-    # if you only want to get completed traces, e.g. for analysis rather than viewing)
+    # Many PCs struggle to plot magnitude and phase for both channels at the
+    # default 10fps, turn it down so it remains smooth, albeit slow. Turn the
+    # output to 'sweep' mode so we can see the in-progress sweep (set to
+    # 'full_frame' or leave blank if if you only want to get completed traces,
+    # e.g. for analysis rather than viewing)
     i.set_framerate(5)
     i.set_xmode('sweep')
 
@@ -47,7 +46,8 @@ try:
     i.set_output(2, amp_ch2)
 
     # Set the sweep configuration
-    i.set_sweep(f_start, f_end, sweep_length, log_scale, averaging_time, settling_time, averaging_cycles, settling_cycles)
+    i.set_sweep(f_start, f_end, sweep_length, log_scale, averaging_time,
+                settling_time, averaging_cycles, settling_cycles)
 
     # Start the output sweep in loop mode
     i.start_sweep(single=single_sweep)

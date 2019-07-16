@@ -1,11 +1,10 @@
-#
-# (c) 2019 Liquid Instruments Pty. Ltd.
-#
-
+"""(c) 2019 Liquid Instruments Pty. Ltd.
+"""
 import numpy as np
 import warnings
 
 warnings.filterwarnings("ignore")
+
 
 def calculate_risetime(amplitude_data, time_data):
     """
@@ -24,11 +23,12 @@ def calculate_risetime(amplitude_data, time_data):
     # by looking for points of 1% and 99% amplitude.
     low_thresh = min_val + 0.02*diff
     high_thresh = max_val - 0.02*diff
-    i_low = [n for n,i in enumerate(amplitude_data) if i > low_thresh][0]
-    i_high = [n for n,i in enumerate(amplitude_data) if i > high_thresh][0]
+    i_low = [n for n, i in enumerate(amplitude_data) if i > low_thresh][0]
+    i_high = [n for n, i in enumerate(amplitude_data) if i > high_thresh][0]
 
     # The time difference between the end points is approximately the rise time
     return time_data[i_high] - time_data[i_low]
+
 
 def calculate_linewidth(power_data, frequency_data):
     """
@@ -58,4 +58,7 @@ def calculate_linewidth(power_data, frequency_data):
 
     width = half_freq2 - half_freq1
 
-    return width, (peak_freq, peak_amp), (half_freq1, half_amp), (half_freq2, half_amp)
+    return (width,
+            (peak_freq, peak_amp),
+            (half_freq1, half_amp),
+            (half_freq2, half_amp))

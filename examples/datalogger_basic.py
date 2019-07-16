@@ -1,12 +1,11 @@
-#
-# pymoku example: Basic Datalogger
-#
-# This example demonstrates use of the Datalogger instrument to log time-series
-# voltage data to a (Binary or CSV) file.
-#
-# (c) 2019 Liquid Instruments Pty. Ltd.
-#
-from pymoku import Moku
+"""pymoku example: Basic Datalogger
+
+This example demonstrates use of the Datalogger instrument to log time-series
+voltage data to a (Binary or CSV) file.
+
+(c) 2019 Liquid Instruments Pty. Ltd.
+"""
+from pymoku import Moku, StreamException
 from pymoku.instruments import Datalogger
 import time
 
@@ -20,11 +19,12 @@ try:
     # 100 samples per second
     i.set_samplerate(100)
 
-    # Stop an existing log, if any, then start a new one. 10 seconds of both channels to the
-    # SD Card (rather than internal storage). Use the Moku's binary file format for better speed
-    # and size performance.
+    # Stop an existing log, if any, then start a new one. 10 seconds of both
+    # channels to the SD Card (rather than internal storage). Use the Moku's
+    # binary file format for better speed and size performance.
     i.stop_data_log()
-    i.start_data_log(duration=10, use_sd=True, ch1=True, ch2=True, filetype='bin')
+    i.start_data_log(duration=10, use_sd=True, ch1=True, ch2=True,
+                     filetype='bin')
 
     # Track progress percentage of the data logging session
     progress = 0
@@ -39,7 +39,8 @@ try:
     i.upload_data_log()
     print("Uploaded log file to local directory.")
 
-    # Denote that we are done with the data logging session so resources may be cleand up
+    # Denote that we are done with the data logging session so resources may be
+    # cleand up
     i.stop_data_log()
 
 except StreamException as e:
