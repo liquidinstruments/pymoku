@@ -1,28 +1,31 @@
 
 # Pull in Python 3 string object on Python 2.
-from builtins import str
-
-import select, socket, struct, sys
-import os, os.path
-import logging, time, threading, math
+import sys
+import logging
+import time
+import threading
 import zmq
 
 from collections import deque
 from queue import Queue, Empty
-
-from . import *
-from . import _instrument, _get_autocommit, _input_instrument
-
+from . import _instrument
+from . import _get_autocommit
+from . import _input_instrument
+from . import _time
+from . import UncommittedSettings
+from . import NotDeployedException
+from . import NoDataException
+from . import FrameTimeout
 from ._instrument import needs_commit
-
-from ._frame_instrument_data import InstrumentData
 
 log = logging.getLogger(__name__)
 
+
 class FrameQueue(Queue):
     def put(self, item, block=True, timeout=None):
-        # Behaves the same way as default except that instead of raising Full, it
-        # just pushes the item on to the deque anyway, throwing away old frames.
+        # Behaves the same way as default except that instead of raising Full,
+        # it just pushes the item on to the deque anyway, throwing away old
+        # frames.
         self.not_full.acquire()
         try:
             if self.maxsize > 0 and block:
@@ -57,13 +60,16 @@ class FrameQueue(Queue):
             else:
                 return item
 
-    # The default _init for a Queue doesn't actually bound the deque, relying on the
-    # put function to bound.
+    # The default _init for a Queue doesn't actually bound the deque, relying
+    # on the put function to bound.
     def _init(self, maxsize):
         self.queue = deque(maxlen=maxsize)
 
-# Revisit: Should this be a Mixin? Are there more instrument classifications of this type, recording ability, for example?
-class FrameBasedInstrument(_input_instrument.InputInstrument, _instrument.MokuInstrument):
+
+# Revisit: Should this be a Mixin? Are there more instrument classifications
+# of this type, recording ability, for example?
+class FrameBasedInstrument(_input_instrument.InputInstrument,
+                           _instrument.MokuInstrument):
     def __init__(self):
         super(FrameBasedInstrument, self).__init__()
         self._buflen = 1
@@ -81,8 +87,9 @@ class FrameBasedInstrument(_input_instrument.InputInstrument, _instrument.MokuIn
 
     def _flush(self):
         """ Clear the Frame Buffer.
-        This is normally not required as one can simply wait for the correctly-generated frames to propagate through
-        using the appropriate arguments to :any:`get_data`.
+        This is normally not required as one can simply wait for the
+        correctly-generated frames to propagate through using the appropriate
+        arguments to :any:`get_data`.
         """
         with self._queue.mutex:
             self._queue.queue.clear()
@@ -104,55 +111,64 @@ class FrameBasedInstrument(_input_instrument.InputInstrument, _instrument.MokuIn
         # TODO: All instruments currently run at 10Hz due to kernel timing
         self.framerate = 10
 
-
     def get_data(self, timeout=None, wait=True):
         """ Get full-resolution data from the instrument.
 
-        This will pause the instrument and download the entire contents of the instrument's
-        internal memory. This may include slightly more data than the instrument is set up
-        to record due to rounding of some parameters in the instrument.
+        This will pause the instrument and download the entire contents of
+        the instrument's internal memory. This may include slightly more data
+        than the instrument is set up to record due to rounding of some
+        parameters in the instrument.
 
-        All settings must be committed before you call this function. If *pymoku.autocommit=True*
-        (the default) then this will always be true, otherwise you will need to have called
-        :any:`commit` first.
+        All settings must be committed before you call this function. If
+        *pymoku.autocommit=True* (the default) then this will always be true,
+        otherwise you will need to have called :any:`commit` first.
 
-        The download process may take a second or so to complete. If you require high rate
-        data, e.g. for rendering a plot, see `get_realtime_data`.
+        The download process may take a second or so to complete. If you
+        require high rate data, e.g. for rendering a plot, see
+        `get_realtime_data`.
 
-        If the *wait* parameter is true (the default), this function will wait for any new
-        settings to be applied before returning. That is, if you have set a new timebase (for example),
-        calling this with *wait=True* will guarantee that the data returned has this new timebase.
+        If the *wait* parameter is true (the default), this function will
+        wait for any new settings to be applied before returning. That is, if
+        you have set a new timebase (for example), calling this with
+        *wait=True* will guarantee that the data returned has this new
+        timebase.
 
-        Note that if instrument configuration is changed, a trigger event must occur before data
-        captured with that configuration set can become available. This can take an arbitrary amount
-        of time. For this reason the *timeout* should be set appropriately.
+        Note that if instrument configuration is changed, a trigger event
+        must occur before data captured with that configuration set can become
+        available. This can take an arbitrary amount of time. For this reason
+        the *timeout* should be set appropriately.
 
         :type timeout: float
-        :param timeout: Maximum time to wait for new data, or *None* for indefinite.
+        :param timeout: Maximum time to wait for new data, or *None* for
+            indefinite.
 
         :type wait: bool
-        :param wait: If *true* (default), waits for a new waveform to be captured with the most
-            recently-applied settings, otherwise just return the most recently captured valid data.
+        :param wait: If *true* (default), waits for a new waveform to be
+            captured with the most recently-applied settings, otherwise just
+            return the most recently captured valid data.
 
         :return: :any:`InstrumentData` subclass, specific to the instrument.
         """
-        if self._moku is None: raise NotDeployedException()
+        if self._moku is None:
+            raise NotDeployedException()
 
         if self.check_uncommitted_state():
-            raise UncommittedSettings("Detected uncommitted instrument settings.")
+            raise UncommittedSettings("Detected uncommitted "
+                                      "instrument settings.")
 
         # Stop existing logging sessions
         self._stream_stop()
 
-        # Block waiting on state to propagate (if wait=True) or a trigger to occur (wait=False)
-        # This also gives us acquisition parameters for the buffer we will subsequently stream
+        # Block waiting on state to propagate (if wait=True) or a trigger to
+        # occur (wait=False). This also gives us acquisition parameters for
+        # the buffer we will subsequently stream
         frame = self.get_realtime_data(timeout=timeout, wait=wait)
 
         # Wait on a synchronised frame or timeout, whichever comes first.
-        # XXX: Timeout is not well-handled, in that each sub-operation has its own timeout
-        # rather than the timeout applying to the whole function. This works in most circumstances
-        # but can mean that the function's maximum return time is several times longer than the
-        # user wanted.
+        # XXX: Timeout is not well-handled, in that each sub-operation has its
+        # own timeout rather than the timeout applying to the whole function.
+        # This works in most circumstances but can mean that the function's
+        # maximum return time is several times longer than the user wanted.
         start = time.time()
         while not(frame.synchronised):
             if timeout is not None and (time.time() > start + timeout):
@@ -169,7 +185,8 @@ class FrameBasedInstrument(_input_instrument.InputInstrument, _instrument.MokuIn
                 self.commit()
 
         # Get buffer data using a network stream
-        self._stream_start(start=0, duration=0, use_sd=False, ch1=True, ch2=True, filetype='net')
+        self._stream_start(start=0, duration=0, use_sd=False, ch1=True,
+                           ch2=True, filetype='net')
 
         while True:
             try:
@@ -189,7 +206,8 @@ class FrameBasedInstrument(_input_instrument.InputInstrument, _instrument.MokuIn
         channel_data = self._stream_get_processed_samples()
         self._stream_clear_processed_samples()
 
-        # Take the channel buffer data and put it into an 'InstrumentData' object
+        # Take the channel buffer data and put it into an 'InstrumentData'
+        # object
         if(getattr(self, '_frame_class', None)):
             buff = self._frame_class(**self._frame_kwargs)
             buff.ch1 = channel_data[0]
@@ -208,55 +226,63 @@ class FrameBasedInstrument(_input_instrument.InputInstrument, _instrument.MokuIn
         """ Set framerate """
         self.framerate = fr
 
-
     def get_realtime_data(self, timeout=None, wait=True):
         """ Get downsampled data from the instrument with low latency.
 
-        Returns a new :any:`InstrumentData` subclass (instrument-specific), containing
-        a version of the data that may have been downsampled from the original in order to
-        be transferred quickly.
+        Returns a new :any:`InstrumentData` subclass (instrument-specific),
+        containing a version of the data that may have been downsampled from
+        the original in order to be transferred quickly.
 
-        This function always returns a new object at `framerate` (10Hz by default), whether
-        or not there is new data in that object. This can be verified by checking the return
-        object's *waveformid* parameter, which increments each time a new waveform is captured
+        This function always returns a new object at `framerate`
+        (10Hz by default), whether or not there is new data in that object.
+        This can be verified by checking the return object's *waveformid*
+        parameter, which increments each time a new waveform is captured
         internally.
 
-        The downsampled, low-latency nature of this data makes it particularly suitable for
-        plotting in real time. If you require high-accuracy, high-resolution data for analysis,
-        see `get_data`.
+        The downsampled, low-latency nature of this data makes it
+        particularly suitable for plotting in real time. If you require
+        high-accuracy, high-resolution data for analysis, see `get_data`.
 
-        If the *wait* parameter is true (the default), this function will wait for any new
-        settings to be applied before returning. That is, if you have set a new timebase (for example),
-        calling this with *wait=True* will guarantee that the data returned has this new timebase.
+        If the *wait* parameter is true (the default), this function will wait
+        for any new settings to be applied before returning. That is, if you
+        have set a new timebase (for example), calling this with *wait=True*
+        will guarantee that the data returned has this new timebase.
 
-        Note that if instrument configuration is changed, a trigger event must occur before data
-        captured with that configuration set can become available. This can take an arbitrary amount
-        of time. For this reason the *timeout* should be set appropriately.
+        Note that if instrument configuration is changed, a trigger event must
+        occur before data captured with that configuration set can become
+        available. This can take an arbitrary amount of time. For this reason
+        the *timeout* should be set appropriately.
 
         :type timeout: float
-        :param timeout: Maximum time to wait for new data, or *None* for indefinite.
+        :param timeout: Maximum time to wait for new data, or *None* for
+            indefinite.
 
         :type wait: bool
-        :param wait: If *true* (default), waits for a new waveform to be captured with the most
-            recently-applied settings, otherwise just return the most recently captured valid data.
+        :param wait: If *true* (default), waits for a new waveform to be
+            captured with the most recently-applied settings, otherwise just
+            return the most recently captured valid data.
 
         :return: :any:`InstrumentData` subclass, specific to the instrument.
         """
         try:
-            # Dodgy hack, infinite timeout gets translated in to just an exceedingly long one
+            # Dodgy hack, infinite timeout gets translated in to just an
+            # exceedingly long one
             endtime = time.time() + (timeout or sys.maxsize)
             while self._running:
                 frame = self._queue.get(block=True, timeout=timeout)
-                # Return only frames with a triggered and rendered state being equal (so we can
-                # interpret the data correctly using the entire state)
-                # If wait is set, only frames that have the triggered state equal to the
-                # currently committed state will be returned.
-                if (not wait and frame._trigstate == frame._stateid) or (frame._trigstate == self._stateid):
+                # Return only frames with a triggered and rendered state being
+                # equal (so we can interpret the data correctly using the
+                # entire state)
+                # If wait is set, only frames that have the triggered state
+                # equal to the currently committed state will be returned.
+                if (not wait and frame._trigstate == frame._stateid) or \
+                        (frame._trigstate == self._stateid):
                     return frame
                 elif time.time() > endtime:
                     raise FrameTimeout()
                 else:
-                    log.debug("Incorrect state received: %d/%d", frame._trigstate, self._stateid)
+                    log.debug("Incorrect state received: %d/%d",
+                              frame._trigstate, self._stateid)
         except Empty:
             raise FrameTimeout()
 
@@ -303,7 +329,7 @@ class FrameBasedInstrument(_input_instrument.InputInstrument, _instrument.MokuIn
                             connected = False
                             log.info("Frame socket reconnecting")
                             self._make_frame_socket()
-            except Exception as e:
+            except Exception:
                 log.exception("Closed Frame worker")
             finally:
                 self.skt.close()
