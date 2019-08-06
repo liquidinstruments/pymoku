@@ -1,5 +1,6 @@
-from ._instrument import *
-from . import _utils
+from ._instrument import from_reg_signed, from_reg_bool
+from ._instrument import to_reg_signed, to_reg_bool
+
 
 class EmbeddedPLL(object):
 
@@ -20,7 +21,7 @@ class EmbeddedPLL(object):
     @bandwidth.setter
     def bandwidth(self, value):
         r = self.reg_base + EmbeddedPLL._REG_BANDWIDTH
-        self._instr._accessor_set(r, to_reg_signed(0, 5), value) #allow_set?
+        self._instr._accessor_set(r, to_reg_signed(0, 5), value)  # allow_set?
 
     @property
     def autoacquire(self):
@@ -30,24 +31,24 @@ class EmbeddedPLL(object):
     @autoacquire.setter
     def autoacquire(self, value):
         r = self.reg_base + EmbeddedPLL._REG_AUTOACQ
-        self._instr._accessor_set(r, to_reg_bool(0), value) #allow_set?
+        self._instr._accessor_set(r, to_reg_bool(0), value)  # allow_set?
 
     @property
     def reacquire(self):
         r = self.reg_base + EmbeddedPLL._REG_REACQ
         return self._instr._accessor_get(r, from_reg_bool(0))
 
-    @autoacquire.setter
+    @reacquire.setter
     def reacquire(self, value):
         r = self.reg_base + EmbeddedPLL._REG_REACQ
-        self._instr._accessor_set(r, to_reg_bool(0), value) #allow_set?
+        self._instr._accessor_set(r, to_reg_bool(0), value)  # allow_set?
 
     @property
     def pllreset(self):
         r = self.reg_base + EmbeddedPLL._REG_RESET
         return self._instr._accessor_get(r, from_reg_bool(31))
 
-    @autoacquire.setter
+    @pllreset.setter
     def pllreset(self, value):
         r = self.reg_base + EmbeddedPLL._REG_RESET
-        self._instr._accessor_set(r, to_reg_bool(31), value) #allow_set?
+        self._instr._accessor_set(r, to_reg_bool(31), value)  # allow_set?
