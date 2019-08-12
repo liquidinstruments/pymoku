@@ -45,12 +45,17 @@ REG_SA_TR2_STOP_L	= 107
 REG_SA_TR2_INCR_H	= 108
 REG_SA_TR2_INCR_L 	= 109
 
+REG_SA_DEMOD_OFFSET  	= 121
+REG_SA_DEMOD_SIN_FREQ	= 122
+REG_SA_DEMOD_SHIFT_EN	= 123
+
 _SA_WIN_BH			= 0
 _SA_WIN_FLATTOP		= 1
 _SA_WIN_HANNING		= 2
 _SA_WIN_NONE		= 3
 
 _SA_ADC_SMPS		= ADC_SMP_RATE
+_SA_DAC_SMPS		= DAC_SMP_RATE
 _SA_BUFLEN			= 2**14
 _SA_SCREEN_WIDTH	= 1024
 _SA_SCREEN_STEPS	= _SA_SCREEN_WIDTH - 1
@@ -250,6 +255,59 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self.rbw_ratio = rbw / window_factor / fbin_resolution
 		log.info("Resolution bandwidth set to %.2f Hz", self.rbw)
 
+	def _set_demodulation_compensation(self):
+		"""
+			This function is called to re-calculate the offsets, dithering gains and under saturation
+			sinewave gains used to remove spectral artefacts from the instrument.
+		"""
+
+		# SINEWAVE
+
+		# Increase sinewave amplitude as span is reduced
+		span = self.f2 - self.f1
+		sinegen_bitshift = max(min(17 - math.floor(2.4 * math.log10(span)), 7), 0)
+		sinegen_enable = (span < 2.0e6) and (sinegen_bitshift != 0)
+
+		# Phase dither to broaden sinewave peak to ~512 FFT points
+		phase_bitshift = round(-0.64 * math.log(1.0e6 / span, 2) + 14.0)
+
+		# Sinewave frequency. Place at 1.9 screens from DC. Need to correct for phase dither offset
+		fbin_resolution = _SA_ADC_SMPS / 2.0 / _SA_FFT_LENGTH / self._total_decimation
+		desired_frequency = fbin_resolution * _SA_FFT_LENGTH * 0.475
+		phase_step = min(round(desired_frequency / _SA_DAC_SMPS * 2**32), 2**32)
+		sinegen_frequency = phase_step - round(31.0/32.0 * 2**(phase_bitshift + 4))
+
+		# DITHER
+		dither_enable = True
+		dither_bitshift = max(min(int(sinegen_bitshift) - 1, 2), 0)
+
+		# DC OFFSET
+
+		# normal 0.5 lsb rounding offset
+		iq_offset = 0x4000
+
+		# offset from additive dither
+		iq_offset += 0x400 * (1 << dither_bitshift)
+
+		# filter offsets
+		[d1, d2, d3, d4, ideal] = self._calculate_decimations()
+		if (d2 == 1 and d3 == 4):
+			iq_offset -= 80
+		elif (d2 == 3):
+			iq_offset -= 896
+		elif (d2 > 3 and d2 < 16):
+			iq_offset -= round(2**(-0.52 * d2 + 10.8))
+		elif (d2 > 16):
+			iq_offset += 64
+
+		self.demod_sinegen_bitshift = sinegen_bitshift
+		self.demod_sinegen_enable = sinegen_enable
+		self.demod_sinegen_freq = sinegen_frequency
+		self.demod_phase_bitshift = phase_bitshift
+		self.demod_dither_enable = dither_enable
+		self.demod_dither_bitshift = dither_bitshift
+		self.demod_iq_offset = iq_offset
+
 	def _update_dependent_regs(self):
 		"""
 			This function is called at commit time to ensure a consistent Moku register state.
@@ -283,6 +341,9 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
 		# Output waveform generator sweep depends on the instrument parameters for optimal
 		# increment vs screen update rate
 		self._set_sweep_increments()
+
+		# Calculate demodulation offsets, gains and dithering
+		self._set_demodulation_compensation()
 
 		log.debug("DM: %f FS: %f, BS: %f, RD: %f, W:%d, RBW: %f, RBR: %f", self.demod, fspan, buffer_span, self.render_dds, self.window, rbw, self.rbw_ratio)
 
@@ -657,5 +718,13 @@ _sa_reg_handlers = {
 										from_reg_unsigned(0, 48, xform=lambda obj, p:p / _SA_SG_FREQ_SCALE)),
 	'tr2_incr'	:	((REG_SA_TR2_INCR_H, REG_SA_TR2_INCR_L),
 										to_reg_unsigned(0, 48, xform=lambda obj, p:p * _SA_SG_FREQ_SCALE),
-										from_reg_unsigned(0, 48, xform=lambda obj, p:p / _SA_SG_FREQ_SCALE))
+										from_reg_unsigned(0, 48, xform=lambda obj, p:p / _SA_SG_FREQ_SCALE)),
+
+	'demod_iq_offset':			(REG_SA_DEMOD_OFFSET,		to_reg_unsigned(0, 28),	from_reg_unsigned(0, 28)),
+	'demod_sinegen_freq':		(REG_SA_DEMOD_SIN_FREQ,		to_reg_unsigned(0, 32),	from_reg_unsigned(0, 32)),
+	'demod_dither_enable':		(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(0, 1),	from_reg_unsigned(0, 1)),
+	'demod_sinegen_enable':		(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(1, 1),	from_reg_unsigned(1, 1)),
+	'demod_dither_bitshift':	(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(2, 3),	from_reg_unsigned(2, 3)),
+	'demod_sinegen_bitshift':	(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(5, 3),	from_reg_unsigned(5, 3)),
+	'demod_phase_bitshift':		(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(8, 5),	from_reg_unsigned(8, 5))
 }
