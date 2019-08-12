@@ -272,7 +272,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		:param in_offset: Input signal offset
 
 		:type out_offset: float; [-1.0, 1.0] V
-		:type out_offset: Output signal offset
+		:param out_offset: Output signal offset
 
 		:raises InvalidConfigurationException: if the configuration of PID gains is not possible.
 		"""
@@ -316,7 +316,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		:param in_offset: Input signal offset
 
 		:type out_offset: float; [-1.0, 1.0] V
-		:type out_offset: Output signal offset
+		:param out_offset: Output signal offset
 
 		:raises InvalidConfigurationException: if the configuration of PID gains is not possible.
 		"""
