@@ -250,8 +250,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		This sets the gain stage to be on the opposite channel.
 
-		:type ch: string; {'main','aux'}
-		:param ch: Lock-in channel name to put PID on. 
+		:type lia_ch: string; {'main','aux'}
+		:param lia_ch: Lock-in channel name to put PID on.
 
 		:type kp: float; [-1e3,1e3]
 		:param kp: Proportional gain factor
@@ -261,9 +261,6 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		:type d_xover: float; [1,10e6] Hz
 		:param d_xover: Differentiator crossover frequency
-
-		:type ii_xover: float; [1, 1e6] Hz
-		:param ii_xover: Second integrator crossover frequency
 
 		:type si: float; float; [-1e3,1e3]
 		:param si: Integrator gain saturation
@@ -294,8 +291,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		This sets the gain stage to be on the opposite channel.
 
-		:type ch: string; {'main','aux'}
-		:param ch: Lock-in channel name to put PID on
+		:type lia_ch: string; {'main','aux'}
+		:param lia_ch: Lock-in channel name to put PID on
 
 		:type g: float; [0,2^16 - 1]
 		:param g: Gain
@@ -329,7 +326,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self._pid_channel = lia_ch
 		self._pid_gains = {'g': g, 'kp': kp, 'ki': ki, 'kd': kd, 'si': si, 'sd': sd, 'in_offset': in_offset, 'out_offset': out_offset}
 
-	# Overload the PID API functions 
+	# Overload the PID API functions
 	set_by_gain = set_pid_by_gain
 	set_by_frequency = set_pid_by_frequency
 
@@ -400,7 +397,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self.lo_reacquire = 0
 
 		# Store the desired output amplitude in the case that 'set_outputs' is called with
-		# 'demod' for the auxillary channel output. We can't set the register here because 
+		# 'demod' for the auxillary channel output. We can't set the register here because
 		# it is shared with the local oscillator amplitude. It will be updated on commit.
 		self._demod_amp = output_amplitude
 
@@ -540,14 +537,14 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 	@needs_commit
 	def set_trigger(self, source, edge, level, minwidth=None, maxwidth=None, hysteresis=10e-3, hf_reject=False, mode='auto'):
-		""" 
+		"""
 		Set the trigger source for the monitor channel signals. This can be either of the input or
 		monitor signals, or the external input.
 
 		:type source: string, {'in1','in2','A','B','ext'}
-		:param source: Trigger Source. May be either an input or monitor channel (as set by 
-				:py:meth:`~pymoku.instruments.LockInAmp.set_monitor`), or external. External refers 
-				to the back-panel connector of the same	name, allowing triggering from an 
+		:param source: Trigger Source. May be either an input or monitor channel (as set by
+				:py:meth:`~pymoku.instruments.LockInAmp.set_monitor`), or external. External refers
+				to the back-panel connector of the same	name, allowing triggering from an
 				externally-generated digital [LV]TTL or CMOS signal.
 
 		:type edge: string, {'rising','falling','both'}
@@ -575,7 +572,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# Define the trigger sources appropriate to the LockInAmp instrument
 		source = _utils.str_to_val(_LIA_OSC_SOURCES, source, 'trigger source')
 
-		# This function is the portion of set_trigger shared among instruments with embedded scopes. 
+		# This function is the portion of set_trigger shared among instruments with embedded scopes.
 		self._set_trigger(source, edge, level, minwidth, maxwidth, hysteresis, hf_reject, mode)
 
 	def _signal_source_volts_per_bit(self, source, scales, trigger=False):
@@ -640,7 +637,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			# If you don't do this, the filtered signal is scaled by < 1.0.
 			self.sineout_amp = 2**16 - 1
 		else:
-			# If aux is set to LO or demod, set the sine amplitude as desired. 
+			# If aux is set to LO or demod, set the sine amplitude as desired.
 			# Only ever output on Channel 2.
 			self.sineout_amp = (self._lo_amp if self.aux_source=='sine' else self._demod_amp) / self._dac_gains()[1]
 
