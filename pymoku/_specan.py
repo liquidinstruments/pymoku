@@ -260,34 +260,35 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
 			This function is called to re-calculate the offsets, dithering gains and under saturation
 			sinewave gains used to remove spectral artefacts from the instrument.
 		"""
+		self._compensation_singen()
+		self._compensation_dithering()
+		self._compensation_offset()
 
-		# SINEWAVE
-
+	def _compensation_singen(self):
 		# Increase sinewave amplitude as span is reduced
 		span = self.f2 - self.f1
-		sinegen_bitshift = max(min(17 - math.floor(2.4 * math.log10(span)), 7), 0)
-		sinegen_enable = (span < 2.0e6) and (sinegen_bitshift != 0)
+		self.demod_sinegen_bitshift = max(min(17 - math.floor(2.4 * math.log10(span)), 7), 0)
+		self.demod_sinegen_enable = (span < 2.0e6) and (self.demod_sinegen_bitshift != 0)
 
 		# Phase dither to broaden sinewave peak to ~512 FFT points
-		phase_bitshift = round(-0.64 * math.log(1.0e6 / span, 2) + 14.0)
+		self.demod_phase_bitshift = round(-0.64 * math.log(1.0e6 / span, 2) + 14.0)
 
 		# Sinewave frequency. Place at 1.9 screens from DC. Need to correct for phase dither offset
 		fbin_resolution = _SA_ADC_SMPS / 2.0 / _SA_FFT_LENGTH / self._total_decimation
 		desired_frequency = fbin_resolution * _SA_FFT_LENGTH * 0.475
 		phase_step = min(round(desired_frequency / _SA_DAC_SMPS * 2**32), 2**32)
-		sinegen_frequency = phase_step - round(31.0/32.0 * 2**(phase_bitshift + 4))
+		self.demod_sinegen_freq = phase_step - round(31.0/32.0 * 2**(self.demod_phase_bitshift + 4))
 
-		# DITHER
-		dither_enable = True
-		dither_bitshift = max(min(int(sinegen_bitshift) - 1, 2), 0)
+	def _compensation_dithering(self):
+		self.demod_dither_bitshift = max(min(int(self.demod_sinegen_bitshift) - 1, 2), 0)
+		self.demod_dither_enable = True
 
-		# DC OFFSET
-
+	def _compensation_offset(self):
 		# normal 0.5 lsb rounding offset
 		iq_offset = 0x4000
 
 		# offset from additive dither
-		iq_offset += 0x400 * (1 << dither_bitshift)
+		iq_offset += 0x400 * (1 << self.demod_dither_bitshift)
 
 		# filter offsets
 		[d1, d2, d3, d4, ideal] = self._calculate_decimations()
@@ -300,12 +301,6 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
 		elif (d2 > 16):
 			iq_offset += 64
 
-		self.demod_sinegen_bitshift = sinegen_bitshift
-		self.demod_sinegen_enable = sinegen_enable
-		self.demod_sinegen_freq = sinegen_frequency
-		self.demod_phase_bitshift = phase_bitshift
-		self.demod_dither_enable = dither_enable
-		self.demod_dither_bitshift = dither_bitshift
 		self.demod_iq_offset = iq_offset
 
 	def _update_dependent_regs(self):
