@@ -265,13 +265,13 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
 		self._compensation_offset()
 
 	def _compensation_singen(self):
-		# Increase sinewave amplitude as span is reduced
-		span = self.f2 - self.f1
+		# Increase sinewave amplitude as span is reduced. Don't consider spans less than 1 kHz
+		span = max(self.f2 - self.f1, 1.0e3)
 		self.demod_sinegen_bitshift = max(min(17 - math.floor(2.4 * math.log10(span)), 7), 0)
 		self.demod_sinegen_enable = (span < 2.0e6) and (self.demod_sinegen_bitshift != 0)
 
 		# Phase dither to broaden sinewave peak to ~512 FFT points
-		self.demod_phase_bitshift = round(-0.64 * math.log(1.0e6 / span, 2) + 14.0)
+		self.demod_phase_bitshift = round(14.0 - 0.58 * math.log(1.0e6 / span, 2))
 
 		# Sinewave frequency. Place at 1.9 screens from DC. Need to correct for phase dither offset
 		fbin_resolution = _SA_ADC_SMPS / 2.0 / _SA_FFT_LENGTH / self._total_decimation
