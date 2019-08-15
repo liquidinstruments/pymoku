@@ -108,15 +108,15 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 				average_period = average_period_cycles
 
 			# Scale according to the predicted accumulator counter size:
-			if average_period <= 2**16:
+			if average_period <= 2**15:
 				average_gain[f] = 2**4
-			elif average_period <= 2**21:
+			elif average_period <= 2**22:
 				average_gain[f] = 2**-1
-			elif average_period <= 2**26:
+			elif average_period <= 2**25:
 				average_gain[f] = 2**-6
-			elif average_period <= 2**31:
+			elif average_period <= 2**30:
 				average_gain[f] = 2**-11
-			elif average_period <= 2**36:
+			elif average_period <= 2**35:
 				average_gain[f] = 2**-16
 			else :
 				average_gain[f] = 2**-20
