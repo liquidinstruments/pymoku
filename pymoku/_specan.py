@@ -211,7 +211,7 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
 
 			d4 = min(max(math.floor(dec), 1), 16)
 
-		return [d1, d2, d3, d4, ideal]
+		return d1, d2, d3, d4, ideal
 
 	def _set_decimations(self, d1, d2, d3, d4, ideal):
 
@@ -291,14 +291,14 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
 		iq_offset += 0x400 * (1 << self.demod_dither_bitshift)
 
 		# filter offsets
-		[d1, d2, d3, d4, ideal] = self._calculate_decimations()
-		if (d2 == 1 and d3 == 4):
+		d1, d2, d3, d4, ideal = self._calculate_decimations()
+		if d2 == 1 and d3 == 4:
 			iq_offset -= 80
-		elif (d2 == 3):
+		elif d2 == 3:
 			iq_offset -= 896
-		elif (d2 > 3 and d2 < 16):
+		elif d2 > 3 and d2 < 16:
 			iq_offset -= round(2**(-0.52 * d2 + 10.8))
-		elif (d2 > 16):
+		elif d2 > 16:
 			iq_offset += 64
 
 		self.demod_iq_offset = iq_offset
@@ -717,8 +717,8 @@ _sa_reg_handlers = {
 
 	'demod_iq_offset':			(REG_SA_DEMOD_OFFSET,		to_reg_unsigned(0, 28),	from_reg_unsigned(0, 28)),
 	'demod_sinegen_freq':		(REG_SA_DEMOD_SIN_FREQ,		to_reg_unsigned(0, 32),	from_reg_unsigned(0, 32)),
-	'demod_dither_enable':		(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(0, 1),	from_reg_unsigned(0, 1)),
-	'demod_sinegen_enable':		(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(1, 1),	from_reg_unsigned(1, 1)),
+	'demod_dither_enable':		(REG_SA_DEMOD_SHIFT_EN,				to_reg_bool(0),			from_reg_bool(0)),
+	'demod_sinegen_enable':		(REG_SA_DEMOD_SHIFT_EN,				to_reg_bool(1),			from_reg_bool(1)),
 	'demod_dither_bitshift':	(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(2, 3),	from_reg_unsigned(2, 3)),
 	'demod_sinegen_bitshift':	(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(5, 3),	from_reg_unsigned(5, 3)),
 	'demod_phase_bitshift':		(REG_SA_DEMOD_SHIFT_EN,		to_reg_unsigned(8, 5),	from_reg_unsigned(8, 5))
