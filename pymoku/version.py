@@ -1,16 +1,14 @@
-import pkg_resources as pkr
+# Official release name
+release = '2.8.0'
 
 # List of compatible firmware builds
-compat_fw = [501]
+compat_fw = [509]
 
 # List of compatible patches
-compat_patch = [1]
+compat_patch = [0]
 
 # List of compatible packs
-compat_packs = [('python-py', '7439434C8782832F134C21090D4E32DB49896171\n')]
+compat_packs = []
 
 # Compatible network protocol version
-protocol_version = '7'
-
-# Official release name
-release = pkr.get_distribution("pymoku").version
+protocol_version = '8'
