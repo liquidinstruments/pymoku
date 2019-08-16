@@ -93,8 +93,8 @@ class BasicWaveformGenerator(MokuInstrument):
 	@needs_commit
 	def set_defaults(self):
 		super(BasicWaveformGenerator, self).set_defaults()
-		self.out1_enable = True
-		self.out2_enable = True
+		self.enable_ch1 = True
+		self.enable_ch2 = True
 		self.out1_amplitude = 0
 		self.out2_amplitude = 0
 		self.adc1_statuslight = False
@@ -369,10 +369,10 @@ class BasicWaveformGenerator(MokuInstrument):
 		_utils.check_parameter_valid('set', ch, [1,2],'output channel', allow_none=True)
 
 		if ch is None or ch == 1:
-			self.out1_enable = False
+			self.enable_ch1 = False
 
 		if ch is None or ch == 2:
-			self.out2_enable = False
+			self.enable_ch2 = False
 
 
 class WaveformGenerator(BasicWaveformGenerator):
