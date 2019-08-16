@@ -110,7 +110,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 			# Scale according to the predicted accumulator counter size:
 			if average_period <= 2**15:
 				average_gain[f] = 2**4
-			elif average_period <= 2**22:
+			elif average_period <= 2**20:
 				average_gain[f] = 2**-1
 			elif average_period <= 2**25:
 				average_gain[f] = 2**-6
