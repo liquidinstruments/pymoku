@@ -12,7 +12,7 @@ import warnings
 
 from pymoku.tools import compat as cp
 
-__version__ = pymoku.version.release
+__version__ = pkg_resources.get_distribution("pymoku").version
 
 DATAPATH = os.path.expanduser(os.environ.get('PYMOKU_INSTR_PATH', None) or pkg_resources.resource_filename('pymoku', 'data'))
 PYMOKU_VERSION = __version__
