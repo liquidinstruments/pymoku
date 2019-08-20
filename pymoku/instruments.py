@@ -1,5 +1,3 @@
-import sys
-
 from . import _instrument
 from . import _oscilloscope
 from . import _waveform_generator
@@ -10,15 +8,14 @@ from . import _datalogger
 from . import _frequency_response_analyzer
 from . import _bode_analyzer
 from . import _arbwavegen
-from . import _stream_instrument
 from . import _frame_instrument
-from . import _input_instrument
 from . import _pid_controller
 from . import _iirfilterbox
 from . import _firfilter
 from . import _laser_lock_box
-''' Preferred import point. Aggregates the separate instruments and helper classes
-    to flatten the import heirarchy (e.g. pymoku.instruments.Oscilloscope rather
+''' Preferred import point. Aggregates the separate instruments and helper
+    classes to flatten the import heirarchy
+    (e.g. pymoku.instruments.Oscilloscope rather
     than pymoku.instruments._oscilloscope.Oscilloscope)
 '''
 
@@ -36,7 +33,8 @@ SpectrumAnalyzer = _specan.SpectrumAnalyzer
 LockInAmp = _lockinamp.LockInAmp
 Datalogger = _datalogger.Datalogger
 BodeAnalyzer = _bode_analyzer.BodeAnalyzer
-FrequencyResponseAnalyzer = _frequency_response_analyzer.FrequencyResponseAnalyzer
+FrequencyResponseAnalyzer = \
+    _frequency_response_analyzer.FrequencyResponseAnalyzer
 PIDController = _pid_controller.PIDController
 ArbitraryWaveGen = _arbwavegen.ArbitraryWaveGen
 IIRFilterBox = _iirfilterbox.IIRFilterBox
