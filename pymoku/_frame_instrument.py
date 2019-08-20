@@ -11,12 +11,12 @@ from queue import Queue, Empty
 from . import _instrument
 from . import _get_autocommit
 from . import _input_instrument
-from . import _time
 from . import UncommittedSettings
 from . import NotDeployedException
 from . import NoDataException
 from . import FrameTimeout
 from ._instrument import needs_commit
+from ._frame_instrument_data import InstrumentData # noqa
 
 log = logging.getLogger(__name__)
 
@@ -35,9 +35,9 @@ class FrameQueue(Queue):
                 elif timeout < 0:
                     raise ValueError("'timeout' must be a non-negative number")
                 else:
-                    endtime = _time() + timeout
+                    endtime = Queue._time() + timeout
                     while self._qsize() == self.maxsize:
-                        remaining = endtime - _time()
+                        remaining = endtime - Queue._time()
                         if remaining <= 0.0:
                             break
                         self.not_full.wait(remaining)
