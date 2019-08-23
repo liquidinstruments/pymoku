@@ -4,9 +4,11 @@
 
 from pymoku import InvalidOperationException
 
-def stream_init(moku, uname, api_key, str_id1, str_id2, npoints=100, mode='lines', line={}):
 
-    line = ';'.join([ '='.join(i) for i in list(line.items())])
+def stream_init(moku, uname, api_key, str_id1,
+                str_id2, npoints=100, mode='lines', line={}):
+
+    line = ';'.join(['='.join(i) for i in list(line.items())])
 
     settings = [
         ('plotly.uname', uname),
@@ -20,16 +22,18 @@ def stream_init(moku, uname, api_key, str_id1, str_id2, npoints=100, mode='lines
 
     moku._set_properties(settings)
 
+
 def stream_url(moku):
     return moku._get_property_single('plotly.url')
+
 
 def plot_frame(dataframe, uname=None, api_key=None, mode='lines', line={}):
     try:
         import plotly.plotly as ply
-        import plotly.tools as ptls
         from plotly.graph_objs import Scatter, Layout, Data, Figure
     except ImportError:
-        raise InvalidOperationException("Please install the Python plotly bindings")
+        raise InvalidOperationException("Please install the Python "
+                                        "plotly bindings")
 
     if uname and api_key:
         ply.sign_in(uname, api_key)
