@@ -1,23 +1,29 @@
-from ._instrument import *
-from . import _utils
+from pymoku._instrument import to_reg_bool
+from pymoku._instrument import from_reg_bool
+from pymoku._instrument import to_reg_unsigned
+from pymoku._instrument import from_reg_unsigned
+from pymoku._instrument import to_reg_signed
+from pymoku._instrument import from_reg_signed
+from pymoku._instrument import InvalidConfigurationException
 import math
 
+
 class PID(object):
-    _REG_EN             = 0
-    _REG_GAIN           = 1
-    _REG_I_GAIN         = 2
-    _REG_I_FB           = 3
-    _REG_P_GAIN         = 4
-    _REG_D_GAIN         = 5
-    _REG_D_FB           = 6
-    _REG_IN_OFFSET      = 7
-    _REG_OUT_OFFSET     = 8
+    _REG_EN = 0
+    _REG_GAIN = 1
+    _REG_I_GAIN = 2
+    _REG_I_FB = 3
+    _REG_P_GAIN = 4
+    _REG_D_GAIN = 5
+    _REG_D_FB = 6
+    _REG_IN_OFFSET = 7
+    _REG_OUT_OFFSET = 8
 
     def __init__(self, instr, reg_base, fs):
         self._instr = instr
         self.reg_base = reg_base
         self.fs = fs
-        self.ang_freq = fs / ( 2 * math.pi)
+        self.ang_freq = fs / (2 * math.pi)
         self.enable = True
         self.bypass = False
         self.int_en = True
@@ -108,33 +114,43 @@ class PID(object):
 
     @property
     def i_gain(self):
-        r =  self.reg_base + PID._REG_I_GAIN
-        return self._instr._accessor_get(r, from_reg_unsigned(0, 25, xform=lambda obj, x: x / (2.0**24-1)))
+        r = self.reg_base + PID._REG_I_GAIN
+        return self._instr._accessor_get(
+            r, from_reg_unsigned(0, 25,
+                                 xform=lambda obj, x: x / (2.0**24 - 1)))
 
     @i_gain.setter
     def i_gain(self, value):
         r = self.reg_base + PID._REG_I_GAIN
-        self._instr._accessor_set(r, to_reg_unsigned(0, 25, xform=lambda obj, x: x * (2.0**24-1)), value)
+        self._instr._accessor_set(
+            r, to_reg_unsigned(0, 25,
+                               xform=lambda obj, x: x * (2.0**24-1)), value)
 
     @property
     def i_fb(self):
         r = self.reg_base + PID._REG_I_FB
-        return self._instr._accessor_get(r, from_reg_signed(0, 25, xform=lambda obj, x: x / (2.0**24 -1)))
+        return self._instr._accessor_get(
+            r, from_reg_signed(0, 25, xform=lambda obj, x: x / (2.0**24 - 1)))
 
     @i_fb.setter
     def i_fb(self, value):
         r = self.reg_base + PID._REG_I_FB
-        self._instr._accessor_set(r, to_reg_signed(0, 25, xform=lambda obj, x: x * (2.0**24 - 1)), value)
+        self._instr._accessor_set(
+            r, to_reg_signed(0, 25,
+                             xform=lambda obj, x: x * (2.0**24 - 1)), value)
 
     @property
     def p_gain(self):
         r = self.reg_base + PID._REG_P_GAIN
-        return self._instr._accessor_get(r, from_reg_unsigned(0, 25, xform=lambda obj, x: x / (2.0**11)))
+        return self._instr._accessor_get(
+            r, from_reg_unsigned(0, 25, xform=lambda obj, x: x / (2.0**11)))
 
     @p_gain.setter
     def p_gain(self, value):
         r = self.reg_base + PID._REG_P_GAIN
-        self._instr._accessor_set(r, to_reg_unsigned(0, 25, xform=lambda obj, x: x * (2.0**11)), value)
+        self._instr._accessor_set(
+            r, to_reg_unsigned(0, 25,
+                               xform=lambda obj, x: x * (2.0**11)), value)
 
     @property
     def d_gain(self):
@@ -149,12 +165,16 @@ class PID(object):
     @property
     def d_fb(self):
         r = self.reg_base + PID._REG_D_FB
-        return self._instr._accessor_get(r, from_reg_unsigned(0, 25, xform=lambda obj, x: x / (2.0**24 -1)))
+        return self._instr._accessor_get(
+            r, from_reg_unsigned(0, 25,
+                                 xform=lambda obj, x: x / (2.0**24 - 1)))
 
     @d_fb.setter
     def d_fb(self, value):
         r = self.reg_base + PID._REG_D_FB
-        return self._instr._accessor_set(r, to_reg_unsigned(0, 25, xform=lambda obj, x: x * (2.0**24-1)), value)
+        return self._instr._accessor_set(
+            r, to_reg_unsigned(0, 25,
+                               xform=lambda obj, x: x * (2.0**24 - 1)), value)
 
     @property
     def input_offset(self):
@@ -177,9 +197,10 @@ class PID(object):
         return self._instr._accessor_set(r, to_reg_unsigned(0, 16, value))
 
     def set_reg_by_gain(self, g, kp, ki, kd, si, sd):
-        # calculates the device registers ased on the gain values given.
-        # Note that additional scaling due to external gain such as
-        # ADC, DAC, decimation gains, etc. are not accounted for here))
+        """ calculates the device registers ased on the gain values given.
+         Note that additional scaling due to external gain such as
+         ADC, DAC, decimation gains, etc. are not accounted for here))
+        """
 
         self.gain = g
         self.p_gain = kp
@@ -191,32 +212,44 @@ class PID(object):
             self.d_gain = 4 * sd if sd else self.ang_freq / float(kd)
 
         if si is None:
-            i_c  = 0
+            i_c = 0
         else:
             i_c = ki / si
-            if i_c  < self.ang_freq / (2**24-1) :
-                si_max = (g * ki / ( 2 * self.ang_freq / (2**24 -1 )))
-                raise InvalidConfigurationException("Integrator corner below minimum. Decrease integrator saturation below %.3f dB." % (20*math.log(si_max,10)))
+            if i_c < self.ang_freq / (2**24 - 1):
+                si_max = (g * ki / (2 * self.ang_freq / (2**24 - 1)))
+                raise InvalidConfigurationException("Integrator corner below"
+                                                    " minimum. Decrease "
+                                                    "integrator saturation "
+                                                    "below %.3f dB."
+                                                    % (20 *
+                                                       math.log(si_max, 10)))
         self.i_fb = 1.0 - (i_c / self.ang_freq)
 
-        if sd :
-            if kd > 0 :
-                fc_coeff = sd / ( self.ang_freq / float(kd))
+        if sd:
+            if kd > 0:
+                fc_coeff = sd / (self.ang_freq / float(kd))
             else:
                 fc_coeff = 1
         else:
-            fc_coeff = (math.sqrt(2*math.pi) / 10.0) # default differentiator roll off to a 10th of the nyquist
+            # default differentiator roll off to a 10th of the nyquist
+            fc_coeff = (math.sqrt(2 * math.pi) / 10.0)
 
-        if fc_coeff > (math.sqrt(2*math.pi) / 10.0):
-            raise InvalidConfigurationException("Differentiator saturation corner above maximum. Reduce differentiator saturation below %.3f." % (fc_coeff * kd * self.ang_freq))
+        if fc_coeff > (math.sqrt(2 * math.pi) / 10.0):
+            raise InvalidConfigurationException("Differentiator saturation "
+                                                "corner above maximum. Reduce"
+                                                " differentiator saturation "
+                                                "below %.3f."
+                                                % (fc_coeff * kd *
+                                                    self.ang_freq))
 
         self.d_fb = 1.0 - fc_coeff
 
     def set_reg_by_frequency(self, kp, i_xover, d_xover, si, sd):
-        #converts frequency cross over information
+        # converts frequency cross over information
 
-        # Particularly high or low I or D crossover frequencies (<1Hz, >1MHz) require that some of their gain is
-        # pushed to the overall gain on the end due to dynamic range limitations
+        # Particularly high or low I or D crossover frequencies (<1Hz, >1MHz)
+        # require that some of their gain is pushed to the overall gain on
+        # the end due to dynamic range limitations
 
         cross_over_gain = kp if kp else 1.0
 
@@ -228,8 +261,9 @@ class PID(object):
             i_gmax = max(i_unity / 1e6, 1.0)
 
         if d_xover:
-            d_unity = d_xover * (2*math.pi) * self.ang_freq / d_xover
-            d_gmin = sd if sd is not None and sd < 1 else max(10.0e6 / d_unity, 1.0)
+            d_unity = d_xover * (2 * math.pi) * self.ang_freq / d_xover
+            d_gmin = sd if sd is not None and sd < 1 else max(10.0e6 / d_unity,
+                                                              1.0)
             d_gmax = max(1 / d_unity, 1.0)
 
         g_min = min(i_gmin, d_gmin)
@@ -249,7 +283,7 @@ class PID(object):
         si = None if i_xover is None else si
         sd = None if d_xover is None else sd
 
-        if i_xover :
+        if i_xover:
             ki = cross_over_gain * i_xover
         else:
             ki = 0.0
