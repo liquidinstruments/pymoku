@@ -1,22 +1,22 @@
 import math
-
 import logging
-
+from pymoku._instrument import deprecated
+from pymoku._instrument import to_reg_bool
+from pymoku._instrument import from_reg_bool
 from pymoku._instrument import to_reg_unsigned
 from pymoku._instrument import from_reg_unsigned
 from pymoku._instrument import to_reg_signed
 from pymoku._instrument import from_reg_signed
-from pymoku._instrument import to_reg_bool
-from pymoku._instrument import from_reg_bool
-from pymoku._instrument import needs_commit
 from pymoku._instrument import ADC_SMP_RATE
 from pymoku._instrument import CHN_BUFLEN
+from pymoku._instrument import needs_commit
+from pymoku._instrument import InvalidConfigurationException
+from pymoku._instrument import ValueOutOfRangeException
+
 from pymoku._oscilloscope import _CoreOscilloscope
+
 from pymoku._pid_controller import PIDController
-from pymoku import deprecated
-from pymoku import ValueOutOfRangeException
-from pymoku import InvalidConfigurationException
-from . import _utils
+from pymoku import _utils
 
 log = logging.getLogger(__name__)
 
@@ -205,22 +205,23 @@ class LockInAmp(PIDController, _CoreOscilloscope):
         signals of the Lock-In.
 
         .. note::
-          When 'external' demodulation is used (that is, without a PLL), the
-          Lock-in Amplifier doesn't know the frequency and therefore can't form
-          the quadrature for full I/Q demodulation. This in turn means it can't
-          distinguish I from Q, X from Y, or form R/Theta. This limits the
-          choices for signals that can be output on the AUX channel to ones not
-          from the Lock-in logic (e.g. demodulation source, auxilliary sine
-          wave etc).
+          When 'external' demodulation is used (that is, without a PLL),
+          the Lock-in Amplifier doesn't know the frequency and therefore
+          can't form the quadrature for full I/Q demodulation. This in
+          turn means it can't distinguish I from Q, X from Y, or form R/Theta.
+          This limits the choices for signals that can be output on the AUX
+          channel to ones not from the Lock-in logic (e.g. demodulation
+          source, auxilliary sine wave etc).
 
           An exception will be raised if you attempt to set the auxilliary
-          channel to view aa signal from the Lock-in logic while external
-          demodulation is enabled.
+          channel to view aa signal from the Lock-in logic whileexternal
+           demodulation is enabled.
 
         :type main: string; {'x', 'y', 'r', 'theta', 'offset', 'none'}
         :param main: Main output signal
 
-        :type aux: string; {'x', 'y', 'r', theta', 'sine', 'demod', 'offset',
+        :type aux: string; {'x', 'y', 'r', theta', 'sine', 'demod',
+                            'offset',
                             'none'}
         :param aux: Auxillary output signal
 
@@ -230,9 +231,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
         :type aux_offset: float; [-1.0, 1.0] V
         :param aux_offset: Auxillary output offset
         """
-        _utils.check_parameter_valid('string', main,
+        _utils.check_parameter_valid(
+            'string', main,
                                      desc="main output signal")
-        _utils.check_parameter_valid('string', aux,
+        _utils.check_parameter_valid(
+            'string', aux,
                                      desc="auxillary output signal")
 
         # Allow uppercase options
@@ -475,16 +478,21 @@ class LockInAmp(PIDController, _CoreOscilloscope):
          when auxillary channel set to output `demod`.
 
         """
-        _utils.check_parameter_valid('range', frequency, allowed=[0, 200e6],
-                                     desc="demodulation frequency", units="Hz")
-        _utils.check_parameter_valid('range', phase, allowed=[0, 360],
+        _utils.check_parameter_valid('range',
+                                     frequency,
+                                     allowed=[0, 200e6],
+                                     desc="demodulation frequency",
+                                     units="Hz")
+        _utils.check_parameter_valid('range',
+                                     phase,
+                                     allowed=[0, 360],
                                      desc="demodulation phase",
                                      units="degrees")
-        _utils.check_parameter_valid('set', mode,
+        _utils.check_parameter_valid('set',
+                                     mode,
                                      allowed=['internal',
                                               'external',
-                                              'external_pll']
-                                     )
+                                              'external_pll'])
 
         if mode == 'external' and not (self.aux_source in
                                        _NON_PLL_ALLOWED_SIGS
@@ -721,19 +729,18 @@ class LockInAmp(PIDController, _CoreOscilloscope):
             Converts volts to bits depending on the signal source
         """
         # Decimation gain is applied only when using precision mode data
-        if (not trigger and self.is_precision_mode()) or (trigger
-                                                          and
-                                                          self.trig_precision):
+        if (not trigger and self.is_precision_mode()) or \
+                (trigger and self.trig_precision):
             deci_gain = self._deci_gain()
         else:
             deci_gain = 1.0
 
         if (source == _LIA_SOURCE_A):
             level = self._monitor_source_volts_per_bit(
-                        self.monitor_a, scales) / deci_gain
+                self.monitor_a, scales) / deci_gain
         elif (source == _LIA_SOURCE_B):
             level = self._monitor_source_volts_per_bit(
-                        self.monitor_b, scales) / deci_gain
+                self.monitor_b, scales) / deci_gain
         elif (source == _LIA_SOURCE_IN1):
             level = scales['gain_adc1'] * (10.0 if scales['atten_ch1']
                                            else 1.0) / deci_gain
@@ -756,7 +763,6 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
         monitor_source_gains = {
             'none': 1.0,
-            # Undo range scaling
             'in1': scales['gain_adc1']/(10.0 if scales['atten_ch1'] else 1.0),
             'in2': scales['gain_adc2']/(10.0 if scales['atten_ch2'] else 1.0),
             'main': scales['gain_dac1']*(2.0**4),  # 12bit ADC - 16bit DAC
@@ -770,8 +776,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
     def _update_dependent_regs(self, scales):
         super(LockInAmp, self)._update_dependent_regs(scales)
 
-        # Update PID/Gain stage input/output selects as they may have swapped
-        # channels
+        # Update PID/Gain stage input/output selects as they may have
+        # swapped channels
         self._update_pid_gain_selects()
 
         # Set the PID gains using the correct output DAC channel
@@ -783,8 +789,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
         # Set gainstage gain with correct output DAC channel scaling
         self.gainstage_gain = self._gainstage_gain / \
-            self._dac_gains()[1 if self._pid_channel == 'main' else 0] / \
-            31.25 / 2.0**12
+            self._dac_gains()[1 if self._pid_channel == 'main' else 0] \
+            / 31.25 / 2.0**12
 
         if self.aux_source in _LIA_SIGNALS:
             # If aux is set to a filtered signal, set this to maximum gain
@@ -956,8 +962,10 @@ _lia_reg_hdl = {
 
     'lpf_int_i_gain':
         (REG_LIA_INT_IGAIN1,
-            to_reg_signed(0, 25, xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
-            from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
+            to_reg_signed(0, 25,
+                          xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
+            from_reg_signed(0, 25,
+                            xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
          ),
 
     'ch1_pid1_int_i_gain':
@@ -967,26 +975,34 @@ _lia_reg_hdl = {
 
     'lpf_int_ifb_gain':
         (REG_LIA_INT_IFBGAIN1,
-            to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
-            from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
+            to_reg_signed(0, 25,
+                          xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
+            from_reg_signed(0, 25,
+                            xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
          ),
 
     'ch1_pid1_int_ifb_gain':
         (REG_LIA_INT_IFBGAIN2,
-            to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
-            from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
+            to_reg_signed(0, 25,
+                          xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
+            from_reg_signed(0, 25,
+                            xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
          ),
 
     'lpf_int_p_gain':
         (REG_LIA_INT_PGAIN1,
-            to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
-            from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
+            to_reg_signed(0, 25,
+                          xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
+            from_reg_signed(0, 25,
+                            xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
          ),
 
     'ch1_pid1_int_p_gain':
         (REG_LIA_INT_PGAIN2,
-            to_reg_signed(0, 25, xform=lambda obj, x: x*2**11),
-            from_reg_signed(0, 25, xform=lambda obj, x: x / 2**11)),
+            to_reg_signed(0, 25,
+                          xform=lambda obj, x: x * 2**11),
+            from_reg_signed(0, 25,
+                            xform=lambda obj, x: x / 2**11)),
 
     'gainstage_gain':
         (REG_LIA_GAIN_STAGE,
@@ -995,8 +1011,10 @@ _lia_reg_hdl = {
 
     'ch1_pid1_diff_p_gain':
         (REG_LIA_DIFF_PGAIN2,
-            to_reg_signed(0, 25, xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
-            from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
+            to_reg_signed(0, 25,
+                          xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
+            from_reg_signed(0, 25,
+                            xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
          ),
 
     'ch1_pid1_diff_i_gain':
@@ -1006,26 +1024,28 @@ _lia_reg_hdl = {
 
     'ch1_pid1_diff_ifb_gain':
         (REG_LIA_DIFF_IFBGAIN2,
-            to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
-            from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
+            to_reg_signed(0, 25,
+                          xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
+            from_reg_signed(0, 25,
+                            xform=lambda obj, x: x / _LIA_ID_GAINSCALE)
          ),
 
     'frequency_demod':
         ((REG_LIA_FREQDEMOD_H, REG_LIA_FREQDEMOD_L),
-            to_reg_unsigned(0, 48, xform=lambda obj, x: x / _LIA_FREQSCALE),
-            from_reg_unsigned(0, 48, xform=lambda obj, x: x * _LIA_FREQSCALE)
+            to_reg_unsigned(0, 48,
+                            xform=lambda obj, x: x / _LIA_FREQSCALE),
+            from_reg_unsigned(0, 48,
+                              xform=lambda obj, x: x * _LIA_FREQSCALE)
          ),
 
     'phase_demod':
         ((REG_LIA_PHASEDEMOD_H, REG_LIA_PHASEDEMOD_L),
             to_reg_unsigned(0, 48,
-                            xform=lambda obj, x: x / (360.0 * _LIA_PHASESCALE)
-                            ),
+                            xform=lambda obj,
+                            x: x / (360.0 * _LIA_PHASESCALE)),
             from_reg_unsigned(0, 48,
-                              xform=lambda obj, x: x * (360.0 *
-                                                        _LIA_PHASESCALE)
-                              )
-         ),
+                              xform=lambda obj,
+                              x: x * (360.0 * _LIA_PHASESCALE))),
 
     'lo_frequency':
         ((REG_LIA_LO_FREQ_H, REG_LIA_LO_FREQ_L),
@@ -1036,12 +1056,11 @@ _lia_reg_hdl = {
     'lo_phase':
         ((REG_LIA_LO_PHASE_H, REG_LIA_LO_PHASE_L),
             to_reg_unsigned(0, 48,
-                            xform=lambda obj, x: x / (360.0 * _LIA_PHASESCALE)
-                            ),
+                            xform=lambda obj,
+                            x: x / (360.0 * _LIA_PHASESCALE)),
             to_reg_unsigned(0, 48,
-                            xform=lambda obj, x: x * (360.0 * _LIA_PHASESCALE)
-                            )
-         ),
+                            xform=lambda obj,
+                            x: x * (360.0 * _LIA_PHASESCALE))),
 
     'monitor_select0':
         (REG_LIA_MONSELECT,
@@ -1053,7 +1072,7 @@ _lia_reg_hdl = {
                                              _LIA_MON_AUX,
                                              _LIA_MON_IN2,
                                              _LIA_MON_DEMOD]
-                            ),
+            ),
             from_reg_unsigned(0, 3)
          ),
 
@@ -1067,7 +1086,7 @@ _lia_reg_hdl = {
                                              _LIA_MON_AUX,
                                              _LIA_MON_IN2,
                                              _LIA_MON_DEMOD]
-                            ),
+            ),
             from_reg_unsigned(0, 3)
          ),
 
