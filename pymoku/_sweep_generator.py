@@ -1,5 +1,8 @@
-from ._instrument import *
-from . import _utils
+from pymoku._instrument import to_reg_unsigned
+from pymoku._instrument import from_reg_unsigned
+from pymoku._instrument import to_reg_bool
+from pymoku._instrument import from_reg_bool
+
 
 class SweepGenerator(object):
     _REG_CONFIG = 0
@@ -29,33 +32,35 @@ class SweepGenerator(object):
     @waveform.setter
     def waveform(self, value):
         r = self.reg_base + SweepGenerator._REG_CONFIG
-        self._instr._accessor_set(r, to_reg_unsigned(0, 2,
-            allow_set=[SweepGenerator.WAVE_TYPE_SINGLE,
-                       SweepGenerator.WAVE_TYPE_UPDOWN,
-                       SweepGenerator.WAVE_TYPE_SAWTOOTH,
-                       SweepGenerator.WAVE_TYPE_TRIANGLE]), value)
+        self._instr._accessor_set(
+            r, to_reg_unsigned(0, 2,
+                               allow_set=[SweepGenerator.WAVE_TYPE_SINGLE,
+                                          SweepGenerator.WAVE_TYPE_UPDOWN,
+                                          SweepGenerator.WAVE_TYPE_SAWTOOTH,
+                                          SweepGenerator.WAVE_TYPE_TRIANGLE]),
+            value)
 
     @property
     def direction(self):
-        r1 = self.reg_base + SweepGenerator._REG_CONFIG
+        r = self.reg_base + SweepGenerator._REG_CONFIG
         return self._instr._accessor_get(r, from_reg_unsigned(5, 1))
 
     @direction.setter
     def direction(self, value):
         r = self.reg_base + SweepGenerator._REG_CONFIG
-        self._instr._accessor_set(r, to_reg_unsigned(5, 1,
-            allow_set=[0,1]), value)
+        self._instr._accessor_set(
+            r, to_reg_unsigned(5, 1, allow_set=[0, 1]), value)
 
     @property
     def logsweep(self):
-        r1 = self.reg_base + SweepGenerator._REG_CONFIG
+        r = self.reg_base + SweepGenerator._REG_CONFIG
         return self._instr._accessor_get(r, from_reg_unsigned(6, 1))
 
     @logsweep.setter
     def logsweep(self, value):
         r = self.reg_base + SweepGenerator._REG_CONFIG
-        self._instr._accessor_set(r, to_reg_unsigned(6, 1,
-            allow_set=[0,1]), value)
+        self._instr._accessor_set(
+            r, to_reg_unsigned(6, 1, allow_set=[0, 1]), value)
 
     @property
     def start(self):
