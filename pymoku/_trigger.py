@@ -1,5 +1,10 @@
-from ._instrument import *
-from . import _utils
+from pymoku._instrument import to_reg_unsigned
+from pymoku._instrument import from_reg_unsigned
+from pymoku._instrument import to_reg_signed
+from pymoku._instrument import from_reg_signed
+from pymoku._instrument import to_reg_bool
+from pymoku._instrument import from_reg_bool
+
 
 class Trigger(object):
     _REG_CONFIG = 0
@@ -31,7 +36,9 @@ class Trigger(object):
     @trigtype.setter
     def trigtype(self, value):
         r = self.reg_base + Trigger._REG_CONFIG
-        self._instr._accessor_set(r, to_reg_unsigned(0, 4, allow_set=[Trigger.TYPE_EDGE, Trigger.TYPE_PULSE]), value)
+        self._instr._accessor_set(
+            r, to_reg_unsigned(0, 4, allow_set=[Trigger.TYPE_EDGE,
+                                                Trigger.TYPE_PULSE]), value)
 
     @property
     def edge(self):
@@ -41,7 +48,10 @@ class Trigger(object):
     @edge.setter
     def edge(self, value):
         r = self.reg_base + Trigger._REG_CONFIG
-        self._instr._accessor_set(r, to_reg_unsigned(4, 2, allow_set=[Trigger.EDGE_RISING, Trigger.EDGE_FALLING, Trigger.EDGE_BOTH]), value)
+        self._instr._accessor_set(
+            r, to_reg_unsigned(4, 2, allow_set=[Trigger.EDGE_RISING,
+                                                Trigger.EDGE_FALLING,
+                                                Trigger.EDGE_BOTH]), value)
 
     @property
     def pulsetype(self):
@@ -51,7 +61,9 @@ class Trigger(object):
     @pulsetype.setter
     def pulsetype(self, value):
         r = self.reg_base + Trigger._REG_CONFIG
-        self._instr._accessor_set(r, to_reg_unsigned(7, 2, allow_set=[Trigger.PULSE_MIN, Trigger.PULSE_MAX]), value)
+        self._instr._accessor_set(
+            r, to_reg_unsigned(7, 2, allow_set=[Trigger.PULSE_MIN,
+                                                Trigger.PULSE_MAX]), value)
 
     @property
     def hysteresis(self):
@@ -66,7 +78,7 @@ class Trigger(object):
     @property
     def holdoff(self):
         r = self.reg_base + Trigger._REG_HOLDOFF
-        return self._instr._accessor_get(r, from_reg_unsigned(0, 32), value)
+        return self._instr._accessor_get(r, from_reg_unsigned(0, 32))
 
     @holdoff.setter
     def holdoff(self, value):
@@ -96,7 +108,7 @@ class Trigger(object):
     @property
     def level(self):
         r = self.reg_base + Trigger._REG_LEVEL
-        return self._instr._accessor_get(r, from_reg_signed(0,32))
+        return self._instr._accessor_get(r, from_reg_signed(0, 32))
 
     @level.setter
     def level(self, value):
@@ -112,4 +124,3 @@ class Trigger(object):
     def duration(self, value):
         r = self.reg_base + Trigger._REG_DURATION
         self._instr._accessor_set(r, to_reg_unsigned(0, 32), value)
-
