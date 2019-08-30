@@ -1,7 +1,7 @@
 import pkg_resources as pkr
 
 # List of compatible firmware builds
-compat_fw = [510]
+compat_fw = [511]
 
 # List of compatible patches
 compat_patch = [0]
