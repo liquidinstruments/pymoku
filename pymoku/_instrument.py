@@ -1,59 +1,67 @@
-import threading, collections, time, struct, socket, logging
+import logging
+import struct
 from functools import wraps
 
-from pymoku import *
-from pymoku import _get_autocommit, _set_autocommit
+from pymoku import _get_autocommit
+from pymoku import MokuException
+from pymoku import ValueOutOfRangeException
+from pymoku import NotDeployedException
+from pymoku import deprecated
+from pymoku import UncommittedSettings
+from pymoku import InvalidOperationException
+from pymoku import InvalidConfigurationException
+from pymoku import NoDataException
+from pymoku import MPNotMounted
 
-
-REG_CTL     = 0
-REG_STAT    = 1
-REG_ID1     = 2
-REG_ID2     = 3
-REG_PAUSE   = 4
-REG_OUTLEN  = 5
-REG_FILT    = 6
-REG_FRATE   = 7
-REG_SCALE   = 8
-REG_OFFSET  = 9
+REG_CTL = 0
+REG_STAT = 1
+REG_ID1 = 2
+REG_ID2 = 3
+REG_PAUSE = 4
+REG_OUTLEN = 5
+REG_FILT = 6
+REG_FRATE = 7
+REG_SCALE = 8
+REG_OFFSET = 9
 REG_OFFSETA = 10
 REG_STRCTL0 = 11
 REG_STRCTL1 = 12
-REG_AINCTL  = 13
+REG_AINCTL = 13
 # 14 was Decimation before that moved in to instrument space
 REG_PRETRIG = 15
 REG_CAL_ADC0, REG_CAL_ADC1, REG_CAL_DAC0, REG_CAL_DAC1 = list(range(16, 20))
 REG_TEMP_DAC = 14
 REG_MMAP_ACCESS = 62
-REG_STATE   = 63
+REG_STATE = 63
 
 # Common instrument parameters
 ADC_SMP_RATE = 500e6
 DAC_SMP_RATE = 1e9
 CHN_BUFLEN = 2**14
 
-### None of these constants will be exported to pymoku.instruments. If an
-### instrument wants to give users access to these (e.g. relay settings) then
-### the Instrument should define their own symbols equal to these guys
+# None of these constants will be exported to pymoku.instruments. If an
+# instrument wants to give users access to these (e.g. relay settings) then
+# the Instrument should define their own symbols equal to these guys
 
 # REG_CTL Constants
-COMMIT      = 0x80000000
-INSTR_RST   = 0x00000001
+COMMIT = 0x80000000
+INSTR_RST = 0x00000001
 
 # REG_OUTLEN Constants
-ROLL        = 1
-SWEEP       = 2
-FULL_FRAME  = 0
+ROLL = 1
+SWEEP = 2
+FULL_FRAME = 0
 
 # REG_FILT Constants
-RDR_CUBIC   = 0
-RDR_MINMAX  = 1
-RDR_DECI    = 2
-RDR_DDS     = 3
+RDR_CUBIC = 0
+RDR_MINMAX = 1
+RDR_DECI = 2
+RDR_DDS = 3
 
 # REG_AINCTL Constants
-RELAY_DC    = 1
-RELAY_LOWZ  = 2
-RELAY_LOWG  = 4
+RELAY_DC = 1
+RELAY_LOWZ = 2
+RELAY_LOWG = 4
 
 log = logging.getLogger(__name__)
 
@@ -67,6 +75,7 @@ def _usgn(i, width):
     raise ValueOutOfRangeException(
         "%d doesn't fit in %d unsigned bits" % (i, width))
 
+
 def _sgn(i, width):
     """ Return the unsigned that, when interpretted with given width,
         represents the signed value i """
@@ -78,6 +87,7 @@ def _sgn(i, width):
         return int(i)
 
     return int(2**width + i)
+
 
 def _upsgn(i, width):
     """ Return the signed integer that comes about by interpretting *i*
@@ -134,7 +144,6 @@ def to_reg_signed(_offset, _len, allow_set=None, allow_range=None,
 
             return tuple(r)
 
-
     return __ss
 
 
@@ -190,7 +199,7 @@ def to_reg_bool(_offset):
 
     :param _offset: Offset of bit in the register (set)
     """
-    return to_reg_unsigned(_offset, 1, allow_set=[0,1], xform=lambda obj,
+    return to_reg_unsigned(_offset, 1, allow_set=[0, 1], xform=lambda obj,
                            x: int(x))
 
 
@@ -260,7 +269,9 @@ def from_reg_bool(_offset):
     """
     return from_reg_unsigned(_offset, 1, xform=lambda obj, x: bool(x))
 
+
 _awaiting_commit = False
+
 
 def needs_commit(func):
     """ Wrapper function which checks whether settings should be committed
@@ -277,7 +288,7 @@ def needs_commit(func):
             # Remember if a commit was already being waited on
             was_awaiting = _awaiting_commit
             if not _awaiting_commit:
-                _awaiting_commit = True # Lock the commit
+                _awaiting_commit = True  # Lock the commit
 
             try:
                 # Attempt to call the wrapped function
@@ -292,9 +303,6 @@ def needs_commit(func):
                     _awaiting_commit = False
             return res
     return wrapper
-
-
-
 
 
 class MokuInstrument(object):
@@ -328,19 +336,21 @@ class MokuInstrument(object):
         # Return local if present. Support a single register or a
         # tuple of registers
         try:
-            c = [ self._localregs[r] if self._localregs[r] is not None \
-                else self._remoteregs[r] or 0 for r in reg ]
-            if all(i is not None for i in c): return get_xform(self, c)
+            c = [self._localregs[r] if self._localregs[r] is not None
+                 else self._remoteregs[r] or 0 for r in reg]
+            if all(i is not None for i in c):
+                return get_xform(self, c)
         except TypeError:
             c = self._localregs[reg] if self._localregs[reg] is not None \
                 else self._remoteregs[reg] or 0
-            if c is not None: return get_xform(self, c)
+            if c is not None:
+                return get_xform(self, c)
 
     def _accessor_set(self, reg, set_xform, data):
         # Support a single register or a tuple of registers
         try:
-            old = [ self._localregs[r] if self._localregs[r] is not None \
-                else self._remoteregs[r] or 0 for r in reg ]
+            old = [self._localregs[r] if self._localregs[r] is not None
+                   else self._remoteregs[r] or 0 for r in reg]
         except TypeError:
             old = self._localregs[reg] if self._localregs[reg] is not None \
                 else self._remoteregs[reg] or 0
@@ -386,28 +396,28 @@ class MokuInstrument(object):
         self._set_frontend(1, fiftyr=True, atten=False, ac=False)
         self._set_frontend(2, fiftyr=True, atten=False, ac=False)
 
-
     def attach_moku(self, moku):
         self._moku = moku
         try:
             self.calibration = dict(
                 self._moku._get_property_section("calibration"))
-        except:
+        except Exception:
             log.warning("Can't read calibration values.")
 
     def _commit(self, update_state=True):
-        if self._moku is None: raise NotDeployedException()
+        if self._moku is None:
+            raise NotDeployedException()
         if update_state:
             # Some statid docco says 8-bits, some 16.
             self._stateid = (self._stateid + 1) % 256
             self.state_id = self._stateid
             self.state_id_alt = self._stateid
-        regs = [ (i, d) for i, d in enumerate(self._localregs)
-                if d is not None ]
+        regs = [(i, d) for i, d in enumerate(self._localregs)
+                if d is not None]
         # TODO: Save this register set against stateid to be retrieved later
         log.debug("Committing reg set %s", str(regs))
         self._moku._write_regs(regs)
-        self._remoteregs = [ l if l is not None else r for l, r
+        self._remoteregs = [l if l is not None else r for l, r
                             in zip(self._localregs, self._remoteregs)]
         self._localregs = [None] * 128
 
@@ -440,8 +450,9 @@ class MokuInstrument(object):
         this will give the user access to those modified states through
         their attributes or accessors
         """
-        if self._moku is None: raise NotDeployedException()
-        self._remoteregs = [ val for reg, val
+        if self._moku is None:
+            raise NotDeployedException()
+        self._remoteregs = [val for reg, val
                             in self._moku._read_regs(list(range(128)))]
         self._stateid = self.state_id
         self._on_reg_sync()
@@ -455,11 +466,11 @@ class MokuInstrument(object):
         # Denotes the list of registers we expect to be non-zero on
         # instrument deploy Control registers [0:4], DAC Test [26],
         # State ID [63]
-        reg_blacklist = [0,1,2,3,26,63]
+        reg_blacklist = [0, 1, 2, 3, 26, 63]
 
         # Get all register values that aren't blacklisted
-        reg_data = [d for i,d in enumerate(self._remoteregs)
-                    if i not in reg_blacklist ]
+        reg_data = [d for i, d in enumerate(self._remoteregs)
+                    if i not in reg_blacklist]
         log.debug(reg_data)
         # If none of these register values are non-zero, assume the
         # instrument has not been
@@ -511,7 +522,7 @@ class MokuInstrument(object):
     @needs_commit
     def _set_frontend(self, channel, fiftyr, atten, ac):
         # Set the analog frontend configuration
-        relays =  RELAY_LOWZ if fiftyr else 0
+        relays = RELAY_LOWZ if fiftyr else 0
         relays |= RELAY_LOWG if atten else 0
         relays |= RELAY_DC if not ac else 0
 
@@ -544,8 +555,8 @@ class MokuInstrument(object):
         gt2s = "calibration.DGT-2"
 
         try:
-            g1  = float(self.calibration[g1s])
-            g2  = float(self.calibration[g2s])
+            g1 = float(self.calibration[g1s])
+            g2 = float(self.calibration[g2s])
             gt1 = float(self.calibration[gt1s])
             gt2 = float(self.calibration[gt2s])
         except (KeyError, TypeError):
@@ -572,8 +583,8 @@ class MokuInstrument(object):
         ot2s = "calibration.DOT-2"
 
         try:
-            o1  = float(self.calibration[o1s])
-            o2  = float(self.calibration[o2s])
+            o1 = float(self.calibration[o1s])
+            o2 = float(self.calibration[o2s])
             ot1 = float(self.calibration[ot1s])
             ot2 = float(self.calibration[ot2s])
         except (KeyError, TypeError):
@@ -582,7 +593,6 @@ class MokuInstrument(object):
             ot1 = ot2 = 0
 
         return o1, ot1, o2, ot2
-
 
     def _adc_gains(self):
         relay_string_1 = '-'.join(
@@ -602,8 +612,8 @@ class MokuInstrument(object):
         gt2s = "calibration.AGT-%s-2" % relay_string_2
 
         try:
-            g1  = float(self.calibration[g1s])
-            g2  = float(self.calibration[g2s])
+            g1 = float(self.calibration[g1s])
+            g2 = float(self.calibration[g2s])
             gt1 = float(self.calibration[gt1s])
             gt2 = float(self.calibration[gt2s])
         except (KeyError, TypeError):
@@ -623,7 +633,6 @@ class MokuInstrument(object):
 
         return g1, g2
 
-
     def _adc_offsets(self):
         relay_string_1 = '-'.join(
             ("50" if self.relays_ch1 & RELAY_LOWZ else "1M",
@@ -631,9 +640,9 @@ class MokuInstrument(object):
              "D" if self.relays_ch1 & RELAY_DC else "A"))
 
         relay_string_2 = '-'.join(
-            ( "50" if self.relays_ch2 & RELAY_LOWZ else "1M",
-              "L" if self.relays_ch2 & RELAY_LOWG else "H",
-              "D" if self.relays_ch2 & RELAY_DC else "A"))
+            ("50" if self.relays_ch2 & RELAY_LOWZ else "1M",
+             "L" if self.relays_ch2 & RELAY_LOWG else "H",
+             "D" if self.relays_ch2 & RELAY_DC else "A"))
 
         o1s = "calibration.AO-%s-1" % relay_string_1
         o2s = "calibration.AO-%s-2" % relay_string_2
@@ -641,8 +650,8 @@ class MokuInstrument(object):
         ot2s = "calibration.AOT-%s-2" % relay_string_2
 
         try:
-            o1  = float(self.calibration[o1s])
-            o2  = float(self.calibration[o2s])
+            o1 = float(self.calibration[o1s])
+            o2 = float(self.calibration[o2s])
             ot1 = float(self.calibration[ot1s])
             ot2 = float(self.calibration[ot2s])
         except (KeyError, TypeError):
@@ -669,8 +678,10 @@ class MokuInstrument(object):
     def _set_mmap_access(self, access):
         self.mmap_access = access
 
+
 _instr_reg_handlers = {
-    # Name : Register, set-transform (user to register), get-transform (register to user); either None is W/R-only
+    # Name : Register, set-transform (user to register), get-transform
+    # (register to user); either None is W/R-only
     'instr_id':
         (REG_ID1,
             None,
@@ -715,17 +726,17 @@ _instr_reg_handlers = {
 
     'waveform_avg1':
         (REG_FILT,
-            to_reg_unsigned(2, 4, allow_range=(0,13)),
+            to_reg_unsigned(2, 4, allow_range=(0, 13)),
             from_reg_unsigned(2, 4)),
     'waveform_avg2':
         (REG_FILT,
-            to_reg_unsigned(6, 4, allow_range=(0,13)),
+            to_reg_unsigned(6, 4, allow_range=(0, 13)),
             from_reg_unsigned(6, 4)),
 
     # Allow range is set to allow ~0-30Hz
     'framerate':
         (REG_FRATE,
-            to_reg_unsigned(0, 8, allow_range=(0,15),
+            to_reg_unsigned(0, 8, allow_range=(0, 15),
                             xform=lambda obj, f: f * 256.0 / 477.0),
             from_reg_unsigned(0, 8, xform=lambda obj, f: f / 256.0 * 477.0)),
 
@@ -734,14 +745,14 @@ _instr_reg_handlers = {
         (REG_SCALE,
             to_reg_unsigned(0, 16,
                             xform=lambda obj, x:
-                            128 * (x - 1), allow_range=(0,0x077E)),
+                            128 * (x - 1), allow_range=(0, 0x077E)),
             from_reg_unsigned(0, 16, xform=lambda obj, x: (x / 128.0) + 1)),
 
     'render_deci_alt':
         (REG_SCALE,
             to_reg_unsigned(16, 16,
                             xform=lambda obj, x:
-                            128 * (x - 1), allow_range=(0,0x077E)),
+                            128 * (x - 1), allow_range=(0, 0x077E)),
             from_reg_unsigned(16, 16,
                               xform=lambda obj, x: (x / 128.0) + 1)),
     # Direct Downsampling accessors

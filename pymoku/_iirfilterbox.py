@@ -3,17 +3,17 @@ import logging
 import struct
 from copy import deepcopy
 from pymoku._oscilloscope import _CoreOscilloscope
-from ._instrument import to_reg_signed
-from ._instrument import from_reg_signed
-from ._instrument import to_reg_unsigned
-from ._instrument import from_reg_unsigned
-from ._instrument import to_reg_bool
-from ._instrument import from_reg_bool
-from ._instrument import ADC_SMP_RATE
-from ._instrument import needs_commit
-from ._instrument import ValueOutOfRangeException
-from . import _utils
-from ._dec_filter import DecFilter
+from pymoku._instrument import to_reg_signed
+from pymoku._instrument import from_reg_signed
+from pymoku._instrument import to_reg_unsigned
+from pymoku._instrument import from_reg_unsigned
+from pymoku._instrument import to_reg_bool
+from pymoku._instrument import from_reg_bool
+from pymoku._instrument import ADC_SMP_RATE
+from pymoku._instrument import needs_commit
+from pymoku._instrument import ValueOutOfRangeException
+from pymoku import _utils
+from pymoku._dec_filter import DecFilter
 
 
 log = logging.getLogger(__name__)

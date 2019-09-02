@@ -1,20 +1,20 @@
 import math
 import logging
 
-from ._instrument import MokuInstrument
-from ._instrument import to_reg_unsigned
-from ._instrument import from_reg_unsigned
-from ._instrument import to_reg_signed
-from ._instrument import from_reg_signed
-from ._instrument import to_reg_bool
-from ._instrument import from_reg_bool
-from ._instrument import needs_commit
-from ._instrument import SWEEP
-from ._instrument import FULL_FRAME
-from ._instrument import RDR_DDS
-from ._instrument import ValueOutOfRangeException
-from . import _frame_instrument
-from . import _utils
+from pymoku._instrument import MokuInstrument
+from pymoku._instrument import to_reg_unsigned
+from pymoku._instrument import from_reg_unsigned
+from pymoku._instrument import to_reg_signed
+from pymoku._instrument import from_reg_signed
+from pymoku._instrument import to_reg_bool
+from pymoku._instrument import from_reg_bool
+from pymoku._instrument import needs_commit
+from pymoku._instrument import SWEEP
+from pymoku._instrument import FULL_FRAME
+from pymoku._instrument import RDR_DDS
+from pymoku._instrument import ValueOutOfRangeException
+from pymoku import _frame_instrument
+from pymoku import _utils
 
 from ._frequency_response_analyzer_data import FRAData
 

@@ -1,15 +1,15 @@
 import math
 import logging
-from ._instrument import to_reg_unsigned
-from ._instrument import from_reg_unsigned
-from ._instrument import to_reg_signed
-from ._instrument import from_reg_signed
-from ._instrument import to_reg_bool
-from ._instrument import from_reg_bool
-from ._instrument import ADC_SMP_RATE
-from ._instrument import needs_commit
-from ._instrument import ValueOutOfRangeException
-from ._instrument import struct
+from pymoku._instrument import to_reg_unsigned
+from pymoku._instrument import from_reg_unsigned
+from pymoku._instrument import to_reg_signed
+from pymoku._instrument import from_reg_signed
+from pymoku._instrument import to_reg_bool
+from pymoku._instrument import from_reg_bool
+from pymoku._instrument import ADC_SMP_RATE
+from pymoku._instrument import needs_commit
+from pymoku._instrument import ValueOutOfRangeException
+from pymoku._instrument import struct
 
 from pymoku._oscilloscope import _CoreOscilloscope
 from . import _utils
