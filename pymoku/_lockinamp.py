@@ -6,6 +6,7 @@ from pymoku._oscilloscope import _CoreOscilloscope, VoltsData
 from pymoku._pid_controller import PIDController
 from . import _instrument
 from . import _utils
+from pymoku._pid import PID
 
 log = logging.getLogger(__name__)
 
@@ -87,13 +88,15 @@ _LIA_OSC_SOURCES = {
 	'ext' : _LIA_SOURCE_EXT
 }
 
-_LIA_CONTROL_FS 	= 25.0e6
-_LIA_FREQSCALE		= 1.0e9 / 2**48
-_LIA_PHASESCALE		= 1.0 / 2**48
-_LIA_P_GAINSCALE	= 2.0**16
-_LIA_ID_GAINSCALE	= 2.0**24 - 1
+_LIA_CONTROL_FS = 31.25e6
+_LIA_FREQSCALE = 1.0e9 / 2**48
+_LIA_PHASESCALE = 1.0 / 2**48
+_LIA_P_GAINSCALE = 2.0**16
+_LIA_ID_GAINSCALE = 2.0**24 - 1
 
-_LIA_SIGNALS = ['x','y','r','theta']
+_PID_REG_BASE = 97
+
+_LIA_SIGNALS = ['x', 'y', 'r', 'theta']
 # The output signals allowed while non-PLL external demodulation is set
 _NON_PLL_ALLOWED_SIGS = ['x','sine','offset','none']
 
@@ -117,7 +120,10 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self.main_source = 'none'
 		self.aux_source = 'none'
 		self._pid_channel = 'main'
-		self._pid_gains = {'g': 1.0, 'kp': 1.0, 'ki': 0, 'kd': 0, 'si': None, 'sd': None, 'in_offset': 0, 'out_offset': 0}
+		# self._pid_gains = {'g': 1.0, 'kp': 1.0, 'ki': 0, 'kd': 0, 'si': None,
+		#                    'sd': None, 'in_offset': 0, 'out_offset': 0}
+
+		self.pid = PID(self, reg_base=_PID_REG_BASE, fs=_LIA_CONTROL_FS)
 		self._lo_amp = 1.0
 		self._gainstage_gain = 1.0
 		self._demod_amp = 0.5
@@ -274,15 +280,35 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		:type out_offset: float; [-1.0, 1.0] V
 		:param out_offset: Output signal offset
 
-		:raises InvalidConfigurationException: if the configuration of PID gains is not possible.
+		:raises InvalidConfigurationException: if the configuration of PID
+				gains is not possible.
 		"""
-		g, kp, ki, kd, kii, si, sd = self._calculate_gains_by_frequency(kp, i_xover, d_xover, None, si, sd)
 
-		# Locally store these settings, and update the instrument registers on commit
-		# This ensures all dependent register values are updated at the same time, and the correct
+
+		# Locally store these settings, and update the instrument registers on
+		# commit
+		# This ensures all dependent register values are updated at the same
+		# time, and the correct
 		# DAC scaling is used.
+		Greq = kp
+		Gdsp = self._calculate_filt_dsp_gain()
+		Gfilt, Gout = self._balance_gains(Greq / Gdsp)
+
+		print('in set pid by gain', Greq, Gdsp, Gfilt)
+		if lia_ch == 'main':
+			self.lpf_int_i_gain_ch1 = Gfilt
+		elif lia_ch == 'aux':
+			self.lpf_int_i_gain_ch2 = Gfilt
+		else:
+			self.lpf_int_i_gain_ch1 = Gfilt
 		self._pid_channel = lia_ch
-		self._pid_gains = {'g': g, 'kp': kp, 'ki': ki, 'kd': kd, 'si': si, 'sd': sd, 'in_offset': in_offset, 'out_offset': out_offset}
+
+		output_channel = 0 if lia_ch == 'main' else 1
+
+		self._pid_channel = lia_ch
+		self.pid.set_reg_by_frequency(kp, i_xover, d_xover, si, sd, overall_scaling=Gout / self._dac_gains()[output_channel - 1])
+		self.pid.input_offset = in_offset
+		self.pid.output_offset = out_offset
 
 	@needs_commit
 	def set_pid_by_gain(self, lia_ch, g, kp=1.0, ki=0, kd=0, si=None, sd=None, in_offset=0, out_offset=0):
@@ -318,17 +344,35 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		:type out_offset: float; [-1.0, 1.0] V
 		:param out_offset: Output signal offset
 
-		:raises InvalidConfigurationException: if the configuration of PID gains is not possible.
+		:raises InvalidConfigurationException: if the configuration of PID
+				gains is not possible.
 		"""
-		# Locally store these settings, and update the instrument registers on commit
-		# This ensures all dependent register values are updated at the same time, and the correct
+		# Locally store these settings, and update the instrument registers
+		# on commit
+		# This ensures all dependent register values are updated at the same
+		# time, and the correct
 		# DAC scaling is used.
-		self._pid_channel = lia_ch
-		self._pid_gains = {'g': g, 'kp': kp, 'ki': ki, 'kd': kd, 'si': si, 'sd': sd, 'in_offset': in_offset, 'out_offset': out_offset}
 
-	# Overload the PID API functions
-	set_by_gain = set_pid_by_gain
-	set_by_frequency = set_pid_by_frequency
+		Greq = g
+		Gdsp = self._calculate_filt_dsp_gain()
+		Gfilt, Gout = self._balance_gains(Greq / Gdsp)
+
+		print('in set pid by gain', Greq, Gdsp, Gfilt)
+		if lia_ch == 'main':
+			self.lpf_int_i_gain_ch1 = Gfilt
+		elif lia_ch == 'aux':
+			self.lpf_int_i_gain_ch2 = Gfilt
+		else:
+			self.lpf_int_i_gain_ch1 = Gfilt
+
+		self._pid_channel = lia_ch
+
+		output_channel = 0 if lia_ch == 'main' else 1
+		self.pid.set_reg_by_gain(Gout / self._dac_gains()[output_channel - 1], kp, ki, kd, si, sd)
+		print('kd', kd)
+		self.pid.input_offset = in_offset
+		self.pid.output_offset = out_offset
+
 
 	@needs_commit
 	def set_gain(self, lia_ch, g):
@@ -343,14 +387,30 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		:type g: float; [0, 2^16 - 1]
 		:param g: Gain
 		"""
-		_utils.check_parameter_valid('set', lia_ch, allowed=['main','aux'], desc="lock-in channel")
-		_utils.check_parameter_valid('range', g, allowed=[0, 2**16 - 1], desc="gain")
+		_utils.check_parameter_valid(
+			'set', lia_ch, allowed=['main','aux'], desc="lock-in channel")
+		_utils.check_parameter_valid(
+			'range', g, allowed=[0, 2**16 - 1], desc="gain")
 
-		# Store selected PID channel locally. Signal select regs are updated on commit.
+		# Store selected PID channel locally. Signal select regs are
+		# updated on commit.
 		self._pid_channel = 'main' if lia_ch=='aux' else 'aux'
 
-		# Store selected gain locally. Update on commit with correct DAC scaling.
-		self._gainstage_gain = g
+
+		Greq = g
+		Gdsp = self._calculate_filt_dsp_gain()
+		Gfilt, Gout = self._balance_gains(Greq / Gdsp)
+
+		if lia_ch == 'main':
+			self.lpf_int_i_gain_ch1 = Gfilt
+		else:
+			self.lpf_int_i_gain_ch2 = Gfilt
+
+		# Store selected gain locally. Update on commit with correct DAC
+		# scaling.
+		self._gainstage_gain = Gout
+		print('in set gain', Greq, Gout, Gfilt, Gdsp)
+		print('in set gain', Greq, Gout * Gfilt * Gdsp)
 
 	@needs_commit
 	def set_demodulation(self, mode, frequency=1e6, phase=0, output_amplitude=0.5):
@@ -429,35 +489,91 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		:type f_corner: float
 		:param f_corner: Corner frequency of the low-pass filter (Hz)
 
-		:type order: int; [0, 1, 2]
+		:type order: int; [1, 2, 3, 4]
 		:param order: filter order; 0 (bypass), first- or second-order.
 
 		"""
-		# Ensure the right parts of the filter are enabled
+		_utils.check_parameter_valid('set', order, allowed=[1, 2, 3, 4],
+									 desc="filter order")
+
+		Greq = [0, 0]
+		Gdsp = [0, 0]
+		Gnew = [0, 0]
+
+		Greq[0] = self._get_balanced_gains(1)
+		Greq[1] = self._get_balanced_gains(2)
+
 		self.lpf_den = 0
 
-		if order == 0:
-			self.filt_bypass1 = True
-			self.filt_bypass2 = True
-		if order == 1:
-			self.filt_bypass1 = False
-			self.filt_bypass2 = True
-			self.slope = 1
-		elif order == 2:
-			self.filt_bypass1 = False
-			self.filt_bypass2 = False
-			self.slope = 2
-		else:
-			raise ValueOutOfRangeException("Order must be 0 (bypass), 1 or 2; not %d" % order)
+		self.filt_select = order - 1
 
 		self.input_gain = 1.0
 
-		gain_factor = 2.0**12 * self._adc_gains()[0] / (10.0 if self.get_frontend(1)[1] else 1.0)
-		self.lpf_pidgain = gain_factor if order == 1 else math.sqrt(gain_factor)
 
-		ifb = 1.0 - 2.0*(math.pi * f_corner)/_LIA_CONTROL_FS
+
+		ifb = (1.0 - 2.0 * (math.pi * f_corner)
+							  / _LIA_CONTROL_FS)
 		self.lpf_int_ifb_gain = ifb
-		self.lpf_int_i_gain = 1.0 - ifb
+
+		self.lpf_int_i_gain_ch1, Gnew[0] = self._balance_gains(
+			Greq[0] * (1.0 - self.lpf_int_ifb_gain))
+		self.lpf_int_i_gain_ch2, Gnew[1] = self._balance_gains(
+			Greq[1] * (1.0 - self.lpf_int_ifb_gain))
+
+
+		print('in set filter', Greq[0], Greq[1])
+		# self.lpf_pidgain = Gnew[0]
+
+		if self._pid_channel == 'main':
+			self.set_pid_by_gain('main', Greq[0])
+			self.set_gain('aux', Greq[1])
+		else:
+			self.set_gain('main', Greq[0])
+			self.set_pid_by_gain('aux', Greq[1])
+
+	def _balance_gains(self, Greq):
+		if Greq > 2**4:
+			Gfilt = 2**4
+			Gout = Greq / 2**4
+		elif Greq < 1 / 2**25:
+			Gfilt = 1 / 2**25
+			Gout = Greq * 2**25
+		else:
+			Gout = 1
+			Gfilt = Greq
+		return (Gfilt, Gout)
+
+	def _get_balanced_gains(self, ch):
+		Gdsp = 1.0 / ( 1.0 - self.lpf_int_ifb_gain)
+
+		if ch == 1:
+			if self._pid_channel == 'main':
+				Gout = self.pid.gain * self._dac_gains()[ch - 1] \
+					* 31.25 /  2.0**4
+				print('ch1 Gout for pid', Gout)
+			else:
+				Gout = self._gainstage_gain
+				print('ch1 Gout for gainstage', Gout)
+			Gfilt = self.lpf_int_i_gain_ch1
+		elif ch == 2:
+			if self._pid_channel == 'main':
+				Gout = self._gainstage_gain
+				print('ch2 Gout for gainstage', Gout)
+			else:
+				Gout = self.pid.gain * self._dac_gains()[ch - 1] \
+					* 31.25 /  2.0**4
+				print('ch2 Gout for pid', Gout)
+			Gfilt = self.lpf_int_i_gain_ch1
+
+		print(Gout, Gfilt, Gdsp)
+		print(Gout * Gfilt * Gdsp)
+
+		return Gout * Gfilt * Gdsp
+
+	def _calculate_filt_dsp_gain(self):
+		G = 1.0 / ( 1.0 - self.lpf_int_ifb_gain)
+		return G
+
 
 	@needs_commit
 	def set_lo_output(self, amplitude, frequency, phase):
@@ -625,9 +741,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self._update_pid_gain_selects()
 
 		# Set the PID gains using the correct output DAC channel
-		gs = self._pid_gains
+		# gs = self._pid_gains
 		pid_ch = 1 if self._pid_channel == 'main' else 2
-		self._set_by_gain(1, gs['g'], gs['kp'], gs['ki'], gs['kd'], 0, gs['si'], gs['sd'], gs['in_offset'], gs['out_offset'], touch_ii=False, dac=pid_ch)
+		# self._set_by_gain(1, gs['g'], gs['kp'], gs['ki'], gs['kd'], 0,
+		#                   gs['si'], gs['sd'], gs['in_offset'],
+		#                   gs['out_offset'], touch_ii=False, dac=pid_ch)
 
 		# Set gainstage gain with correct output DAC channel scaling
 		self.gainstage_gain = self._gainstage_gain / self._dac_gains()[1 if self._pid_channel == 'main' else 0] / 31.25 / 2.0**12
@@ -647,21 +765,58 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# We need to rethink PID inheritance.
 		pass
 
+	def _balance_gains(self, Greq):
+		if Greq > 2**4:
+			Gfilt = 2**4
+			Gout = Greq / 2**4
+		elif Greq < 1 / 2**25:
+			Gfilt = 1 / 2**25
+			Gout = Greq * 2**25
+		else:
+			Gout = 1
+			Gfilt = Greq
+		return (Gfilt, Gout)
+
+	def _get_balanced_gains(self, ch):
+		Gdsp = 1.0 / ( 1.0 - self.lpf_int_ifb_gain)
+
+		if ch == 1:
+			if self._pid_channel == 'main':
+				Gout = self.ch1_pid1_pidgain * self._dac_gains()[
+					ch - 1] * 31.25 /  2.0**4
+				print('ch1 Gout for pid', Gout)
+			else:
+				Gout = self._gainstage_gain #* self._dac_gains()[ch - 1] * 31.25 /  2.0**4
+				print('ch1 Gout for gainstage', Gout)
+			Gfilt = self.lpf_int_i_gain_ch1
+		elif ch == 2:
+			if self._pid_channel == 'main':
+				Gout = self._gainstage_gain# * self._dac_gains()[ch - 1] * 31.25 /  2.0**4
+				print('ch2 Gout for gainstage', Gout)
+			else:
+				Gout = self.ch1_pid1_pidgain * self._dac_gains()[
+					ch - 1] * 31.25 /  2.0**4
+				print('ch2 Gout for pid', Gout)
+			Gfilt = self.lpf_int_i_gain_ch1
+
+		print(Gout, Gfilt, Gdsp)
+		print(Gout * Gfilt * Gdsp)
+
+		return Gout * Gfilt * Gdsp
+
+	def _calculate_filt_dsp_gain(self):
+		G = 1.0 / ( 1.0 - self.lpf_int_ifb_gain)
+		return G
+
+
 _lia_reg_hdl = {
 	'lpf_en':			(REG_LIA_ENABLES,		to_reg_bool(0),
 												from_reg_bool(0)),
 
-	'ch1_pid1_en':		(REG_LIA_ENABLES,		to_reg_bool(1),
-												from_reg_bool(1)),
-
-	'ch1_pid1_ien':		(REG_LIA_ENABLES,		to_reg_bool(3),
-												from_reg_bool(3)),
-
-	'ch1_pid1_pen':		(REG_LIA_ENABLES,		to_reg_bool(5),
-												from_reg_bool(5)),
-
-	'ch1_out_en': 		(REG_LIA_ENABLES,		to_reg_bool(8),
-												from_reg_bool(8)),
+	'ch1_out_en':
+		(REG_LIA_ENABLES,
+			to_reg_bool(8),
+			from_reg_bool(8)),
 
 	'ch2_out_en': 		(REG_LIA_ENABLES, 		to_reg_bool(9),
 												from_reg_bool(9)),
@@ -669,20 +824,15 @@ _lia_reg_hdl = {
 	'lpf_den':			(REG_LIA_ENABLES,		to_reg_bool(10),
 												from_reg_bool(10)),
 
-	'pid1_ch1_den':		(REG_LIA_ENABLES,		to_reg_bool(11),
-												from_reg_bool(11)),
+	'ch1_signal_en':
+		(REG_LIA_ENABLES,
+			to_reg_bool(14),
+			from_reg_bool(14)),
 
-	'ch1_pid1_bypass':	(REG_LIA_ENABLES,		to_reg_bool(13),
-												from_reg_bool(13)),
-
-	'ch1_signal_en':	(REG_LIA_ENABLES,		to_reg_bool(14),
-												from_reg_bool(14)),
-
-	'ch1_pid1_int_dc_pole':	(REG_LIA_ENABLES,	to_reg_bool(16),
-												from_reg_bool(16)),
-
-	'ch2_signal_en':	(REG_LIA_ENABLES,		to_reg_bool(17),
-												from_reg_bool(17)),
+	'ch2_signal_en':
+		(REG_LIA_ENABLES,
+			to_reg_bool(17),
+			from_reg_bool(17)),
 
 	'ext_demod':		(REG_LIA_ENABLES, 		to_reg_bool(18),
 												from_reg_bool(18)),
@@ -690,11 +840,10 @@ _lia_reg_hdl = {
 	'lo_PLL':			(REG_LIA_ENABLES, 		to_reg_bool(19),
 												from_reg_bool(19)),
 
-	'filt_bypass1':		(REG_LIA_ENABLES,		to_reg_bool(21),
-												from_reg_bool(21)),
-
-	'filt_bypass2':		(REG_LIA_ENABLES, 		to_reg_bool(22),
-												from_reg_bool(22)),
+	'filt_select':
+		(REG_LIA_ENABLES,
+			to_reg_unsigned(21, 2),
+			from_reg_unsigned(21, 2)),
 
 	'pid_ch_select':	(REG_LIA_ENABLES, 		to_reg_bool(23),
 												from_reg_bool(23)),
@@ -705,11 +854,6 @@ _lia_reg_hdl = {
 	'input_gain_select': (REG_LIA_ENABLES,		to_reg_unsigned(28, 2),
 												from_reg_unsigned(28,2)),
 
-	'ch1_pid1_in_offset':	(REG_LIA_IN_OFFSET1,	to_reg_signed(16, 16, xform=lambda obj, x: x / obj._dac_gains()[0]),
-													from_reg_signed(16, 16, xform=lambda obj, x: x * obj._dac_gains()[0])),
-
-	'ch1_pid1_out_offset':	(REG_LIA_OUT_OFFSET1,	to_reg_signed(16, 16, xform=lambda obj, x: x / obj._dac_gains()[0]),
-													from_reg_signed(16, 16, xform=lambda obj, x: x * obj._dac_gains()[0])),
 
 	'main_offset': 		(REG_LIA_OUT_OFFSET1, 	to_reg_signed(0, 16, xform=lambda obj, x: x / obj._dac_gains()[0]),
 												  	from_reg_signed(0, 16, xform=lambda obj, x: x * obj._dac_gains()[0])),
@@ -720,35 +864,35 @@ _lia_reg_hdl = {
 	'ch1_pid1_pidgain':		(REG_LIA_PIDGAIN2,		to_reg_signed(0, 32, xform=lambda obj, x : x),
 													from_reg_signed(0, 32, xform=lambda obj, x: x)),
 
-	'lpf_int_i_gain':	(REG_LIA_INT_IGAIN1,		to_reg_signed(0, 25, xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
-													from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)),
+	'lpf_int_i_gain_ch1':
+		(107,
+			to_reg_signed(0, 32,
+						  xform=lambda obj, x: x * 2**24),
+			from_reg_signed(0, 32,
+							xform=lambda obj, x: x / 2**24)),
 
-	'ch1_pid1_int_i_gain':	(REG_LIA_INT_IGAIN2,	to_reg_signed(0, 25, xform=lambda obj, x: x),
-													from_reg_signed(0, 25, xform=lambda obj, x: x)),
+	'lpf_int_i_gain_ch2':
+		(109,
+			to_reg_signed(0, 32,
+						  xform=lambda obj, x: x *  2**24),
+			from_reg_signed(0, 32,
+							xform=lambda obj, x: x / 2**24)),
 
-	'lpf_int_ifb_gain':(REG_LIA_INT_IFBGAIN1,		to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
-													from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)),
-
-	'ch1_pid1_int_ifb_gain':(REG_LIA_INT_IFBGAIN2,	to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
-													from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)),
+	'lpf_int_ifb_gain':
+		(106,
+			to_reg_signed(0, 25,
+						  xform=lambda obj, x: x * _LIA_ID_GAINSCALE),
+			from_reg_signed(0, 25,
+							xform=lambda obj, x: x / _LIA_ID_GAINSCALE)),
 
 	'lpf_int_p_gain':	(REG_LIA_INT_PGAIN1,		to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
 													from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)),
 
-	'ch1_pid1_int_p_gain':	(REG_LIA_INT_PGAIN2,	to_reg_signed(0, 25, xform=lambda obj, x: x*2**11),
-													from_reg_signed(0, 25, xform=lambda obj, x: x / 2**11)),
+	'gainstage_gain':
+		(110,
+			to_reg_signed(0, 32, xform=lambda obj, x: x * 2**15),
+			from_reg_signed(0, 32, xform=lambda obj, x: x / 2**15)),
 
-	'gainstage_gain':	(REG_LIA_GAIN_STAGE,		to_reg_signed(0, 32, xform=lambda obj, x: x* 2**15),
-													from_reg_signed(0, 32, xform=lambda obj, x: x / 2**15)),
-
-	'ch1_pid1_diff_p_gain':	(REG_LIA_DIFF_PGAIN2,	to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
-													from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)),
-
-	'ch1_pid1_diff_i_gain':	(REG_LIA_DIFF_IGAIN2,	to_reg_signed(0, 25, xform=lambda obj, x: x),
-													from_reg_signed(0, 25, xform=lambda obj, x: x)),
-
-	'ch1_pid1_diff_ifb_gain':(REG_LIA_DIFF_IFBGAIN2,	to_reg_signed(0, 25, xform=lambda obj, x: x*_LIA_ID_GAINSCALE),
-														from_reg_signed(0, 25, xform=lambda obj, x: x / _LIA_ID_GAINSCALE)),
 
 	'frequency_demod':	((REG_LIA_FREQDEMOD_H, REG_LIA_FREQDEMOD_L),
 												to_reg_unsigned(0, 48, xform=lambda obj, x: x / _LIA_FREQSCALE),
