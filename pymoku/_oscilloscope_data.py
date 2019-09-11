@@ -130,10 +130,10 @@ class VoltsData(_frame_instrument.InstrumentData):
 
         scales = self._scales[self._stateid]
         ts = scales['time_step']
-        tscale_str, tscale_const = self._get_timescale(ts*_OSC_SCREEN_WIDTH)
+        tscale_str, tscale_const = self._get_timescale(ts * _OSC_SCREEN_WIDTH)
 
-        return {'xaxis': '%.1f %s' % (x*tscale_const, tscale_str),
-                'xcoord': '%.3f %s' % (x*tscale_const, tscale_str)}
+        return {'xaxis': '%.1f %s' % (x * tscale_const, tscale_str),
+                'xcoord': '%.3f %s' % (x * tscale_const, tscale_str)}
 
     def get_xaxis_fmt(self, x, pos):
         """ Function suitable to use as argument to a matplotlib FuncFormatter
