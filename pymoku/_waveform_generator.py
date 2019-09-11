@@ -45,11 +45,11 @@ _WG_FREQSCALE_SQR = 1.0e9 / 2**48
 _WG_PERIODSCALE_SQR = 2**48 - 1
 _WG_RISESCALE = 2**24
 
-_WG_MAX_RISE = 1.0/(2**39 - 1)
+_WG_MAX_RISE = 1.0 / (2 ** 39 - 1)
 _WG_TIMESCALE = 1.0 / (2**32 - 1)  # Doesn't wrap
 
 _WG_MOD_FREQ_MAX = 62.5e6
-_WG_MOD_DEPTH_MAX = 2.0**31-1  # 100% modulation depth in bits
+_WG_MOD_DEPTH_MAX = 2.0 ** 31 - 1  # 100% modulation depth in bits
 
 _WG_TRIG_ADC1 = 0
 _WG_TRIG_ADC2 = 1
@@ -769,11 +769,11 @@ class WaveformGenerator(BasicWaveformGenerator):
 
         # set status light register
         if ch == 1:
-            self.adc1_statuslight = True if (trigger_source ==
-                                             _WG_TRIG_ADC1) else False
+            self.adc1_statuslight = True if (
+                trigger_source == _WG_TRIG_ADC1) else False
         else:
-            self.adc2_statuslight = True if (trigger_source ==
-                                             _WG_TRIG_ADC2) else False
+            self.adc2_statuslight = True if (
+                trigger_source == _WG_TRIG_ADC2) else False
 
         if sweep_start_freq is None or mode != _WG_TRIG_MODE_SWEEP:
             channel_frequency = (self._sweep1.step * _WG_FREQSCALE) \
@@ -838,8 +838,9 @@ class WaveformGenerator(BasicWaveformGenerator):
         if trigger_source == _WG_TRIG_EXT:
             trigger_threshold = 0
         elif trigger_source == _WG_TRIG_INTER:
-            trigger_threshold = -2**47 + (1.0 - internal_trig_high
-                                          / internal_trig_period) * (2**48 - 1)
+            trigger_threshold = -2 ** 47 + (
+                1.0 - internal_trig_high / internal_trig_period) * (
+                2 ** 48 - 1)
             if ch == 1:
                 self._sweepmod1.step = 1 / internal_trig_period / _WG_FREQSCALE
                 self._sweepmod1.waveform = 2
@@ -936,9 +937,9 @@ class WaveformGenerator(BasicWaveformGenerator):
 
         # ensure combination of signal frequency and Ncycles doesn't cause
         # 64 bit register overflow:
-        FPGA_cycles = (
-            math.floor(125e6 / channel_frequency
-                       * ncycles) - 1) if channel_frequency != 0.0 else 0
+        FPGA_cycles = (math.floor(
+            125e6 / channel_frequency * ncycles) - 1) if \
+            channel_frequency != 0.0 else 0
         if FPGA_cycles > 2**63 - 1:
             raise ValueOutOfRangeException("NCycle Register Overflow")
 
@@ -982,8 +983,8 @@ class WaveformGenerator(BasicWaveformGenerator):
         # calculate sweep parameters:
         mod_start_freq = 0
         range_shift = 0
-        deltafreq_persecond = (sweep_end_freq -
-                               channel_frequency) / sweep_duration
+        deltafreq_persecond = (sweep_end_freq - channel_frequency) / (
+            sweep_duration)
         mod_step = abs(2.0**64 / 1e18 * deltafreq_persecond)
         mod_duration_FPGAcycles = math.floor(sweep_duration * 125e6)
         mod_stop_freq = mod_step * 1e9 * sweep_duration
@@ -1347,9 +1348,8 @@ class WaveformGenerator(BasicWaveformGenerator):
         trig_source_scalers = [adc1, adc2, dac1 * 16, dac2 * 16, 1.0, 1.0]
 
         # Channel 1 modulation depth
-        if (self.amod_enable_ch1 is True or self.pmod_enable_ch1 is True
-                or self.fmod_enable_ch1 is True):
-
+        if (self.amod_enable_ch1 is True or self.pmod_enable_ch1 is True or (
+                self.fmod_enable_ch1 is True)):
             try:
                 self.mod_depth_uncalibrated_ch1
             except AttributeError:
@@ -1360,9 +1360,8 @@ class WaveformGenerator(BasicWaveformGenerator):
                 mod_source_scalers[self.mod_source_ch1] * _WG_MOD_DEPTH_MAX
 
         # Channel 2 modulation depth
-        if (self.amod_enable_ch2 is True or self.pmod_enable_ch2 is True
-                or self.fmod_enable_ch2 is True):
-
+        if (self.amod_enable_ch2 is True or self.pmod_enable_ch2 is True or (
+                self.fmod_enable_ch2 is True)):
             try:
                 self.mod_depth_uncalibrated_ch2
             except AttributeError:
