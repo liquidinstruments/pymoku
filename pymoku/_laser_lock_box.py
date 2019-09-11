@@ -562,7 +562,7 @@ class LaserLockBox(_CoreOscilloscope):
             'set', en, [True, False], 'enable')
 
         pid_array = [self.fast_pid, self.slow_pid]
-        pid_array[pid_block-1].enable = en
+        pid_array[pid_block - 1].enable = en
 
     @needs_commit
     def set_output_enables(self, ch, en=True):
@@ -651,7 +651,7 @@ class LaserLockBox(_CoreOscilloscope):
         self.embedded_pll.pllreset = 0
         self.embedded_pll.autoacquire = pll_auto_acq
         self.embedded_pll.reacquire = 0
-        self.lo_phase_offset = (phase/360.0) * (2**28-1)
+        self.lo_phase_offset = (phase / 360.0) * (2 ** 28 - 1)
 
         if source == 'internal':
             self.MuxLOPhase = 0
@@ -882,15 +882,12 @@ class LaserLockBox(_CoreOscilloscope):
         monitor_source_gains = {
             'error': scales['gain_adc1'] * 2.0 / (10.0 if scales['atten_ch1']
                                                   else 1.0) * lo_scale_factor,
-            'pid_fast': scales['gain_adc1']
-            * 2.0 / (10.0 if scales['atten_ch1']
-                     else 1.0) * lo_scale_factor,
-            'pid_slow': scales['gain_adc1']
-            * 2.0 / (10.0 if scales['atten_ch1']
-                     else 1.0) * lo_scale_factor,
-            'offset_fast': scales['gain_adc1']
-            * 2.0 / (10.0 if scales['atten_ch1']
-                     else 1.0) * lo_scale_factor,
+            'pid_fast': scales['gain_adc1'] * 2.0 / (
+                10.0 if scales['atten_ch1'] else 1.0) * lo_scale_factor,
+            'pid_slow': scales['gain_adc1'] * 2.0 / (
+                10.0 if scales['atten_ch1'] else 1.0) * lo_scale_factor,
+            'offset_fast': scales['gain_adc1'] * 2.0 / (
+                10.0 if scales['atten_ch1'] else 1.0) * lo_scale_factor,
             'in1': scales['gain_adc1'] / (10.0 if scales['atten_ch1']
                                           else 1.0),
             'in2': scales['gain_adc2'] / (10.0 if scales['atten_ch2']
@@ -904,9 +901,9 @@ class LaserLockBox(_CoreOscilloscope):
                                          if scales['atten_ch2']
                                          else 1.0)
             if self.MuxLOSignal else 2**-12,
-            'aux': 2**4 * (
-                           scales['gain_dac1'] if self.fast_aux_enable
-                           else scales['gain_dac2'])
+            'aux': 2 ** 4 * (
+                scales['gain_dac1'] if self.fast_aux_enable
+                else scales['gain_dac2'])
         }
         return monitor_source_gains[source]
 
@@ -1101,7 +1098,7 @@ class LaserLockBox(_CoreOscilloscope):
 _llb_reg_hdl = {
     '_fast_scale':
         (REG_LLB_GAINS_SCALING,
-            to_reg_signed(0, 16, xform=lambda obj,  x: x * 2**14),
+            to_reg_signed(0, 16, xform=lambda obj, x: x * 2**14),
             from_reg_signed(0, 16, xform=lambda obj, x: x / 2**14)),
 
     '_slow_scale':
@@ -1116,7 +1113,7 @@ _llb_reg_hdl = {
 
     'scan_amplitude':
         (REG_LLB_SCAN_SCALE,
-            to_reg_signed(0, 16, xform=lambda obj,  x: x * 2**14),
+            to_reg_signed(0, 16, xform=lambda obj, x: x * 2**14),
             from_reg_signed(0, 16, xform=lambda obj, x: x / 2**14)),
 
     'fast_scan_enable':
