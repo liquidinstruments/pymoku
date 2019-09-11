@@ -60,10 +60,11 @@ try:
     # Calculate and plot the quantized FIR kernel and transfer function for
     # reference.
     taps_quantized = \
-        [round(taps[x] * 2.0**24-1) / (2**24 - 1) for x in range(0, len(taps))]
+        [round(taps[x] * 2.0 ** 24 - 1) / (2 ** 24 - 1) for x in
+         range(0, len(taps))]
     fft_taps = fft(taps_quantized)
     fft_mag = [abs(fft_taps[x]) for x in range(0, len(fft_taps[0:499]))]
-    fft_db = [20*math.log10(fft_mag[x]) for x in range(0, len(fft_mag))]
+    fft_db = [20 * math.log10(fft_mag[x]) for x in range(0, len(fft_mag))]
 
     plt.subplot(221)
     plt.plot(taps)

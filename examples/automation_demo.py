@@ -59,7 +59,7 @@ def phase1(moku):
     # For demonstration purposes we set the pass/fail risetime criteria to be a
     # function of the simulated square wave period. This is so we can see
     # examples of 'failed' tests.
-    risetime_maximum = 0.18 * (1.0/square_frequency)  # 18% of cycle
+    risetime_maximum = 0.18 * (1.0 / square_frequency)  # 18% of cycle
 
     osc = Oscilloscope()
     moku.deploy_instrument(osc)
@@ -205,7 +205,7 @@ def phase2(moku):
                           'frequency': data.frequency, 'linewidth': linewidth,
                           'peak': peak, 'half_f1': hf1, 'half_f2': hf2})
 
-        progress = ((i+1)/float(number_of_measurements)) * 100
+        progress = ((i + 1) / float(number_of_measurements)) * 100
         phase2_plot_update(f, ax1, data, passed, peak, hf1, hf2, progress)
 
     plt.close()

@@ -19,7 +19,7 @@ from matplotlib.ticker import FuncFormatter
 
 def from_dB(dB):
     # Helper function that converts from dB to linear scale
-    return 10**(dB/20.0)
+    return 10 ** (dB / 20.0)
 
 
 # Connect to your Moku by its device name

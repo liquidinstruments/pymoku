@@ -23,7 +23,7 @@ def gen_butterworth(corner_frequency):
     b, a = signal.butter(2, normalised_corner, 'low', analog=False)
 
     coefficient_array = [[1.0, b[0], b[1], b[2], -a[1], -a[2]],
-                         [1.0, 1.0,  0.0,  0.0,  0.0, 0.0]]
+                         [1.0, 1.0, 0.0, 0.0, 0.0, 0.0]]
     return coefficient_array
 
 
