@@ -253,13 +253,13 @@ class LockInAmp(PIDController, _CoreOscilloscope):
         if self.demod_mode == 'external' and not \
                 (aux in _NON_PLL_ALLOWED_SIGS and main
                  in _NON_PLL_ALLOWED_SIGS):
-
-            raise InvalidConfigurationException("Can't use quadrature-related"
-                                                " outputs when using external"
-                                                " demodulation without a "
-                                                "PLL. "
-                                                "Allowed outputs are " +
-                                                str(_NON_PLL_ALLOWED_SIGS))
+            raise InvalidConfigurationException(
+                "Can't use quadrature-related"
+                " outputs when using external"
+                " demodulation without a "
+                "PLL. "
+                "Allowed outputs are " + (
+                    str(_NON_PLL_ALLOWED_SIGS)))
 
         # Main output enables
         self.main_offset = main_offset
@@ -332,7 +332,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
          gains is not possible.
         """
         g, kp, ki, kd, kii, si, sd = self._calculate_gains_by_frequency(
-                                        kp, i_xover, d_xover, None, si, sd)
+            kp, i_xover, d_xover, None, si, sd)
 
         # Locally store these settings, and update the instrument registers on
         # commit
@@ -492,17 +492,16 @@ class LockInAmp(PIDController, _CoreOscilloscope):
                                               'external',
                                               'external_pll'])
 
-        if mode == 'external' and not (self.aux_source in
-                                       _NON_PLL_ALLOWED_SIGS
-                                       and self.main_source
-                                       in _NON_PLL_ALLOWED_SIGS):
-            raise InvalidConfigurationException("Can't use external"
-                                                " demodulation source "
-                                                "without a PLL with "
-                                                "quadrature-related outputs."
-                                                "Allowed outputs are " +
-                                                str(_NON_PLL_ALLOWED_SIGS)
-                                                )
+        if mode == 'external' and not (
+                self.aux_source in _NON_PLL_ALLOWED_SIGS and (
+                self.main_source in _NON_PLL_ALLOWED_SIGS)):
+            raise InvalidConfigurationException(
+                "Can't use external"
+                " demodulation source "
+                "without a PLL with "
+                "quadrature-related outputs."
+                "Allowed outputs are " + (
+                    str(_NON_PLL_ALLOWED_SIGS)))
 
         self.autoacquire = 1
         self.bandwidth = 0
@@ -574,7 +573,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
         self.lpf_pidgain = gain_factor if order == 1 else \
             math.sqrt(gain_factor)
 
-        ifb = 1.0 - 2.0*(math.pi * f_corner)/_LIA_CONTROL_FS
+        ifb = 1.0 - 2.0 * (math.pi * f_corner) / _LIA_CONTROL_FS
         self.lpf_int_ifb_gain = ifb
         self.lpf_int_i_gain = 1.0 - ifb
 
@@ -755,19 +754,21 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
         def _demod_mode_to_gain(mode):
             if mode == 'internal' or 'external_pll':
-                return 1.0/2**11
+                return 1.0 / 2 ** 11
             else:
                 return 1.0
 
         monitor_source_gains = {
             'none': 1.0,
-            'in1': scales['gain_adc1']/(10.0 if scales['atten_ch1'] else 1.0),
-            'in2': scales['gain_adc2']/(10.0 if scales['atten_ch2'] else 1.0),
-            'main': scales['gain_dac1']*(2.0**4),  # 12bit ADC - 16bit DAC
-            'aux': scales['gain_dac2']*(2.0**4),
+            'in1': scales['gain_adc1'] / (
+                10.0 if scales['atten_ch1'] else 1.0),
+            'in2': scales['gain_adc2'] / (
+                10.0 if scales['atten_ch2'] else 1.0),
+            'main': scales['gain_dac1'] * (2.0 ** 4),  # 12bit ADC - 16bit DAC
+            'aux': scales['gain_dac2'] * (2.0 ** 4),
             'demod': _demod_mode_to_gain(self.demod_mode),
-            'i': scales['gain_adc1']/(10.0 if scales['atten_ch1'] else 1.0),
-            'q': scales['gain_adc1']/(10.0 if scales['atten_ch1'] else 1.0)
+            'i': scales['gain_adc1'] / (10.0 if scales['atten_ch1'] else 1.0),
+            'q': scales['gain_adc1'] / (10.0 if scales['atten_ch1'] else 1.0)
         }
         return monitor_source_gains[source]
 
