@@ -14,8 +14,8 @@ filt_coeff = [[1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
 @pytest.fixture
 def dut(moku):
     with patch(
-               'pymoku._frame_instrument.'
-               'FrameBasedInstrument._set_running'):
+            'pymoku._frame_instrument.'
+            'FrameBasedInstrument._set_running'):
         i = LaserLockBox()
         moku.deploy_instrument(i)
         moku.reset_mock()
@@ -144,17 +144,17 @@ def test_set_monitor(dut, moku):
 
 
 @pytest.mark.parametrize('attr, value', [
-    ('_fast_scale', 1.0/2**14),
-    ('_slow_scale', 1.0/2**14),
-    ('_aux_scale', 1/2**14),
-    ('scan_amplitude', 1/2**14),
+    ('_fast_scale', 1.0 / 2 ** 14),
+    ('_slow_scale', 1.0 / 2 ** 14),
+    ('_aux_scale', 1 / 2 ** 14),
+    ('scan_amplitude', 1 / 2 ** 14),
     ('fast_scan_enable', 1),
     ('slow_scan_enable', 1),
     ('lo_phase_offset', 1),
     ('aux_phase_offset', 1),
-    ('fast_offset', 1/2**15),
-    ('output_offset_ch1', 1/2**15),
-    ('output_offset_ch2', 1/2**15),
+    ('fast_offset', 1 / 2 ** 15),
+    ('output_offset_ch1', 1 / 2 ** 15),
+    ('output_offset_ch2', 1 / 2 ** 15),
     ('monitor_select0', 1),
     ('monitor_select1', 1),
     ('input_gain_select', 1),
@@ -163,10 +163,10 @@ def test_set_monitor(dut, moku):
     ('MuxAuxPhase', 1),
     ('trig_aux', 1),
     ('cond_trig', 1),
-    ('cliprange_lower_ch1', 1/2**15),
-    ('cliprange_upper_ch1', 1/2**15),
-    ('cliprange_lower_ch2', 1/2**15),
-    ('cliprange_upper_ch2', 1/2**15),
+    ('cliprange_lower_ch1', 1 / 2 ** 15),
+    ('cliprange_upper_ch1', 1 / 2 ** 15),
+    ('cliprange_lower_ch2', 1 / 2 ** 15),
+    ('cliprange_upper_ch2', 1 / 2 ** 15),
     ('fast_aux_enable', 1),
     ('slow_aux_enable', 1),
     ('fast_channel_en', 1),

@@ -18,8 +18,8 @@ filt_coeff = [[1.0],
 @pytest.fixture
 def dut(moku):
     with patch(
-               'pymoku._frame_instrument.'
-               'FrameBasedInstrument._set_running'):
+            'pymoku._frame_instrument.'
+            'FrameBasedInstrument._set_running'):
         i = IIRFilterBox()
         moku.deploy_instrument(i)
         moku.reset_mock()
@@ -89,21 +89,21 @@ def test_set_trigger(dut, moku):
     ('input_en2', True),
     ('output_en1', True),
     ('output_en2', True),
-    ('matrixscale_ch1_ch1', 1/_iirfilterbox._ADC_DEFAULT_CALIBRATION),
-    ('matrixscale_ch1_ch2', 1/_iirfilterbox._ADC_DEFAULT_CALIBRATION),
-    ('matrixscale_ch2_ch1', 1/_iirfilterbox._ADC_DEFAULT_CALIBRATION),
-    ('matrixscale_ch2_ch2', 1/_iirfilterbox._ADC_DEFAULT_CALIBRATION),
+    ('matrixscale_ch1_ch1', 1 / _iirfilterbox._ADC_DEFAULT_CALIBRATION),
+    ('matrixscale_ch1_ch2', 1 / _iirfilterbox._ADC_DEFAULT_CALIBRATION),
+    ('matrixscale_ch2_ch1', 1 / _iirfilterbox._ADC_DEFAULT_CALIBRATION),
+    ('matrixscale_ch2_ch2', 1 / _iirfilterbox._ADC_DEFAULT_CALIBRATION),
     ('ch1_sampling_freq', 1),
     ('ch2_sampling_freq', 1),
     ('filter_reset', 1),
-    ('input_scale1', 2**5),
-    ('input_scale2', 2**5),
-    ('output_scale1', 2**5),
-    ('output_scale2', 2**5),
-    ('input_offset1', 1/_iirfilterbox._ADC_DEFAULT_CALIBRATION),
-    ('input_offset2', 1/_iirfilterbox._ADC_DEFAULT_CALIBRATION),
-    ('output_offset1', 1/_iirfilterbox._ADC_DEFAULT_CALIBRATION),
-    ('output_offset2', 1/_iirfilterbox._ADC_DEFAULT_CALIBRATION),
+    ('input_scale1', 2 ** 5),
+    ('input_scale2', 2 ** 5),
+    ('output_scale1', 2 ** 5),
+    ('output_scale2', 2 ** 5),
+    ('input_offset1', 1 / _iirfilterbox._ADC_DEFAULT_CALIBRATION),
+    ('input_offset2', 1 / _iirfilterbox._ADC_DEFAULT_CALIBRATION),
+    ('output_offset1', 1 / _iirfilterbox._ADC_DEFAULT_CALIBRATION),
+    ('output_offset2', 1 / _iirfilterbox._ADC_DEFAULT_CALIBRATION),
 ])
 def test_attributes(dut, moku, attr, value):
     '''
