@@ -74,13 +74,11 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
         start_frequency = float(start_frequency)
         end_frequency = float(end_frequency)
         if log_scale:
-            sweep_freq_delta = round(((end_frequency / start_frequency)
-                                      ** (1.0 / (sweep_length - 1)) - 1)
-                                     * _FRA_FXP_SCALE)
+            sweep_freq_delta = round(((end_frequency / start_frequency) ** (
+                1.0 / (sweep_length - 1)) - 1) * _FRA_FXP_SCALE)
         else:
-            sweep_freq_delta = round(((end_frequency - start_frequency)
-                                      / (sweep_length-1))
-                                     * _FRA_FREQ_SCALE)
+            sweep_freq_delta = round(((end_frequency - start_frequency) / (
+                sweep_length - 1)) * _FRA_FREQ_SCALE)
 
         return sweep_freq_delta
 
@@ -93,13 +91,11 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
             # Delta register becomes a multiplier in the logarithmic case
             # Fixed-point precision is used in the FPGA multiplier
             # (30 fractional bits)
-            fs = [f_start
-                  * (1 + (self.sweep_freq_delta / _FRA_FXP_SCALE))**n
+            fs = [f_start * (1 + (self.sweep_freq_delta / _FRA_FXP_SCALE)) ** n
                   for n in range(self.sweep_length)]
         else:
-            fs = [(f_start
-                   + n*(self.sweep_freq_delta / _FRA_FREQ_SCALE))
-                  for n in range(self.sweep_length)]
+            fs = [(f_start + n * (self.sweep_freq_delta / _FRA_FREQ_SCALE)) for
+                  n in range(self.sweep_length)]
         return fs
 
     def _calculate_gain_correction(self, fs):
@@ -127,9 +123,9 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
             if self.averaging_time % sweep_period == 0:
                 average_period_time = self.averaging_time * _FRA_FPGA_CLOCK
             else:
-                average_period_time = math.ceil(self.averaging_time
-                                                / sweep_period) \
-                    * sweep_period * _FRA_FPGA_CLOCK
+                average_period_time = math.ceil(
+                    self.averaging_time / sweep_period) * sweep_period * (
+                        _FRA_FPGA_CLOCK)
 
             if average_period_time >= average_period_cycles:
                 average_period = average_period_time
@@ -152,8 +148,9 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
         for f in range(self.sweep_length):
             if sweep_freq[f] > 0.0:
-                gain_scale[f] = math.ceil(average_gain[f] * points_per_freq[f]
-                                          * _FRA_FPGA_CLOCK / sweep_freq[f])
+                gain_scale[f] = math.ceil(
+                    average_gain[f] * points_per_freq[f] * _FRA_FPGA_CLOCK / (
+                        sweep_freq[f]))
             else:
                 gain_scale[f] = average_gain[f]
 
@@ -331,7 +328,7 @@ class FrequencyResponseAnalyzer(_frame_instrument.FrameBasedInstrument):
 
         # ensure combination of amplitude and offset doesn't cause output
         # clipping
-        if ((amplitude/2.0) + abs(offset)) > 1.0:
+        if ((amplitude / 2.0) + abs(offset)) > 1.0:
             raise ValueOutOfRangeException("Output sweep waveform must not "
                                            "exceed +/- 1.0 volts. Reduce "
                                            "output amplitude and/or offset.")
