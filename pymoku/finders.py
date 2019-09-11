@@ -29,8 +29,8 @@ class BonjourFinder(object):
             # filtered out by serial or name,
             # so we add it to the list, unless it's filtered by IP first.
             if (not self.filter_type == 'ip') \
-                or (self.filter_type == 'ip' and
-                    self.filter_callback(ip)):
+                    or (self.filter_type == 'ip' and (
+                    self.filter_callback(ip))):
                 self.moku_list.append(ip)
 
             if self.max_results and len(self.moku_list) >= self.max_results:
@@ -55,14 +55,13 @@ class BonjourFinder(object):
 
         # If specified, filter service by serial number (extracted from
         # service metadata)
-        if not(self.filter_type == 'serial'
-           and not self.filter_callback(txtRecord_dict)):
-
+        if not (self.filter_type == 'serial' and not self.filter_callback(
+                txtRecord_dict)):
             query_sdRef = pybonjour.DNSServiceQueryRecord(
-                            interfaceIndex=interfaceIndex,
-                            fullname=hosttarget,
-                            rrtype=pybonjour.kDNSServiceType_A,
-                            callBack=self.query_record_callback)
+                interfaceIndex=interfaceIndex,
+                fullname=hosttarget,
+                rrtype=pybonjour.kDNSServiceType_A,
+                callBack=self.query_record_callback)
             try:
                 while not self.queried:
                     ready = select.select([query_sdRef], [], [], self.timeout)
@@ -122,8 +121,8 @@ class BonjourFinder(object):
         self.moku_list = []
 
         browse_sdRef = pybonjour.DNSServiceBrowse(
-                                regtype='_moku._tcp',
-                                callBack=self.browse_callback)
+            regtype='_moku._tcp',
+            callBack=self.browse_callback)
 
         start = time.time()
         try:
