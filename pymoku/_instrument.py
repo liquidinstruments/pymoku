@@ -319,8 +319,8 @@ class MokuInstrument(object):
         implementations. """
         self._accessor_dict = {}
         self._moku = None
-        self._remoteregs = [None]*128
-        self._localregs = [None]*128
+        self._remoteregs = [None] * 128
+        self._localregs = [None] * 128
         self._running = False
         self._stateid = 0
 
@@ -803,21 +803,21 @@ _instr_reg_handlers = {
             from_reg_signed(0, 7)),
     'adc1_offset_t':
         (REG_CAL_ADC0,
-            to_reg_signed(16, 16,
-                          xform=lambda obj, x:
-                          round(max(-2**15, min(2**15-1, x * 2.0**13)))),
-            from_reg_signed(16, 16, xform=lambda obj, x: x / 2.0**13)),
+         to_reg_signed(16, 16,
+                       xform=lambda obj, x:
+                       round(max(-2 ** 15, min(2 ** 15 - 1, x * 2.0 ** 13)))),
+         from_reg_signed(16, 16, xform=lambda obj, x: x / 2.0 ** 13)),
 
     'adc2_offset':
         (REG_CAL_ADC1,
             to_reg_signed(0, 7),
             from_reg_signed(0, 7)),
-        'adc2_offset_t':
+    'adc2_offset_t':
         (REG_CAL_ADC1,
-            to_reg_signed(16, 16,
-                          xform=lambda obj, x:
-                          round(max(-2**15, min(2**15-1, x * 2.0**13)))),
-            from_reg_signed(16, 16, xform=lambda obj, x: x / 2.0**13)),
+         to_reg_signed(16, 16,
+                       xform=lambda obj, x:
+                       round(max(-2 ** 15, min(2 ** 15 - 1, x * 2.0 ** 13)))),
+         from_reg_signed(16, 16, xform=lambda obj, x: x / 2.0 ** 13)),
 
     'dac1_offset':
         (REG_CAL_DAC0,
@@ -825,10 +825,10 @@ _instr_reg_handlers = {
             from_reg_signed(0, 11)),
     'dac1_offset_t':
         (REG_CAL_DAC0,
-            to_reg_signed(16, 16,
-                          xform=lambda obj, x:
-                          round(max(-2**15, min(2**15-1, x * 2.0**12)))),
-            from_reg_signed(16, 16, xform=lambda obj, x: x / 2.0**12)),
+         to_reg_signed(16, 16,
+                       xform=lambda obj, x:
+                       round(max(-2 ** 15, min(2 ** 15 - 1, x * 2.0 ** 12)))),
+         from_reg_signed(16, 16, xform=lambda obj, x: x / 2.0 ** 12)),
 
     'dac2_offset':
         (REG_CAL_DAC1,
@@ -836,10 +836,10 @@ _instr_reg_handlers = {
             from_reg_signed(0, 11)),
     'dac2_offset_t':
         (REG_CAL_DAC1,
-            to_reg_signed(16, 16,
-                          xform=lambda obj, x:
-                          round(max(-2**15, min(2**15-1, x * 2.0**12)))),
-            from_reg_signed(16, 16, xform=lambda obj, x:  x / 2.0**12)),
+         to_reg_signed(16, 16,
+                       xform=lambda obj, x:
+                       round(max(-2 ** 15, min(2 ** 15 - 1, x * 2.0 ** 12)))),
+         from_reg_signed(16, 16, xform=lambda obj, x: x / 2.0 ** 12)),
 
     'state_id':
         (REG_STATE,
