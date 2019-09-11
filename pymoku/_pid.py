@@ -124,7 +124,8 @@ class PID(object):
         r = self.reg_base + PID._REG_I_GAIN
         self._instr._accessor_set(
             r, to_reg_unsigned(0, 25,
-                               xform=lambda obj, x: x * (2.0**24-1)), value)
+                               xform=lambda obj, x: x * (2.0 ** 24 - 1)),
+            value)
 
     @property
     def i_fb(self):
@@ -217,12 +218,12 @@ class PID(object):
             i_c = ki / si
             if i_c < self.ang_freq / (2**24 - 1):
                 si_max = (g * ki / (2 * self.ang_freq / (2**24 - 1)))
-                raise InvalidConfigurationException("Integrator corner below"
-                                                    " minimum. Decrease "
-                                                    "integrator saturation "
-                                                    "below %.3f dB."
-                                                    % (20 *
-                                                       math.log(si_max, 10)))
+                raise InvalidConfigurationException(
+                    "Integrator corner below"
+                    " minimum. Decrease "
+                    "integrator saturation "
+                    "below %.3f dB."
+                    % (20 * math.log(si_max, 10)))
         self.i_fb = 1.0 - (i_c / self.ang_freq)
 
         if sd:
@@ -235,12 +236,12 @@ class PID(object):
             fc_coeff = (math.sqrt(2 * math.pi) / 10.0)
 
         if fc_coeff > (math.sqrt(2 * math.pi) / 10.0):
-            raise InvalidConfigurationException("Differentiator saturation "
-                                                "corner above maximum. Reduce"
-                                                " differentiator saturation "
-                                                "below %.3f."
-                                                % (fc_coeff * kd *
-                                                    self.ang_freq))
+            raise InvalidConfigurationException(
+                "Differentiator saturation "
+                "corner above maximum. Reduce"
+                " differentiator saturation "
+                "below %.3f."
+                % (fc_coeff * kd * self.ang_freq))
 
         self.d_fb = 1.0 - fc_coeff
 
@@ -288,7 +289,7 @@ class PID(object):
         else:
             ki = 0.0
 
-        kd = d_xover/cross_over_gain if d_xover else 0.0
+        kd = d_xover / cross_over_gain if d_xover else 0.0
         si = si / best_gain if si else None
 
         # if ii_xover :
