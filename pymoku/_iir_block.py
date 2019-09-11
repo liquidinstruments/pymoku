@@ -33,13 +33,13 @@ class IIRBlock(object):
         for stage in range(self.num_stages):
             for coeff in range(6):
                 if coeff == 0:
-                    coeff_list[stage][coeff] = \
-                        int(round(2**(self._gain_frac_width)
-                                  * intermediate_filter[stage][coeff]))
+                    coeff_list[stage][coeff] = int(round(
+                        2 ** self._gain_frac_width * (
+                            intermediate_filter[stage][coeff])))
                 else:
                     coeff_list[stage][coeff] = \
-                        int(round(2**(self._coeff_frac_width)
-                                  * intermediate_filter[stage][coeff]))
+                        int(round(2 ** self._coeff_frac_width * (
+                            intermediate_filter[stage][coeff])))
         return coeff_list
 
     def _coeff_dimenension_checks(self, filt_coeffs):
@@ -75,8 +75,9 @@ class IIRBlock(object):
 
         for stage in range(self.num_stages):
             for coeff in range(6):
-                r = self.reg_base + 6*stage + coeff
-                self._instr._accessor_set(
-                        r,
-                        to_reg_signed(0, self._coeff_frac_width + 2),
-                        coeffs_converted[stage][coeff])
+                r = self.reg_base + 6 * stage + coeff
+                self._instr._accessor_set(r,
+                                          to_reg_signed(
+                                              0,
+                                              self._coeff_frac_width + 2),
+                                          coeffs_converted[stage][coeff])
