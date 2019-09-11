@@ -119,7 +119,7 @@ class Datalogger(_stream_instrument.StreamBasedInstrument,
 
         decimation = _DL_ADC_SMPS / float(samplerate)
         self.decimation_rate = decimation
-        self.timestep = 1.0/(_DL_ADC_SMPS/decimation)
+        self.timestep = 1.0 / (_DL_ADC_SMPS / decimation)
 
     def get_samplerate(self):
         """ :return: The current instrument sample rate """
@@ -195,7 +195,7 @@ class Datalogger(_stream_instrument.StreamBasedInstrument,
         scales = self._calculate_scales()
 
         samplerate = self.get_samplerate()
-        self.timestep = 1.0/samplerate
+        self.timestep = 1.0 / samplerate
 
         # Use the new scales to decide on the processing string
         self.procstr[0] = "*{:.15f}".format(scales['scale_ch1'])
@@ -206,10 +206,10 @@ class Datalogger(_stream_instrument.StreamBasedInstrument,
     def _on_reg_sync(self):
         super(Datalogger, self)._on_reg_sync()
         if self.decimation_rate == 0:
-            self.timestep = 1.0/(_DL_ADC_SMPS)
+            self.timestep = 1.0 / (_DL_ADC_SMPS)
         else:
             samplerate = _DL_ADC_SMPS / float(self.decimation_rate)
-            self.timestep = 1.0/samplerate
+            self.timestep = 1.0 / samplerate
 
     def _get_hdrstr(self, ch1, ch2):
         chs = [ch1, ch2]
@@ -217,31 +217,31 @@ class Datalogger(_stream_instrument.StreamBasedInstrument,
         hdr = "% Moku:Datalogger\r\n"
         for i, c in enumerate(chs):
             if c:
-                r = self.get_frontend(i+1)
+                r = self.get_frontend(i + 1)
                 hdr += "% Ch {i} - {} coupling, {} Ohm impedance, "
                 "{} V range\r\n".format(
-                                        "AC" if r[2] else "DC",
-                                        "50" if r[0] else "1M",
-                                        "10" if r[1] else "1",
-                                        i=i + 1
-                                        )
+                    "AC" if r[2] else "DC",
+                    "50" if r[0] else "1M",
+                    "10" if r[1] else "1",
+                    i=i + 1
+                )
         hdr += "% Acquisition rate: {:.10e} Hz, "
         "{} mode\r\n".format(
-                             self.get_samplerate(),
-                             "Precision"
-                             if self.is_precision_mode()
-                             else "Normal"
-                             )
+            self.get_samplerate(),
+            "Precision"
+            if self.is_precision_mode()
+            else "Normal"
+        )
         hdr += "% {} 10 MHz clock\r\n".format(
-                                           "External"
-                                           if self._moku._get_actual_extclock()
-                                           else "Internal"
-                                           )
+            "External"
+            if self._moku._get_actual_extclock()
+            else "Internal"
+        )
         hdr += "% Acquired {}\r\n".format(_utils.formatted_timestamp())
         hdr += "% Time"
         for i, c in enumerate(chs):
             if c:
-                hdr += ", Ch {i} voltage (V)".format(i=i+1)
+                hdr += ", Ch {i} voltage (V)".format(i=i + 1)
         hdr += "\r\n"
         return hdr
 
@@ -250,7 +250,7 @@ class Datalogger(_stream_instrument.StreamBasedInstrument,
         fmtstr = "{t:.10e}"
         for i, c in enumerate(chs):
             if c:
-                fmtstr += ",{{ch{i}:.10e}}".format(i=i+1)
+                fmtstr += ",{{ch{i}:.10e}}".format(i=i + 1)
         fmtstr += "\r\n"
         return fmtstr
 
