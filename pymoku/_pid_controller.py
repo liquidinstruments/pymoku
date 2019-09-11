@@ -267,7 +267,8 @@ class PIDController(_CoreOscilloscope):
                                                     " minimum. Decrease "
                                                     "integrator saturation "
                                                     "below %.3f dB." %
-                                                    (20*math.log(si_max, 10)))
+                                                    (20 * math.log(si_max,
+                                                                   10)))
         i_fb = 1.0 - (i_c / fs)
 
         d_gain = 4 * sd if sd else 4 * 1000
@@ -281,9 +282,9 @@ class PIDController(_CoreOscilloscope):
                 fc_coeff = 1
         else:
             # Set the differentiator corner to 1MHz
-            fc_coeff = 1e6/12.5e6 * math.pi
+            fc_coeff = 1e6 / 12.5e6 * math.pi
 
-        if fc_coeff > (1e6/12.5e6 * math.pi):
+        if fc_coeff > (1e6 / 12.5e6 * math.pi):
             raise InvalidConfigurationException("Differentiator saturation "
                                                 "corner above maximum. Reduce"
                                                 " differentiator saturation "
@@ -593,10 +594,10 @@ class PIDController(_CoreOscilloscope):
         monitor_sources = {
             'none': _PID_MON_NONE,
             'adc1': _PID_MON_ADC1,
-            'in1':  _PID_MON_IN1,
+            'in1': _PID_MON_IN1,
             'out1': _PID_MON_OUT1,
             'adc2': _PID_MON_ADC2,
-            'in2':  _PID_MON_IN2,
+            'in2': _PID_MON_IN2,
             'out2': _PID_MON_OUT2
         }
         monitor_ch = monitor_ch.lower()
@@ -628,8 +629,8 @@ class PIDController(_CoreOscilloscope):
             Converts volts to bits depending on the signal source
         """
         # Decimation gain is applied only when using precision mode data
-        if (not trigger and self.is_precision_mode()) or (trigger and
-                                                          self.trig_precision):
+        if (not trigger and self.is_precision_mode()) or (trigger and (
+                self.trig_precision)):
             deci_gain = self._deci_gain()
         else:
             deci_gain = 1.0
@@ -644,8 +645,8 @@ class PIDController(_CoreOscilloscope):
             level = scales['gain_adc1'] * (10.0 if scales['atten_ch1']
                                            else 1.0) / deci_gain
         elif (source == _PID_SOURCE_IN2):
-            level = scales['gain_adc2']*(10.0 if scales['atten_ch2']
-                                         else 1.0) / deci_gain
+            level = scales['gain_adc2'] * (10.0 if scales['atten_ch2']
+                                           else 1.0) / deci_gain
         else:
             level = 1.0
         return level
@@ -659,11 +660,11 @@ class PIDController(_CoreOscilloscope):
             'adc1': scales['gain_adc1'] / (10.0 if scales['atten_ch1']
                                            else 1.0),
             'in1': 1.0 / _ADC_DEFAULT_CALIBRATION,
-            'out1': scales['gain_dac1']*(2.0**4),
+            'out1': scales['gain_dac1'] * (2.0 ** 4),
             'adc2': scales['gain_adc2'] / (10.0 if scales['atten_ch2']
                                            else 1.0),
             'in2': 1.0 / _ADC_DEFAULT_CALIBRATION,
-            'out2': scales['gain_dac2'] * (2.0**4)
+            'out2': scales['gain_dac2'] * (2.0 ** 4)
         }
         return monitor_source_gains[source]
 
@@ -912,7 +913,7 @@ _PID_reg_hdl = {
 
     'ch1_pid1_int_i_gain':
         (REG_PID_CH0_INT_IGAIN1,
-            to_reg_unsigned(0, 24, xform=lambda obj, x: x*(2.0**24 - 1)),
+         to_reg_unsigned(0, 24, xform=lambda obj, x: x * (2.0 ** 24 - 1)),
             from_reg_unsigned(0, 24, xform=lambda obj, x: x / (2.0**24 - 1))),
 
     # TODO: This concerns me, not sure if its writing to the registers as
@@ -929,8 +930,8 @@ _PID_reg_hdl = {
 
     'ch1_pid2_int_ifb_gain':
         (REG_PID_CH0_INT_IFBGAIN2,
-            to_reg_unsigned(8, 24, xform=lambda obj, x: x*(2.0**24 - 1)),
-            from_reg_unsigned(8, 24, xform=lambda obj, x: x / (2.0**24 - 1))),
+         to_reg_unsigned(8, 24, xform=lambda obj, x: x * (2.0 ** 24 - 1)),
+         from_reg_unsigned(8, 24, xform=lambda obj, x: x / (2.0 ** 24 - 1))),
 
     'ch1_pid1_int_p_gain':
         (REG_PID_CH0_INT_PGAIN1,
