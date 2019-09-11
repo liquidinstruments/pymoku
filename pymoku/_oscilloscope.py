@@ -133,29 +133,29 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
     def _calculate_render_downsample(self, t1, t2, decimation):
         # Calculate how much to render downsample
         tspan = float(t2) - float(t1)
-        buffer_smp_rate = self._input_samplerate/float(decimation)
+        buffer_smp_rate = self._input_samplerate / float(decimation)
 
         def _cubic_int_to_scale(integer):
             # Integer to cubic scaling ratio (see Wiki)
-            return float(integer/(2.0**7)) + 1
+            return float(integer / (2.0 ** 7)) + 1
 
         # Enforce a maximum ADC sampling rate
-        screen_smp_rate = min(_OSC_SCREEN_WIDTH/tspan, self._input_samplerate)
+        screen_smp_rate = min(_OSC_SCREEN_WIDTH / tspan,
+                              self._input_samplerate)
 
         # Clamp the render downsampling ratio between 1.0 and ~16.0
-        render_downsample = min(max(buffer_smp_rate/screen_smp_rate, 1.0),
+        render_downsample = min(max(buffer_smp_rate / screen_smp_rate, 1.0),
                                 _cubic_int_to_scale(0x077E))
         return render_downsample
 
     def _calculate_buffer_offset(self, t1, decimation):
         # Calculate the number of pretrigger samples and offset it by an
         # additional (CubicRatio) samples
-        buffer_smp_rate = self._input_samplerate/decimation
+        buffer_smp_rate = self._input_samplerate / decimation
         buffer_offset_secs = -1.0 * t1
-        buffer_offset = math.ceil(min(max(math.ceil(buffer_offset_secs
-                                          * buffer_smp_rate / 4.0),
-                                          _OSC_POSTTRIGGER_MAX),
-                                  _OSC_PRETRIGGER_MAX))
+        buffer_offset = (math.ceil(min(
+            max(math.ceil(buffer_offset_secs * buffer_smp_rate / 4.0),
+                _OSC_POSTTRIGGER_MAX), _OSC_PRETRIGGER_MAX)))
 
         # Apply a correction in pretrigger because of the way cubic
         # interpolation occurs when rendering
@@ -174,14 +174,14 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
             * decimation / self._input_samplerate
 
     def _calculate_frame_timestep(self, decimation, render_decimation):
-        return decimation*render_decimation/self._input_samplerate
+        return decimation * render_decimation / self._input_samplerate
 
     def _calculate_buffer_timestep(self, decimation):
-        return float(decimation)/float(self._input_samplerate)
+        return float(decimation) / float(self._input_samplerate)
 
     def _calculate_buffer_start_time(self, decimation, buffer_offset):
-        return self._calculate_buffer_timestep(decimation) \
-            * (-1.0 * buffer_offset) * 4.0
+        return self._calculate_buffer_timestep(
+            decimation) * (-1.0 * buffer_offset) * 4.0
 
     def _deci_gain(self):
         if self.decimation_rate == 0:
@@ -439,17 +439,17 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
             bts = self._calculate_buffer_timestep(self.decimation_rate)
 
         scales = {
-                'gain_adc1': g1,
-                'gain_adc2': g2,
-                'gain_dac1': d1,
-                'gain_dac2': d2,
-                'atten_ch1': a1,
-                'atten_ch2': a2,
-                'time_min': t1,
-                'time_step': ts,
-                'buff_time_min': bt1,
-                'buff_time_step': bts
-                }
+            'gain_adc1': g1,
+            'gain_adc2': g2,
+            'gain_dac1': d1,
+            'gain_dac2': d2,
+            'atten_ch1': a1,
+            'atten_ch2': a2,
+            'time_min': t1,
+            'time_step': ts,
+            'buff_time_min': bt1,
+            'buff_time_step': bts
+        }
 
         # Replace scaling factors depending on the monitor signal source
         scales['scale_ch1'] = self._signal_source_volts_per_bit(
@@ -472,10 +472,8 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
         # Notify the user if hysteresis has been clamped
         max_hysteresis = 2**16 - 1
         hysteresis = int(
-            round(self._trig_hysteresis /
-                  self._signal_source_volts_per_bit(self.trig_ch,
-                                                    scales,
-                                                    trigger=True)))
+            round(self._trig_hysteresis / self._signal_source_volts_per_bit(
+                self.trig_ch, scales, trigger=True)))
         if hysteresis > max_hysteresis:
             hysteresis = max_hysteresis
             log.info("Hysteresis set to maximum value.")
@@ -485,7 +483,7 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
         scales = self._calculate_scales()
 
         samplerate = self.get_samplerate()
-        self.timestep = 1.0/samplerate
+        self.timestep = 1.0 / samplerate
 
         # Use the new scales to decide on the processing string
         self.procstr[0] = "*{:.15f}".format(scales['scale_ch1'])
@@ -500,12 +498,12 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
         hdr = "% Moku:Oscilloscope\r\n"
         for i, c in enumerate(chs):
             if c:
-                r = self.get_frontend(i+1)
+                r = self.get_frontend(i + 1)
                 hdr += "% Ch {i} - {} coupling, {} Ohm impedance, " \
                     "{} V range\r\n".format("AC" if r[2] else "DC",
                                             "50" if r[0] else "1M",
                                             "10" if r[1] else "1",
-                                            i=i+1)
+                                            i=i + 1)
         hdr += "% Acquisition rate: {:.10e} Hz, " \
             "{} mode\r\n".format(self.get_samplerate(),
                                  "Precision" if self.is_precision_mode()
@@ -517,7 +515,7 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
         hdr += "% Time"
         for i, c in enumerate(chs):
             if c:
-                hdr += ", Ch {i} voltage (V)".format(i=i+1)
+                hdr += ", Ch {i} voltage (V)".format(i=i + 1)
         hdr += "\r\n"
         return hdr
 
@@ -526,7 +524,7 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
         fmtstr = "{t:.10e}"
         for i, c in enumerate(chs):
             if c:
-                fmtstr += ",{{ch{i}:.10e}}".format(i=i+1)
+                fmtstr += ",{{ch{i}:.10e}}".format(i=i + 1)
         fmtstr += "\r\n"
         return fmtstr
 
@@ -537,7 +535,7 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
         # This function is used to update any local variables when a Moku has
         # had its registers synchronised with the current instrument
         if self.decimation_rate == 0:
-            self.timestep = 1.0/(self._input_samplerate)
+            self.timestep = 1.0 / self._input_samplerate
         else:
             self.timestep = float(self.decimation_rate) \
                 / self._input_samplerate
@@ -694,20 +692,20 @@ class Oscilloscope(
         """
             Converts volts to bits depending on the signal source
         """
-        if (not trigger and self.is_precision_mode()) or (trigger and
-                                                          self.trig_precision):
+        if (not trigger and self.is_precision_mode()) or (
+                trigger and self.trig_precision):
             deci_gain = self._deci_gain()
         else:
             deci_gain = 1.0
 
-        if (source == _OSC_SOURCE_CH1):
-            level = scales['gain_adc1']/deci_gain
-        elif (source == _OSC_SOURCE_CH2):
-            level = scales['gain_adc2']/deci_gain
-        elif (source == _OSC_SOURCE_DA1):
-            level = (scales['gain_dac1'])*16/deci_gain
-        elif (source == _OSC_SOURCE_DA2):
-            level = (scales['gain_dac2'])*16/deci_gain
+        if source == _OSC_SOURCE_CH1:
+            level = scales['gain_adc1'] / deci_gain
+        elif source == _OSC_SOURCE_CH2:
+            level = scales['gain_adc2'] / deci_gain
+        elif source == _OSC_SOURCE_DA1:
+            level = (scales['gain_dac1']) * 16 / deci_gain
+        elif source == _OSC_SOURCE_DA2:
+            level = (scales['gain_dac2']) * 16 / deci_gain
         else:
             level = 1.0
 
