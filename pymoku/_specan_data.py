@@ -130,7 +130,7 @@ class SpectrumData(_frame_instrument.InstrumentData):
                               for x in reversed(dat[:_SA_SCREEN_WIDTH])]
 
             self.ch2 = [self._vrms_to_dbm(a * c * scale2) if dbmscale
-                        else a*c*scale2 if a is not None else None
+                        else a * c * scale2 if a is not None else None
                         for a, c in zip(self._ch2_bits, fcorrs)]
             self.ch2 = self.ch2[start_index:-1]
 
@@ -148,8 +148,7 @@ class SpectrumData(_frame_instrument.InstrumentData):
         if self._stateid not in self._scales:
             return
         scales = self._scales[self._stateid]
-        self.time = [scales['buff_time_min']
-                     + (scales['buff_time_step'] * x)
+        self.time = [scales['buff_time_min'] + (scales['buff_time_step'] * x)
                      for x in range(_SA_BUFLEN)]
         self.dbm = scales['dbmscale']
         return True
