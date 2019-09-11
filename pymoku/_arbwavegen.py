@@ -112,10 +112,10 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
         if ch == 1:
             self.mode1 = mode
-            self.lut_length1 = length-1
+            self.lut_length1 = length - 1
         elif ch == 2:
             self.mode2 = mode
-            self.lut_length2 = length-1
+            self.lut_length2 = length - 1
 
     # Can't use nested needs_commit because mmap access bit must be set in this
     # function
@@ -163,13 +163,13 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
         n_points = len(data)
 
-        if n_points <= 2**13:
+        if n_points <= 2 ** 13:
             max_lut_samplerate = 1000
-        elif n_points <= 2**14:
+        elif n_points <= 2 ** 14:
             max_lut_samplerate = 500
-        elif n_points <= 2**15:
+        elif n_points <= 2 ** 15:
             max_lut_samplerate = 250
-        elif n_points <= 2**16:
+        elif n_points <= 2 ** 16:
             max_lut_samplerate = 125
         else:
             raise ValueOutOfRangeException(
@@ -185,9 +185,9 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
         _str_to_mode = {
             '1000': _ARB_MODE_1000,
-            '500':  _ARB_MODE_500,
-            '250':  _ARB_MODE_250,
-            '125':  _ARB_MODE_125
+            '500': _ARB_MODE_500,
+            '250': _ARB_MODE_250,
+            '125': _ARB_MODE_125
         }
 
         mode = str_to_val(_str_to_mode, str(mode), "operating mode")
@@ -403,9 +403,9 @@ class ArbitraryWaveGen(_CoreOscilloscope):
             'ext': _ARB_TRIG_SRC_EXT
         }
         _str_to_edge = {
-            'rising':  Trigger.EDGE_RISING,
+            'rising': Trigger.EDGE_RISING,
             'falling': Trigger.EDGE_FALLING,
-            'both':    Trigger.EDGE_BOTH
+            'both': Trigger.EDGE_BOTH
         }
         source = str_to_val(_str_to_source, source, 'trigger source')
         edge = str_to_val(_str_to_edge, edge, 'edge type')
@@ -422,23 +422,23 @@ class ArbitraryWaveGen(_CoreOscilloscope):
         trig_channels = [self._trigger1, self._trigger2]
 
         # AKA: Normal trigger mode only (HG-2598)
-        trig_channels[ch-1].timer = 0.0
-        trig_channels[ch-1].auto_holdoff = 0
+        trig_channels[ch - 1].timer = 0.0
+        trig_channels[ch - 1].auto_holdoff = 0
 
-        trig_channels[ch-1].edge = edge
-        trig_channels[ch-1].duration = minwidth or maxwidth or 0.0
+        trig_channels[ch - 1].edge = edge
+        trig_channels[ch - 1].duration = minwidth or maxwidth or 0.0
         # TODO: Enable setting hysteresis level. For now we use the iPad LSB
         # values for ON/OFF.
-        trig_channels[ch-1].hysteresis = 25 if hysteresis else 0
+        trig_channels[ch - 1].hysteresis = 25 if hysteresis else 0
 
         if maxwidth:
-            trig_channels[ch-1].trigtype = Trigger.TYPE_PULSE
-            trig_channels[ch-1].pulsetype = Trigger.PULSE_MAX
+            trig_channels[ch - 1].trigtype = Trigger.TYPE_PULSE
+            trig_channels[ch - 1].pulsetype = Trigger.PULSE_MAX
         elif minwidth:
-            trig_channels[ch-1].trigtype = Trigger.TYPE_PULSE
-            trig_channels[ch-1].pulsetype = Trigger.PULSE_MIN
+            trig_channels[ch - 1].trigtype = Trigger.TYPE_PULSE
+            trig_channels[ch - 1].pulsetype = Trigger.PULSE_MIN
         else:
-            trig_channels[ch-1].trigtype = Trigger.TYPE_EDGE
+            trig_channels[ch - 1].trigtype = Trigger.TYPE_EDGE
 
     @needs_commit
     def set_waveform_trigger_output(self, ch, trig_en=True, single=False,
@@ -474,18 +474,18 @@ class ArbitraryWaveGen(_CoreOscilloscope):
 
         sweep_channels = [self._sweep1, self._sweep2]
 
-        sweep_channels[ch-1].wait_for_trig = trig_en
-        sweep_channels[ch-1].waveform = \
+        sweep_channels[ch - 1].wait_for_trig = trig_en
+        sweep_channels[ch - 1].waveform = \
             _ARB_TRIG_TYPE_SINGLE if single else _ARB_TRIG_TYPE_CONT
-        sweep_channels[ch-1].hold_last = hold_last
+        sweep_channels[ch - 1].hold_last = hold_last
 
         if single and not duration:
             # Duration must be set to ~equal the waveform period otherwise we
             # can never retrigger
-            sweep_channels[ch-1].duration = \
+            sweep_channels[ch - 1].duration = \
                 _ARB_SMPL_RATE / 8.0 / self.get_frequency(ch)
         else:
-            sweep_channels[ch-1].duration = int(round(duration * 1.0e9 / 8))
+            sweep_channels[ch - 1].duration = int(round(duration * 1.0e9 / 8))
 
     def _update_dependent_regs(self, scales):
         super(ArbitraryWaveGen, self)._update_dependent_regs(scales)
@@ -531,11 +531,11 @@ class ArbitraryWaveGen(_CoreOscilloscope):
         valid('set', ch, [1, 2], 'output channel')
 
         if ch == 1:
-            return (float(self._sweep1.step) / self._sweep1.stop) \
-                                                        * _ARB_SMPL_RATE
+            return (float(
+                self._sweep1.step) / self._sweep1.stop) * _ARB_SMPL_RATE
         if ch == 2:
-            return (float(self._sweep2.step) / self._sweep2.stop) \
-                                                        * _ARB_SMPL_RATE
+            return (float(
+                self._sweep2.step) / self._sweep2.stop) * _ARB_SMPL_RATE
 
     @needs_commit
     @deprecated(category='method',
