@@ -54,9 +54,8 @@ _PM_UPDATE_RATE = 1e6
 
 _PM_CYCLE_SCALE = 2.0 * 2.0**16 / 2.0**48 * _PM_ADC_SMPS / _PM_UPDATE_RATE
 _PM_HERTZ_SCALE = 2.0 * _PM_ADC_SMPS / 2**48
-_PM_VOLTS_SCALE = 2.0 / (_PM_ADC_SMPS * _PM_ADC_SMPS
-                         / _PM_UPDATE_RATE
-                         / _PM_UPDATE_RATE)
+_PM_VOLTS_SCALE = 2.0 / (
+        _PM_ADC_SMPS * _PM_ADC_SMPS / _PM_UPDATE_RATE / _PM_UPDATE_RATE)
 
 # Phasemeter waveform generator constants
 _PM_SG_AMPSCALE = 2**16 / 4.0
@@ -354,14 +353,14 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
         _utils.check_parameter_valid(
             'range', bw, [10, 10e3], 'bandwidth', 'Hz')
 
-        n = max(min(math.ceil(math.log(10e3/bw, 2)), 10), 0)
+        n = max(min(math.ceil(math.log(10e3 / bw, 2)), 10), 0)
 
         if ch == 1:
             self.bandwidth_ch1 = n
         elif ch == 2:
             self.bandwidth_ch2 = n
 
-        log.info("Bandwidth (Ch %d) set to %.2f Hz", ch, 10e3/(2**n))
+        log.info("Bandwidth (Ch %d) set to %.2f Hz", ch, 10e3 / (2 ** n))
 
     def get_bandwidth(self, ch):
         """ Get the bandwidth of the phasemeter.
@@ -436,18 +435,18 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
         hdr = "% Moku:Phasemeter \r\n"
         for i, c in enumerate(chs):
             if c:
-                r = self.get_frontend(i+1)
+                r = self.get_frontend(i + 1)
                 hdr += "% Ch {i} - {} coupling, {} Ohm impedance, "
                 "{} V range\r\n".format("AC" if r[2] else "DC",
                                         "50" if r[0] else "1M", "10"
-                                        if r[1] else "1", i=i+1)
+                                        if r[1] else "1", i=i + 1)
 
         hdr += "%"
         for i, c in enumerate(chs):
             if c:
                 hdr += "{} Ch {i} bandwidth = {:.10e} (Hz)".format(
                     "," if ((ch1 and ch2) and i == 1)
-                    else "", self.get_bandwidth(i+1), i=i+1)
+                    else "", self.get_bandwidth(i + 1), i=i + 1)
         hdr += "\r\n"
 
         hdr += "% Acquisition rate: {:.10e} " \
@@ -460,9 +459,9 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
         for i, c in enumerate(chs):
             if c:
                 hdr += "{} Set frequency {i} (Hz), Frequency {i} (Hz)," \
-                    " Phase {i} (cyc), I {i} (V), Q {i} " \
-                    "(V)".format("," if ((ch1 and ch2) and i == 1)
-                                 else "", i=i+1)
+                       " Phase {i} (cyc), I {i} (V), Q {i} " \
+                       "(V)".format("," if ((ch1 and ch2) and i == 1)
+                                    else "", i=i + 1)
 
         hdr += "\r\n"
 
@@ -503,7 +502,7 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
         self.en_in_ch2 = True
 
     def _on_sync_regs(self):
-        self.timestep = 1.0/(_PM_UPDATE_RATE/self.output_decimation)
+        self.timestep = 1.0 / (_PM_UPDATE_RATE / self.output_decimation)
 
 
 _pm_reg_handlers = {
