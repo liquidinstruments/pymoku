@@ -14,7 +14,7 @@ class _FRAChannelData():
         sig_len = len(gain_correction)
 
         # De-interleave IQ values
-        self.i_sig, self.q_sig = zip(*zip(*[iter(input_signal)]*2))
+        self.i_sig, self.q_sig = zip(*zip(*[iter(input_signal)] * 2))
         self.i_sig = self.i_sig[:sig_len]
         self.q_sig = self.q_sig[:sig_len]
 
@@ -39,7 +39,7 @@ class _FRAChannelData():
                              if output_amp else None for x in self.magnitude]
 
         self.phase = [None if (I is None or Q is None)
-                      else (math.atan2(Q or 0, I or 0))/(2.0*math.pi)
+                      else (math.atan2(Q or 0, I or 0)) / (2.0 * math.pi)
                       for I, Q in zip(self.i_sig, self.q_sig)]
 
     def __json__(self):
