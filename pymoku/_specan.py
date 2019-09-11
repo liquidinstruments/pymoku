@@ -324,27 +324,24 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
         # Increase sinewave amplitude as span is reduced. Don't consider
         # spans less than 1 kHz
         span = max(self.f2 - self.f1, 1.0e3)
-        self.demod_sinegen_bitshift = max(min(17 -
-                                              math.floor(2.4 *
-                                                         math.log10(span)),
-                                              7), 0)
-        self.demod_sinegen_enable = (span <
-                                     2.0e6) and (self.demod_sinegen_bitshift
-                                                 != 0)
+        self.demod_sinegen_bitshift = max(
+            min(17 - math.floor(2.4 * math.log10(span)), 7), 0)
+        self.demod_sinegen_enable = (span < 2.0e6) and (
+            self.demod_sinegen_bitshift != 0)
 
         # Phase dither to broaden sinewave peak to ~512 FFT points
-        self.demod_phase_bitshift = round(14.0 - 0.58 *
-                                          math.log(1.0e6 / span, 2))
+        self.demod_phase_bitshift = round(
+            14.0 - 0.58 * math.log(1.0e6 / span, 2))
 
         # Sinewave frequency. Place at 1.9 screens from DC. Need to correct
         # for phase dither offset
-        fbin_resolution = _SA_ADC_SMPS / 2.0 / _SA_FFT_LENGTH \
-            / self._total_decimation
+        fbin_resolution = _SA_ADC_SMPS / 2.0 / _SA_FFT_LENGTH / (
+            self._total_decimation)
         desired_frequency = fbin_resolution * _SA_FFT_LENGTH * 0.475
-        phase_step = min(round(desired_frequency
-                               / _SA_DAC_SMPS * 2**32), 2**32)
+        phase_step = min(round(desired_frequency / _SA_DAC_SMPS * 2 ** 32),
+                         2 ** 32)
         self.demod_sinegen_freq = phase_step - round(
-            31.0 / 32.0 * 2**(self.demod_phase_bitshift + 4))
+            31.0 / 32.0 * 2 ** (self.demod_phase_bitshift + 4))
 
     def _compensation_dithering(self):
         self.demod_dither_bitshift = max(
@@ -386,7 +383,7 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
         self._set_decimations(d1, d2, d3, d4, ideal)
 
         # Set the filter gains based on the set CIC decimations
-        filter_set = _SA_IIR_COEFFS[self.dec_iir-1]
+        filter_set = _SA_IIR_COEFFS[self.dec_iir - 1]
         self.gain_sos0, self.a1_sos0, self.a2_sos0, self.b1_sos0 = \
             filter_set[0:4]
         self.gain_sos1, self.a1_sos1, self.a2_sos1, self.b1_sos1 = \
@@ -397,9 +394,9 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
         # Set rendering decimations
         fspan = self.f2 - self.f1
         buffer_span = _SA_ADC_SMPS / 2.0 / self._total_decimation
-        self.render_dds = min(max(math.ceil(fspan / buffer_span *
-                                            _SA_FFT_LENGTH / _SA_SCREEN_STEPS),
-                                  1.0), 4.0)
+        self.render_dds = min(max(
+            math.ceil(fspan / buffer_span * _SA_FFT_LENGTH / _SA_SCREEN_STEPS),
+            1.0), 4.0)
         self.render_dds_alt = self.render_dds
 
         # Calculate and set the Resolution Bandwidth (RBW)
@@ -568,11 +565,11 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
         In this case 'f' is the frequency (Hz) relative to the demodulation
         frequency.
         """
-        freq = f/_SA_ADC_SMPS
+        freq = f / _SA_ADC_SMPS
 
         correction = 1.0 if (freq == 0.0) else math.pow(
-            math.fabs(math.sin(math.pi*freq*dec)/(
-                math.sin(math.pi*freq)*dec)), order)
+            math.fabs(math.sin(math.pi * freq * dec) / (
+                      math.sin(math.pi * freq) * dec)), order)
 
         return correction
 
@@ -708,8 +705,9 @@ class SpectrumAnalyzer(_frame_instrument.FrameBasedInstrument):
         if self.sweep1 or self.sweep2:
             samplerate = _SA_ADC_SMPS / decimation
             windowed_points = 2 * _SA_FFT_LENGTH / self.rbw_ratio
-            fft_time = windowed_points / samplerate + \
-                (2*_SA_FFT_LENGTH - windowed_points) / 125e6 + (1.0/1788.8)
+            fft_time = (windowed_points / samplerate + (
+                        2 * _SA_FFT_LENGTH - windowed_points) / 125e6 + (
+                        1.0 / 1788.8))
             screen_update_time = max(
                 round(fft_time * framerate) / framerate, 1.0 / framerate)
 
@@ -791,7 +789,7 @@ _sa_reg_handlers = {
             from_reg_bool(0)),
     'dec_cic2':
         (REG_SA_DECCTL,
-            to_reg_unsigned(1, 6,   xform=lambda obj, x: x - 1),
+            to_reg_unsigned(1, 6, xform=lambda obj, x: x - 1),
             from_reg_unsigned(1, 6, xform=lambda obj, x: x + 1)),
     'bs_cic2':
         (REG_SA_DECCTL,
@@ -799,7 +797,7 @@ _sa_reg_handlers = {
             from_reg_unsigned(7, 4)),
     'dec_cic3':
         (REG_SA_DECCTL,
-            to_reg_unsigned(11, 4,  xform=lambda obj, x: x - 1),
+            to_reg_unsigned(11, 4, xform=lambda obj, x: x - 1),
             from_reg_unsigned(11, 4, xform=lambda obj, x: x + 1)),
     'bs_cic3':
         (REG_SA_DECCTL,
@@ -807,20 +805,20 @@ _sa_reg_handlers = {
             from_reg_unsigned(15, 4)),
     'dec_iir':
         (REG_SA_DECCTL,
-            to_reg_unsigned(19, 4,  xform=lambda obj, x: x - 1),
+            to_reg_unsigned(19, 4, xform=lambda obj, x: x - 1),
             from_reg_unsigned(19, 4, xform=lambda obj, x: x + 1)),
     'rbw_ratio':
         (REG_SA_RBW,
-            to_reg_unsigned(0, 24,  xform=lambda obj, x: round(x * 2.0**10.0)),
+            to_reg_unsigned(0, 24, xform=lambda obj, x: round(x * 2.0**10.0)),
             from_reg_unsigned(0, 24, xform=lambda obj, x: x / (2.0**10.0))),
 
     'window':
         (REG_SA_RBW,
             to_reg_unsigned(24, 2, allow_set=[
-                                              _SA_WIN_NONE,
-                                              _SA_WIN_BH,
-                                              _SA_WIN_HANNING,
-                                              _SA_WIN_FLATTOP]),
+                _SA_WIN_NONE,
+                _SA_WIN_BH,
+                _SA_WIN_HANNING,
+                _SA_WIN_FLATTOP]),
             from_reg_unsigned(24, 2)),
 
     'ref_level':
