@@ -232,11 +232,9 @@ class LockInAmp(PIDController, _CoreOscilloscope):
         :param aux_offset: Auxillary output offset
         """
         _utils.check_parameter_valid(
-            'string', main,
-                                     desc="main output signal")
+            'string', main, desc="main output signal")
         _utils.check_parameter_valid(
-            'string', aux,
-                                     desc="auxillary output signal")
+            'string', aux, desc="auxillary output signal")
 
         # Allow uppercase options
         main = main.lower()
@@ -1064,30 +1062,30 @@ _lia_reg_hdl = {
 
     'monitor_select0':
         (REG_LIA_MONSELECT,
-            to_reg_unsigned(0, 3, allow_set=[_LIA_MON_NONE,
-                                             _LIA_MON_IN1,
-                                             _LIA_MON_I,
-                                             _LIA_MON_Q,
-                                             _LIA_MON_OUT,
-                                             _LIA_MON_AUX,
-                                             _LIA_MON_IN2,
-                                             _LIA_MON_DEMOD]
-            ),
-            from_reg_unsigned(0, 3)
+         to_reg_unsigned(0, 3, allow_set=[_LIA_MON_NONE,
+                                          _LIA_MON_IN1,
+                                          _LIA_MON_I,
+                                          _LIA_MON_Q,
+                                          _LIA_MON_OUT,
+                                          _LIA_MON_AUX,
+                                          _LIA_MON_IN2,
+                                          _LIA_MON_DEMOD]
+                         ),
+         from_reg_unsigned(0, 3)
          ),
 
     'monitor_select1':
         (REG_LIA_MONSELECT,
-            to_reg_unsigned(3, 3, allow_set=[_LIA_MON_NONE,
-                                             _LIA_MON_IN1,
-                                             _LIA_MON_I,
-                                             _LIA_MON_Q,
-                                             _LIA_MON_OUT,
-                                             _LIA_MON_AUX,
-                                             _LIA_MON_IN2,
-                                             _LIA_MON_DEMOD]
-            ),
-            from_reg_unsigned(0, 3)
+         to_reg_unsigned(3, 3, allow_set=[_LIA_MON_NONE,
+                                          _LIA_MON_IN1,
+                                          _LIA_MON_I,
+                                          _LIA_MON_Q,
+                                          _LIA_MON_OUT,
+                                          _LIA_MON_AUX,
+                                          _LIA_MON_IN2,
+                                          _LIA_MON_DEMOD]
+                         ),
+         from_reg_unsigned(0, 3)
          ),
 
     'sineout_amp':
