@@ -134,11 +134,10 @@ class StreamBasedInstrument(_input_instrument.InputInstrument,
 
         # Only "get" samples off the network if we haven't already processed
         # enough to return 'n' for all enabled channels.
-        while ((n == -1) or
-                (self.ch1 and ((num_processed_samples[0] <= n) or
-                               (num_processed_samples[0] <= 0))) or
-                (self.ch2 and ((num_processed_samples[1] <= n) or
-                               (num_processed_samples[1] <= 0)))):
+        while ((n == -1) or (self.ch1 and ((num_processed_samples[0] <= n) or (
+                num_processed_samples[0] <= 0))) or (self.ch2 and (
+                (num_processed_samples[1] <= n) or (
+                num_processed_samples[1] <= 0)))):
             try:
                 self._stream_receive_samples(timeout)
             except NoDataException:
