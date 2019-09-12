@@ -19,8 +19,8 @@ from pymoku import dataparser
 __version__ = pkg_resources.get_distribution("pymoku").version
 
 DATAPATH = os.path.expanduser(
-                os.environ.get('PYMOKU_INSTR_PATH', None) or
-                pkg_resources.resource_filename('pymoku', 'data'))
+    os.environ.get('PYMOKU_INSTR_PATH', None) or
+    pkg_resources.resource_filename('pymoku', 'data'))
 PYMOKU_VERSION = __version__
 MOKUDATAFILE = 'mokudata-%s-%s.tar.gz' % (pymoku.version.compat_fw[0],
                                           pymoku.version.compat_patch[0])
@@ -193,7 +193,7 @@ def _set_autocommit(enable):
 # Allow environment variable override of bitstream path
 data_folder = os.path.expanduser(os.environ.get('PYMOKU_INSTR_PATH', None) or
                                  pkg_resources.resource_filename(
-                                    'pymoku', 'data'))
+                                     'pymoku', 'data'))
 
 # Network status codes
 _ERR_OK = 0
@@ -1252,7 +1252,7 @@ class Moku(object):
         """
         :return: Version of connected Moku:Lab
         """
-        return version.release
+        return version.release  # noqa
 
     def get_hw_version(self):
         """
