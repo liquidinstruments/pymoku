@@ -16,7 +16,7 @@ from . import NotDeployedException
 from . import NoDataException
 from . import FrameTimeout
 from ._instrument import needs_commit
-from ._frame_instrument_data import InstrumentData # noqa
+from ._frame_instrument_data import InstrumentData
 
 log = logging.getLogger(__name__)
 
