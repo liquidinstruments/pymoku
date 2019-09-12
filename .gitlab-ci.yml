@@ -30,7 +30,7 @@ stages:
       - python -m pip install flake8
       - python -m pip install .
     script:
-      - flake8 --ignore W191 --exclude ./pymoku/pybonjour.py ./
+      - flake8 --ignore E226, F401, W504, W503 --exclude ./pymoku/pybonjour.py ./
 
 style:python2.7:
     extends: .template-flake8
