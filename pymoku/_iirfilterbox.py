@@ -373,12 +373,12 @@ class IIRFilterBox(_CoreOscilloscope):
                 for y in range(6):
                     if y == 0:
                         coeff_list[x][y][k] = int(
-                            round(2**(_IIR_COEFFWIDTH - 24)
-                                  * filter_coeffs[x][y + k * 6]))
+                            round(2 ** (_IIR_COEFFWIDTH - 24) * (
+                                filter_coeffs[x][y + k * 6])))
                     else:
                         coeff_list[x][y][k] = int(
-                            round(2**(_IIR_COEFFWIDTH - 3)
-                                  * filter_coeffs[x][y + k*6]))
+                            round(2 ** (_IIR_COEFFWIDTH - 3) * (
+                                filter_coeffs[x][y + k * 6])))
         coeff_bytes = bytearray()
         for k in range(2):
             for y in range(6):
@@ -522,10 +522,10 @@ class IIRFilterBox(_CoreOscilloscope):
         monitor_sources = {
             'none': _IIR_MON_NONE,
             'adc1': _IIR_MON_ADC1,
-            'in1':  _IIR_MON_IN1,
+            'in1': _IIR_MON_IN1,
             'out1': _IIR_MON_OUT1,
             'adc2': _IIR_MON_ADC2,
-            'in2':  _IIR_MON_IN2,
+            'in2': _IIR_MON_IN2,
             'out2': _IIR_MON_OUT2
         }
         monitor_ch = monitor_ch.lower()
@@ -605,8 +605,8 @@ class IIRFilterBox(_CoreOscilloscope):
             Converts volts to bits depending on the signal source
         """
         # Decimation gain is applied only when using precision mode data
-        if (not trigger and self.is_precision_mode()) or (trigger and
-                                                          self.trig_precision):
+        if (not trigger and self.is_precision_mode()) or (
+                trigger and self.trig_precision):
             deci_gain = self._deci_gain()
         else:
             deci_gain = 1.0
@@ -635,16 +635,16 @@ class IIRFilterBox(_CoreOscilloscope):
             'none': 1.0,
             'adc1': scales['gain_adc1'] / (10.0 if scales['atten_ch1']
                                            else 1.0),
-            'in1':  1.0 / _ADC_DEFAULT_CALIBRATION / (10.0 if
-                                                      scales['atten_ch1']
-                                                      else 1.0),
-            'out1': scales['gain_dac1'] * (2.0**4),
+            'in1': 1.0 / _ADC_DEFAULT_CALIBRATION / (10.0 if
+                                                     scales['atten_ch1']
+                                                     else 1.0),
+            'out1': scales['gain_dac1'] * (2.0 ** 4),
             'adc2': scales['gain_adc2'] / (10.0 if scales['atten_ch2']
                                            else 1.0),
-            'in2':  1.0 / _ADC_DEFAULT_CALIBRATION/(10.0 if
-                                                    scales['atten_ch2']
-                                                    else 1.0),
-            'out2': scales['gain_dac2']*(2.0**4)
+            'in2': 1.0 / _ADC_DEFAULT_CALIBRATION / (10.0 if
+                                                     scales['atten_ch2']
+                                                     else 1.0),
+            'out2': scales['gain_dac2'] * (2.0 ** 4)
         }
         return monitor_source_gains[source]
 
@@ -668,169 +668,169 @@ class IIRFilterBox(_CoreOscilloscope):
 _iir_reg_handlers = {
     'mon1_source':
         (REG_MONSELECT,
-            to_reg_unsigned(0, 3),
-            from_reg_unsigned(0, 3)),
+         to_reg_unsigned(0, 3),
+         from_reg_unsigned(0, 3)),
     'mon2_source':
         (REG_MONSELECT,
-            to_reg_unsigned(3, 3),
-            from_reg_unsigned(3, 3)),
+         to_reg_unsigned(3, 3),
+         from_reg_unsigned(3, 3)),
 
     'input_en1':
         (REG_ENABLE,
-            to_reg_unsigned(0, 1),
-            from_reg_unsigned(0, 1)),
+         to_reg_unsigned(0, 1),
+         from_reg_unsigned(0, 1)),
     'input_en2':
         (REG_ENABLE,
-            to_reg_unsigned(1, 1),
-            from_reg_unsigned(1, 1)),
+         to_reg_unsigned(1, 1),
+         from_reg_unsigned(1, 1)),
     'output_en1':
         (REG_ENABLE,
-            to_reg_unsigned(2, 1),
-            from_reg_unsigned(2, 1)),
+         to_reg_unsigned(2, 1),
+         from_reg_unsigned(2, 1)),
     'output_en2':
         (REG_ENABLE,
-            to_reg_unsigned(3, 1),
-            from_reg_unsigned(3, 1)),
+         to_reg_unsigned(3, 1),
+         from_reg_unsigned(3, 1)),
 
     'matrixscale_ch1_ch1':
         (REG_CH0_CH0GAIN,
-            to_reg_signed(0, 16,
-                          xform=lambda obj, x:
-                          int(round(x * (_ADC_DEFAULT_CALIBRATION /
-                                         (10.0 if obj.get_frontend(1)[1]
-                                          else 1.0)) * obj._adc_gains()[0]
-                                    * 2.0**10))),
-            from_reg_signed(0, 16,
-                            xform=lambda obj, x:
-                            x * ((10.0 if obj.get_frontend(1)[1]
-                                 else 1.0) /
-                                 _ADC_DEFAULT_CALIBRATION)
-                            / obj._adc_gains()[0]
-                            / 2.0**10)),
+         to_reg_signed(0, 16,
+                       xform=lambda obj, x:
+                       int(round(x * (_ADC_DEFAULT_CALIBRATION /
+                                      (10.0 if obj.get_frontend(1)[1]
+                                       else 1.0)) * obj._adc_gains()[0]
+                                 * 2.0 ** 10))),
+         from_reg_signed(0, 16,
+                         xform=lambda obj, x:
+                         x * ((10.0 if obj.get_frontend(1)[1]
+                               else 1.0) /
+                              _ADC_DEFAULT_CALIBRATION)
+                         / obj._adc_gains()[0]
+                         / 2.0 ** 10)),
     'matrixscale_ch1_ch2':
         (REG_CH0_CH1GAIN,
-            to_reg_signed(0, 16,
-                          xform=lambda obj, x:
-                          int(round(x * (_ADC_DEFAULT_CALIBRATION /
-                                         (10.0 if obj.get_frontend(2)[1]
-                                          else 1.0))
-                                    * obj._adc_gains()[1] * 2.0**10))),
-            from_reg_signed(0, 16,
-                            xform=lambda obj, x:
-                            x * ((10.0 if obj.get_frontend(2)[1] else 1.0)
-                                 / _ADC_DEFAULT_CALIBRATION)
-                            / obj._adc_gains()[1] / 2.0**10)),
+         to_reg_signed(0, 16,
+                       xform=lambda obj, x:
+                       int(round(x * (_ADC_DEFAULT_CALIBRATION /
+                                      (10.0 if obj.get_frontend(2)[1]
+                                       else 1.0))
+                                 * obj._adc_gains()[1] * 2.0 ** 10))),
+         from_reg_signed(0, 16,
+                         xform=lambda obj, x:
+                         x * ((10.0 if obj.get_frontend(2)[1] else 1.0)
+                              / _ADC_DEFAULT_CALIBRATION)
+                         / obj._adc_gains()[1] / 2.0 ** 10)),
     'matrixscale_ch2_ch1':
         (REG_CH1_CH0GAIN,
-            to_reg_signed(0, 16,
-                          xform=lambda obj, x:
-                          int(round(x * (_ADC_DEFAULT_CALIBRATION /
-                                         (10.0 if obj.get_frontend(1)[1]
-                                          else 1.0))
-                              * obj._adc_gains()[0] * 2.0**10))),
-            from_reg_signed(0, 16,
-                            xform=lambda obj, x:
-                            x * ((10.0 if obj.get_frontend(1)[1] else 1.0)
-                                 / _ADC_DEFAULT_CALIBRATION) /
-                            obj._adc_gains()[0] / 2.0**10)),
+         to_reg_signed(0, 16,
+                       xform=lambda obj, x:
+                       int(round(x * (_ADC_DEFAULT_CALIBRATION /
+                                      (10.0 if obj.get_frontend(1)[1]
+                                       else 1.0))
+                                 * obj._adc_gains()[0] * 2.0 ** 10))),
+         from_reg_signed(0, 16,
+                         xform=lambda obj, x:
+                         x * ((10.0 if obj.get_frontend(1)[1] else 1.0)
+                              / _ADC_DEFAULT_CALIBRATION) /
+                         obj._adc_gains()[0] / 2.0 ** 10)),
     'matrixscale_ch2_ch2':
         (REG_CH1_CH1GAIN,
-            to_reg_signed(0, 16,
-                          xform=lambda obj, x:
-                          int(round(x *
-                                    (_ADC_DEFAULT_CALIBRATION /
-                                     (10.0 if obj.get_frontend(2)[1]
-                                      else 1.0)) * obj._adc_gains()[1]
-                                    * 2.0**10))),
-            from_reg_signed(0, 16,
-                            xform=lambda obj, x:
-                            x * ((10.0 if obj.get_frontend(2)[1] else 1.0)
-                                 / _ADC_DEFAULT_CALIBRATION)
-                            / obj._adc_gains()[1] / 2.0**10)),
+         to_reg_signed(0, 16,
+                       xform=lambda obj, x:
+                       int(round(x *
+                                 (_ADC_DEFAULT_CALIBRATION /
+                                  (10.0 if obj.get_frontend(2)[1]
+                                   else 1.0)) * obj._adc_gains()[1]
+                                 * 2.0 ** 10))),
+         from_reg_signed(0, 16,
+                         xform=lambda obj, x:
+                         x * ((10.0 if obj.get_frontend(2)[1] else 1.0)
+                              / _ADC_DEFAULT_CALIBRATION)
+                         / obj._adc_gains()[1] / 2.0 ** 10)),
 
     'ch1_sampling_freq':
         (REG_SAMPLINGFREQ,
-            to_reg_unsigned(0, 1),
-            from_reg_unsigned(0, 1)),
+         to_reg_unsigned(0, 1),
+         from_reg_unsigned(0, 1)),
     'ch2_sampling_freq':
         (REG_SAMPLINGFREQ,
-            to_reg_unsigned(1, 1),
-            from_reg_unsigned(1, 1)),
+         to_reg_unsigned(1, 1),
+         from_reg_unsigned(1, 1)),
 
     'filter_reset':
         (REG_FILT_RESET,
-            to_reg_bool(0),
-            from_reg_bool(0)),
+         to_reg_bool(0),
+         from_reg_bool(0)),
 
     'input_scale1':
         (REG_INPUTSCALE_CH0,
-            to_reg_signed(0, 18, xform=lambda obj, x: x * 2.0**9),
-            from_reg_signed(0, 18, xform=lambda obj, x: x / (2.0**9))),
+         to_reg_signed(0, 18, xform=lambda obj, x: x * 2.0 ** 9),
+         from_reg_signed(0, 18, xform=lambda obj, x: x / (2.0 ** 9))),
     'input_scale2':
         (REG_INPUTSCALE_CH1,
-            to_reg_signed(0, 18, xform=lambda obj, x: x * 2.0**9),
-            from_reg_signed(0, 18, xform=lambda obj, x: x / (2.0**9))),
+         to_reg_signed(0, 18, xform=lambda obj, x: x * 2.0 ** 9),
+         from_reg_signed(0, 18, xform=lambda obj, x: x / (2.0 ** 9))),
 
     'output_scale1':
         (REG_OUTPUTSCALE_CH0,
-            to_reg_signed(0, 18,
-                          xform=lambda obj, x:
-                          int(round(x * 2.0**9 /
-                                    (_ADC_DEFAULT_CALIBRATION * 2**3 *
-                                     obj._dac_gains()[0])))),
-            from_reg_signed(0, 18,
-                            xform=lambda obj, x:
-                            x * (_ADC_DEFAULT_CALIBRATION * 2**3 *
-                                 obj._dac_gains()[0]) / 2.0**9)),
+         to_reg_signed(0, 18,
+                       xform=lambda obj, x:
+                       int(round(x * 2.0 ** 9 /
+                                 (_ADC_DEFAULT_CALIBRATION * 2 ** 3 *
+                                  obj._dac_gains()[0])))),
+         from_reg_signed(0, 18,
+                         xform=lambda obj, x:
+                         x * (_ADC_DEFAULT_CALIBRATION * 2 ** 3 *
+                              obj._dac_gains()[0]) / 2.0 ** 9)),
 
     'output_scale2':
         (REG_OUTPUTSCALE_CH1,
-            to_reg_signed(0, 18,
-                          xform=lambda obj, x:
-                          int(round(x * 2.0**9 /
-                                    (_ADC_DEFAULT_CALIBRATION * 2**3 *
-                                     obj._dac_gains()[1])))),
-            from_reg_signed(0, 18,
-                            xform=lambda obj, x:
-                            x * (_ADC_DEFAULT_CALIBRATION * 2**3 *
-                                 obj._dac_gains()[1]) / 2.0**9)),
+         to_reg_signed(0, 18,
+                       xform=lambda obj, x:
+                       int(round(x * 2.0 ** 9 /
+                                 (_ADC_DEFAULT_CALIBRATION * 2 ** 3 *
+                                  obj._dac_gains()[1])))),
+         from_reg_signed(0, 18,
+                         xform=lambda obj, x:
+                         x * (_ADC_DEFAULT_CALIBRATION * 2 ** 3 *
+                              obj._dac_gains()[1]) / 2.0 ** 9)),
 
     'input_offset1':
         (REG_INPUTOFFSET_CH0,
-            to_reg_signed(0, 14,
-                          xform=lambda obj, x:
-                          int(round(2.0 * x * _ADC_DEFAULT_CALIBRATION /
-                                    (10.0 if obj.get_frontend(1)[1]
-                                     else 1.0)))),
-            from_reg_signed(0, 14,
-                            xform=lambda obj, x:
-                            x * ((10.0 if obj.get_frontend(1)[1]
-                                  else 1.0) / 2.0 /
-                                 _ADC_DEFAULT_CALIBRATION))),
+         to_reg_signed(0, 14,
+                       xform=lambda obj, x:
+                       int(round(2.0 * x * _ADC_DEFAULT_CALIBRATION /
+                                 (10.0 if obj.get_frontend(1)[1]
+                                  else 1.0)))),
+         from_reg_signed(0, 14,
+                         xform=lambda obj, x:
+                         x * ((10.0 if obj.get_frontend(1)[1]
+                               else 1.0) / 2.0 /
+                              _ADC_DEFAULT_CALIBRATION))),
     'input_offset2':
         (REG_INPUTOFFSET_CH1,
-            to_reg_signed(0, 14,
-                          xform=lambda obj, x:
-                          int(round(2.0 * x * _ADC_DEFAULT_CALIBRATION /
-                                    (10.0 if obj.get_frontend(2)[1]
-                                     else 1.0)))),
-            from_reg_signed(0, 14,
-                            xform=lambda obj, x:
-                            x * ((10.0 if obj.get_frontend(2)[1]
-                                  else 1.0) / 2.0 /
-                                 _ADC_DEFAULT_CALIBRATION))),
+         to_reg_signed(0, 14,
+                       xform=lambda obj, x:
+                       int(round(2.0 * x * _ADC_DEFAULT_CALIBRATION /
+                                 (10.0 if obj.get_frontend(2)[1]
+                                  else 1.0)))),
+         from_reg_signed(0, 14,
+                         xform=lambda obj, x:
+                         x * ((10.0 if obj.get_frontend(2)[1]
+                               else 1.0) / 2.0 /
+                              _ADC_DEFAULT_CALIBRATION))),
     'output_offset1':
         (REG_OUTPUTOFFSET_CH0,
-            to_reg_signed(0, 17,
-                          xform=lambda obj, x:
-                          int(round(x / obj._dac_gains()[0]))),
-            from_reg_signed(0, 17,
-                            xform=lambda obj, x: x * obj._dac_gains()[0])),
+         to_reg_signed(0, 17,
+                       xform=lambda obj, x:
+                       int(round(x / obj._dac_gains()[0]))),
+         from_reg_signed(0, 17,
+                         xform=lambda obj, x: x * obj._dac_gains()[0])),
     'output_offset2':
         (REG_OUTPUTOFFSET_CH1,
-            to_reg_signed(0, 17,
-                          xform=lambda obj, x:
-                          int(round(x / obj._dac_gains()[1]))),
-            from_reg_signed(0, 17,
-                            xform=lambda obj, x: x * obj._dac_gains()[1]))
-    }
+         to_reg_signed(0, 17,
+                       xform=lambda obj, x:
+                       int(round(x / obj._dac_gains()[1]))),
+         from_reg_signed(0, 17,
+                         xform=lambda obj, x: x * obj._dac_gains()[1]))
+}
