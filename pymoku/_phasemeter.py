@@ -55,7 +55,7 @@ _PM_UPDATE_RATE = 1e6
 _PM_CYCLE_SCALE = 2.0 * 2.0**16 / 2.0**48 * _PM_ADC_SMPS / _PM_UPDATE_RATE
 _PM_HERTZ_SCALE = 2.0 * _PM_ADC_SMPS / 2**48
 _PM_VOLTS_SCALE = 2.0 / (
-        _PM_ADC_SMPS * _PM_ADC_SMPS / _PM_UPDATE_RATE / _PM_UPDATE_RATE)
+            _PM_ADC_SMPS * _PM_ADC_SMPS / _PM_UPDATE_RATE / _PM_UPDATE_RATE)  # noqa
 
 # Phasemeter waveform generator constants
 _PM_SG_AMPSCALE = 2**16 / 4.0
