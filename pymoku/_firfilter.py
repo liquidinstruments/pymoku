@@ -137,12 +137,12 @@ class _DecFilter(object):
             self.regbase + self.REG_DECIMATION,
             to_reg_unsigned(0, 2),
             d_wdfmuxsel
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_DECIMATION,
             to_reg_unsigned(2, 2),
             d_outmuxsel
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_DECIMATION,
             to_reg_unsigned(4, 4),
@@ -155,58 +155,58 @@ class _DecFilter(object):
             self.regbase + self.REG_DECIMATION,
             to_reg_unsigned(12, 5),
             d_cic1_dec
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_DECIMATION,
             to_reg_unsigned(17, 5),
             d_cic2_dec
-            )
+        )
 
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_CTRL,
             to_reg_unsigned(0, 3),
             i_muxsel
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_WDFRATES,
             to_reg_unsigned(0, 16),
             i_highrate_wdf1
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_WDFRATES,
             to_reg_unsigned(16, 16),
             i_highrate_wdf2
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_CTRL,
             to_reg_unsigned(3, 5),
             i_ratechange_cic1
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_CTRL,
             to_reg_unsigned(8, 5),
             i_ratechange_cic2
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_CICRATES,
             to_reg_unsigned(0, 16),
             i_interprate_cic1
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_CICRATES,
             to_reg_unsigned(16, 16),
             i_interprate_cic2
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_CTRL,
             to_reg_unsigned(13, 4),
             i_bitshift_cic1
-            )
+        )
         self._instr._accessor_set(
             self.regbase + self.REG_INTERP_CTRL,
             to_reg_unsigned(17, 4),
             i_bitshift_cic2
-            )
+        )
 
 
 class FIRFilter(_CoreOscilloscope):
@@ -574,10 +574,10 @@ class FIRFilter(_CoreOscilloscope):
         monitor_sources = {
             'none': _FIR_MON_NONE,
             'adc1': _FIR_MON_ADC1,
-            'in1':  _FIR_MON_IN1,
+            'in1': _FIR_MON_IN1,
             'out1': _FIR_MON_OUT1,
             'adc2': _FIR_MON_ADC2,
-            'in2':  _FIR_MON_IN2,
+            'in2': _FIR_MON_IN2,
             'out2': _FIR_MON_OUT2
         }
         monitor_ch = monitor_ch.lower()
@@ -907,8 +907,8 @@ _fir_reg_handlers = {
             to_reg_signed(0, 16,
                           xform=lambda obj, x:
                           int(round(x * (_ADC_DEFAULT_CALIBRATION /
-                              (10.0 if obj.get_frontend(1)[1] else 1.0)) *
-                           obj._adc_gains()[0] * 2.0**10))),
+                              (10.0 if obj.get_frontend(1)[1]
+                               else 1.0)) * obj._adc_gains()[0] * 2.0 ** 10))),
             from_reg_signed(0, 16,
                             xform=lambda obj, x:
                             x * ((10.0 if obj.get_frontend(1)[1] else 1.0) /
