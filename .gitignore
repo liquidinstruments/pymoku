@@ -11,4 +11,6 @@ tests/test2.li
 .cache/
 pymoku/data/*.tar.gz
 .vscode
-
+.pytest_cache
+.coverage
+htmlcov/
