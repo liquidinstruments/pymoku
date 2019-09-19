@@ -17,6 +17,7 @@ from pymoku import DATAPATH
 from pymoku import version
 from pymoku import Moku
 from pymoku import PYMOKU_VERSION
+from pymoku.instruments import id_table
 
 from pymoku.tools.compat import patch_is_compatible
 from pymoku.tools.compat import firmware_is_compatible
@@ -245,6 +246,28 @@ def instrument(args):
                 chk = moku._load_bitstream(file)
                 print("Successfully loaded new instrument {} "
                       "version {}".format(fname, chk))
+        elif args.action == 'list':
+            def instrument_repr(r):
+                instr_dict = dict(
+                    filter(lambda x: x[0] in r, id_table.items())) if bool(
+                    r) else id_table
+                print("{: <30}".format('Available instruments'))
+                print("-" * 30)
+                print("\n".join(
+                    list(map(lambda x: x.__name__,
+                             filter(None, instr_dict.values())))))
+
+            enttitlements = list(
+                filter(lambda x: x[0].startswith('license.entitlement'),
+                       moku._get_property_section('license')))
+            instruments = list(
+                map(lambda x: x[1].split(';')[0].strip('fpga:deploy:'),
+                    enttitlements))
+            if '*' in instruments:
+                instrument_repr(r=None)
+            else:
+                instrument_repr(
+                    r=list(map(lambda x: int(float(x)), instruments)))
         else:
             exit(1)
     finally:
@@ -255,7 +278,7 @@ def instrument(args):
 parser_instruments = subparsers.add_parser(
     'instrument', help="Check and update instruments on the Moku.")
 parser_instruments.add_argument(
-    'action', help='Action to take', choices=['load'])
+    'action', help='Action to take', choices=['list', 'load'])
 parser_instruments.add_argument(
     'files', nargs='*', default=None,
     help="Path to local instrument file(s), if any")
