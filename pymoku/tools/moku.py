@@ -10,6 +10,7 @@ import sys
 import threading
 import logging
 import zmq
+import re
 
 import pymoku
 from pymoku import MOKUDATAFILE
@@ -247,27 +248,21 @@ def instrument(args):
                 print("Successfully loaded new instrument {} "
                       "version {}".format(fname, chk))
         elif args.action == 'list':
-            def instrument_repr(r):
-                instr_dict = dict(
-                    filter(lambda x: x[0] in r, id_table.items())) if bool(
-                    r) else id_table
-                print("{: <30}".format('Available instruments'))
-                print("-" * 30)
-                print("\n".join(
-                    list(map(lambda x: x.__name__,
-                             filter(None, instr_dict.values())))))
+            # Grab all the entitlements and filter out the instrument IDs
+            re_instr_id = re.compile(r'fpga:deploy:([0-9\*]+)')
+            entitlements = [x[1] for x in
+                            moku._get_property_section('license.entitlements')]
+            instruments = set(
+                [x[1] for x in map(re_instr_id.match, entitlements) if x])
 
-            enttitlements = list(
-                filter(lambda x: x[0].startswith('license.entitlement'),
-                       moku._get_property_section('license')))
-            instruments = list(
-                map(lambda x: x[1].split(';')[0].strip('fpga:deploy:'),
-                    enttitlements))
             if '*' in instruments:
-                instrument_repr(r=None)
+                instrs = [x for x in id_table.values() if x]
             else:
-                instrument_repr(
-                    r=list(map(lambda x: int(float(x)), instruments)))
+                instrs = [id_table[int(i)] for i in instruments]
+
+            print("{: <30}".format('Available instruments'))
+            print("-" * 30)
+            print("\n".join([x.__name__ for x in instrs]))
         else:
             exit(1)
     finally:
