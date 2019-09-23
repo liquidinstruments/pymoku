@@ -436,10 +436,10 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
         for i, c in enumerate(chs):
             if c:
                 r = self.get_frontend(i + 1)
-                hdr += "% Ch {i} - {} coupling, {} Ohm impedance, "
-                "{} V range\r\n".format("AC" if r[2] else "DC",
-                                        "50" if r[0] else "1M", "10"
-                                        if r[1] else "1", i=i + 1)
+                hdr += "% Ch {i} - {} coupling, {} Ohm impedance, " \
+                       "{} V range\r\n".format("AC" if r[2] else "DC",
+                                               "50" if r[0] else "1M",
+                                               "10" if r[1] else "1", i=i + 1)
 
         hdr += "%"
         for i, c in enumerate(chs):
