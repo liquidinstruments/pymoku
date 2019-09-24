@@ -281,10 +281,10 @@ class LaserLockBox(_CoreOscilloscope):
                 _utils.check_parameter_valid('range',
                                              filt_coeffs[row][bcoef],
                                              [-2.0, 2.0],
-                                             desc='product of b{}.{} '
-                                             'and s{}'.format(row + 1,
-                                                              bcoef,
-                                                              row + 1),
+                                             desc=('product of b{}.{} '
+                                                   'and s{}').format(row + 1,
+                                                                     bcoef,
+                                                                     row + 1),
                                              units='linear scalar')
         filt_coeffs[0][0] = 1.0
         filt_coeffs[1][0] = 1.0
