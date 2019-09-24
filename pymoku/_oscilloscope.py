@@ -499,15 +499,15 @@ class _CoreOscilloscope(_frame_instrument.FrameBasedInstrument):
         for i, c in enumerate(chs):
             if c:
                 r = self.get_frontend(i + 1)
-                hdr += "% Ch {i} - {} coupling, {} Ohm impedance, " \
-                    "{} V range\r\n".format("AC" if r[2] else "DC",
-                                            "50" if r[0] else "1M",
-                                            "10" if r[1] else "1",
-                                            i=i + 1)
-        hdr += "% Acquisition rate: {:.10e} Hz, " \
-            "{} mode\r\n".format(self.get_samplerate(),
-                                 "Precision" if self.is_precision_mode()
-                                 else "Normal")
+                hdr += ("% Ch {i} - {} coupling, {} Ohm impedance, "
+                        "{} V range\r\n").format("AC" if r[2] else "DC",
+                                                 "50" if r[0] else "1M",
+                                                 "10" if r[1] else "1",
+                                                 i=i + 1)
+        hdr += ("% Acquisition rate: {:.10e} Hz, "
+                "{} mode\r\n").format(self.get_samplerate(),
+                                      "Precision" if self.is_precision_mode()
+                                      else "Normal")
         hdr += "% {} 10 MHz clock\r\n".format("External" if
                                               self._moku._get_actual_extclock()
                                               else "Internal")

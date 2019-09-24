@@ -229,18 +229,18 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
         self.logname = "MokuPhasemeterData"
 
         self.binstr = "<p32,0xAAAAAAAA:u48:u48:s15:p1,0:s48:s32:s32"
-        self.procstr = ["*{:.16e} : *{:.16e} : : *{:.16e} : *C*{:.16e} "
-                        ": *C*{:.16e}".format(_PM_HERTZ_SCALE,
-                                              _PM_HERTZ_SCALE,
-                                              _PM_CYCLE_SCALE,
-                                              _PM_VOLTS_SCALE,
-                                              _PM_VOLTS_SCALE),
-                        "*{:.16e} : *{:.16e} : : *{:.16e} : *C*{:.16e} "
-                        ": *C*{:.16e}".format(_PM_HERTZ_SCALE,
-                                              _PM_HERTZ_SCALE,
-                                              _PM_CYCLE_SCALE,
-                                              _PM_VOLTS_SCALE,
-                                              _PM_VOLTS_SCALE)]
+        self.procstr = [("*{:.16e} : *{:.16e} : : *{:.16e} : *C*{:.16e} "
+                         ": *C*{:.16e}").format(_PM_HERTZ_SCALE,
+                                                _PM_HERTZ_SCALE,
+                                                _PM_CYCLE_SCALE,
+                                                _PM_VOLTS_SCALE,
+                                                _PM_VOLTS_SCALE),
+                        ("*{:.16e} : *{:.16e} : : *{:.16e} : *C*{:.16e} "
+                         ": *C*{:.16e}").format(_PM_HERTZ_SCALE,
+                                                _PM_HERTZ_SCALE,
+                                                _PM_CYCLE_SCALE,
+                                                _PM_VOLTS_SCALE,
+                                                _PM_VOLTS_SCALE)]
 
     def _update_datalogger_params(self):
         # Call this function when any instrument configuration parameters are
@@ -436,10 +436,11 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
         for i, c in enumerate(chs):
             if c:
                 r = self.get_frontend(i + 1)
-                hdr += "% Ch {i} - {} coupling, {} Ohm impedance, "
-                "{} V range\r\n".format("AC" if r[2] else "DC",
-                                        "50" if r[0] else "1M", "10"
-                                        if r[1] else "1", i=i + 1)
+                hdr += ("% Ch {i} - {} coupling, {} Ohm impedance, "
+                        "{} V range\r\n").format("AC" if r[2] else "DC",
+                                                 "50" if r[0] else "1M",
+                                                 "10" if r[1] else "1",
+                                                 i=i + 1)
 
         hdr += "%"
         for i, c in enumerate(chs):
@@ -449,8 +450,8 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
                     else "", self.get_bandwidth(i + 1), i=i + 1)
         hdr += "\r\n"
 
-        hdr += "% Acquisition rate: {:.10e} " \
-            "Hz\r\n".format(self.get_samplerate())
+        hdr += ("% Acquisition rate: {:.10e} "
+                "Hz\r\n").format(self.get_samplerate())
         hdr += "% {} 10 MHz clock\r\n".format("External" if
                                               self._moku._get_actual_extclock()
                                               else "Internal")
@@ -458,10 +459,10 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
         hdr += "% Time,"
         for i, c in enumerate(chs):
             if c:
-                hdr += "{} Set frequency {i} (Hz), Frequency {i} (Hz)," \
-                       " Phase {i} (cyc), I {i} (V), Q {i} " \
-                       "(V)".format("," if ((ch1 and ch2) and i == 1)
-                                    else "", i=i + 1)
+                hdr += ("{} Set frequency {i} (Hz), Frequency {i} (Hz),"
+                        " Phase {i} (cyc), I {i} (V), Q {i} "
+                        "(V)").format("," if ((ch1 and ch2) and i == 1)
+                                      else "", i=i + 1)
 
         hdr += "\r\n"
 
@@ -470,11 +471,11 @@ class Phasemeter(_stream_instrument.StreamBasedInstrument,
     def _get_fmtstr(self, ch1, ch2):
         fmtstr = "{t:.10e}"
         if ch1:
-            fmtstr += ", {ch1[0]:.16e}, {ch1[1]:.16e}, {ch1[3]:.16e}," \
-                " {ch1[4]:.10e}, {ch1[5]:.10e}"
+            fmtstr += (", {ch1[0]:.16e}, {ch1[1]:.16e}, {ch1[3]:.16e},"
+                       " {ch1[4]:.10e}, {ch1[5]:.10e}")
         if ch2:
-            fmtstr += ", {ch2[0]:.16e}, {ch2[1]:.16e}, {ch2[3]:.16e}," \
-                " {ch2[4]:.10e}, {ch2[5]:.10e}"
+            fmtstr += (", {ch2[0]:.16e}, {ch2[1]:.16e}, {ch2[3]:.16e},"
+                       " {ch2[4]:.10e}, {ch2[5]:.10e}")
         fmtstr += "\r\n"
         return fmtstr
 
