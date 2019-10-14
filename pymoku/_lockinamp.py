@@ -152,7 +152,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self.set_monitor('b', 'main')
 		self.set_trigger('b', 'rising', 0)
 		self.set_timebase(-1e-6, 1e-6)
-		self._set_r_theta_input_range()
+		self.set_input_range_r_theta(0)
 
 	@needs_commit
 	def _set_gain_range(self, range=0):
@@ -318,12 +318,12 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# time, and the correct
 		# DAC scaling is used.
 		Greq = kp
-		Gfilt, Gout = self._distribute_gain(Greq)
+		Gfilt, Gout, filt_gain_select = self._distribute_gain(Greq)
 		Gdsp = self._calculate_filt_dsp_gain()
 		Gout = self._apply_dac_gain(lia_ch, Gout)
 		self._set_filt_gain(lia_ch, Gfilt)
-		print('in set by frequency, Gout', Gout)
-		print('in set by frequency, Gfilt', Gfilt)
+		self._set_filt_gain_select(filt_gain_select, lia_ch)
+
 		if lia_ch != self._pid_channel:
 			gainstage_scaling = self._get_output_scaling(lia_ch)
 			new_gainstage_ch = self._pid_channel
@@ -379,8 +379,10 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# time, and the correct
 		# DAC scaling is used.
 		Greq = g
-		Gfilt, Gout = self._distribute_gain(Greq)
+		Gfilt, Gout, filt_gain_select = self._distribute_gain(Greq)
 		self._set_filt_gain(lia_ch, Gfilt)
+		print('in set by gain', filt_gain_select, Gfilt, Gout)
+		self._set_filt_gain_select(filt_gain_select, lia_ch)
 		# if self.r_theta_mode is False:
 		#     Gfilt, Gout = self._balance_gains(Greq / Gdsp)
 		#     if lia_ch == 'main':
@@ -472,8 +474,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		print('in gain settings',  self.r_theta_input_range)
 		Greq = g
-		Gfilt, Gout = self._distribute_gain(Greq)
+		Gfilt, Gout, filt_gain_select = self._distribute_gain(Greq)
+		Gout = self._apply_dac_gain(lia_ch, Gout)
+		print('in set gain', Gfilt, Gout)
 		self._set_filt_gain(lia_ch, Gfilt)
+		self._set_filt_gain_select(filt_gain_select, lia_ch)
 		# if self.r_theta_mode is False:
 		#     Gfilt, Gout = self._balance_gains(Greq / Gdsp)
 		#     if lia_ch == 'main':
@@ -489,7 +494,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		# Store selected gain locally. Update on commit with correct DAC
 		# scaling.
-		self._gainstage_gain = Gout
+		self.gainstage_gain = Gout
 
 	@needs_commit
 	def set_demodulation(self, mode, frequency=1e6, phase=0, output_amplitude=0.5):
@@ -578,6 +583,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		Greq = [0, 0]
 		Gfilt = [0, 0]
 		Gnew = [0, 0]
+		filt_gain_select = [0, 0]
 
 		Greq[0] = self._get_required_gain(1)
 		Greq[1] = self._get_required_gain(2)
@@ -588,14 +594,16 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		self.input_gain = 1.0
 
-
-
 		ifb = (1.0 - 2.0 * (math.pi * f_corner)
 							  / _LIA_CONTROL_FS)
 		self.lpf_int_ifb_gain = ifb
 
-		Gfilt[0], Gnew[0] = self._distribute_gain(Greq[0])
-		Gfilt[1], Gnew[1] = self._distribute_gain(Greq[1])
+		Gfilt[0], Gnew[0], filt_gain_select[0] = self._distribute_gain(Greq[0])
+		Gfilt[1], Gnew[1], filt_gain_select[1] = self._distribute_gain(Greq[1])
+
+		self._set_filt_gain_select(filt_gain_select[0], 'main')
+		self._set_filt_gain_select(filt_gain_select[1], 'aux')
+
 		self._set_filt_gain('main', Gfilt[0])
 		self._set_filt_gain('aux', Gfilt[1])
 		# self.lpf_pidgain = Gnew[0]
@@ -629,7 +637,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self.lo_phase = phase
 
 	@needs_commit
-	def set_monitor(self, monitor_ch, source):
+	def set_monitor(self, monitor_ch, source, high_sensitvity_en=False):
 		"""
 		Select the point inside the lockin amplifier to monitor.
 
@@ -672,9 +680,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		if monitor_ch == 'a':
 			self.monitor_a = source
 			self.monitor_select0 = monitor_sources[source]
+			self.monitor_a_sensitivity_en = high_sensitvity_en
 		elif monitor_ch == 'b':
 			self.monitor_b = source
 			self.monitor_select1 = monitor_sources[source]
+			self.monitor_b_sensitivity_en = high_sensitvity_en
 		else:
 			raise ValueOutOfRangeException("Invalid channel %d", monitor_ch)
 
@@ -750,14 +760,14 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 				return 1.0
 
 		monitor_source_gains = {
-			'none'	: 1.0,
-			'in1'	: scales['gain_adc1']/(10.0 if scales['atten_ch1'] else 1.0), # Undo range scaling
-			'in2'	: scales['gain_adc2']/(10.0 if scales['atten_ch2'] else 1.0),
-			'main'	: scales['gain_dac1']*(2.0**4), # 12bit ADC - 16bit DAC
-			'aux'	: scales['gain_dac2']*(2.0**4),
-			'demod'	: _demod_mode_to_gain(self.demod_mode),
-			'i'		: scales['gain_adc1']/(10.0 if scales['atten_ch1'] else 1.0),
-			'q'		: scales['gain_adc1']/(10.0 if scales['atten_ch1'] else 1.0)
+			'none': 1.0,
+			'in1': scales['gain_adc1'] / (10.0 if scales['atten_ch1'] else 1.0),
+			'in2': scales['gain_adc2'] / (10.0 if scales['atten_ch2'] else 1.0),
+			'main': scales['gain_dac1'] * (2.0**4),  # 12bit ADC - 16bit DAC
+			'aux': scales['gain_dac2'] * (2.0**4),
+			'demod': _demod_mode_to_gain(self.demod_mode),
+			'i': scales['gain_adc1'] / (10.0 if scales['atten_ch1'] else 1.0),
+			'q': scales['gain_adc1'] / (10.0 if scales['atten_ch1'] else 1.0)
 		}
 		return monitor_source_gains[source]
 
@@ -776,9 +786,9 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		#                   gs['out_offset'], touch_ii=False, dac=pid_ch)
 
 		# Set gainstage gain with correct output DAC channel scaling
-		self.gainstage_gain = self._gainstage_gain / \
-			self._dac_gains()[1 if self._pid_channel == 'main' else 0] \
-			/ 2**14
+		# self.gainstage_gain = self._gainstage_gain / \
+		#     self._dac_gains()[1 if self._pid_channel == 'main' else 0] \
+		#     / 2**14
 
 		if self.aux_source in _LIA_SIGNALS:
 			# If aux is set to a filtered signal, set this to maximum gain setting.
@@ -846,12 +856,12 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		return G
 
 	def _set_filt_gain(self, ch, G):
-		if ch == 'main':
+		if self.r_theta_mode is True:
+			self.lpf_int_i_gain_ch1 = self._apply_adc_gain(G)
+			self.lpf_int_i_gain_ch2 = self._apply_adc_gain(G)
+		elif ch == 'main':
 			self.lpf_int_i_gain_ch1 = self._apply_adc_gain(G)
 		elif ch == 'aux':
-			self.lpf_int_i_gain_ch2 = self._apply_adc_gain(G)
-		else:
-			self.lpf_int_i_gain_ch1 = self._apply_adc_gain(G)
 			self.lpf_int_i_gain_ch2 = self._apply_adc_gain(G)
 
 	def _set_output_scaling(self, ch, G):
@@ -867,23 +877,13 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			G = self._remove_dac_gain(ch, self.gainstage_gain)
 		return G
 
-	def _calculate_distributed_gain(self, Greq):
-
-		if Greq > 2**4:
-			Gfilt = 2**4
-			Gout = Greq / 2**4
-		elif Greq < 1 / 2**25:
-			Gfilt = 1 / 2**25
-			Gout = Greq * 2**25
-		else:
-			Gout = 1
-			Gfilt = Greq
-		return (Gfilt, Gout)
-
 	def _apply_adc_gain(self, gain):
-		print('adc gain', self._adc_gains()[0])
-		Gcal = gain * self._adc_gains()[0] * 2**12
-
+		atten_on = self.get_frontend(1)[1]
+		if atten_on is True:
+			Gcal = gain * self._adc_gains()[0] * 2**12 / 10
+		else:
+			Gcal = gain * self._adc_gains()[0] * 2**12
+		print('gain, Gcal', gain, Gcal)
 		return Gcal
 
 	def _remove_adc_gain(self, ch, gain):
@@ -891,8 +891,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			ch_number = 0
 		else:
 			ch_number = 1
-
-		Guncal = gain / self._adc_gains()[ch_number-1] / 2**12
+		atten_on = self.get_frontend(1)[1]
+		if atten_on is True:
+			Guncal = 10 * gain / self._adc_gains()[ch_number-1] / 2**12
+		else:
+			Guncal = gain / self._adc_gains()[ch_number-1] / 2**12
 		return Guncal
 
 	def _apply_dac_gain(self, ch, gain):
@@ -901,7 +904,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		else:
 			ch_number = 1
 
-		Gcal = gain / self._dac_gains()[ch_number -1] / 2**15
+		Gcal = gain / self._dac_gains()[ch_number] / 2**15
 		return Gcal
 
 	def _remove_dac_gain(self, ch, gain):
@@ -913,15 +916,55 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		Guncal = gain * self._dac_gains()[ch_number -1]
 		return Guncal
 
-	def _distribute_gain(self, Greq):
+	def _distribute_gain(self, Greq, input_range=0):
 		Gdsp = self._calculate_filt_dsp_gain()
-		print('Gdsp', Gdsp)
+
 		if self.r_theta_mode is False:
-			Gfilt, Gout = self._calculate_distributed_gain(Greq / Gdsp)
+			Gfilt, Gout , filt_gain_select = (
+				self._calculate_distributed_gain(Greq / Gdsp))
 		elif self.r_theta_mode is True:
-			Gfilt = 1.0 / Gdsp
+			Gfilt, filt_gain_select = self._calculate_r_theta_gain(input_range)
 			Gout = Greq
-		return (Gfilt, Gout)
+		print('in distribute gain, Gfilt, Gout, filt_select', Gfilt, Gout, filt_gain_select)
+		return (Gfilt, Gout, filt_gain_select)
+
+	def _calculate_distributed_gain(self, Greq):
+		gain_threshold = (2**31 - 1) / 2**24
+		if Greq > (2**15):
+			filt_gain_select = 1
+			Gfilt = gain_threshold
+			Gout = Greq / 2**8 / Gfilt
+		elif Greq > (gain_threshold):
+			filt_gain_select = 1
+			Gfilt = Greq / 2**8
+			Gout = 1
+		elif Greq > 2**(-24):
+			filt_gain_select = 0
+			Gfilt = Greq
+			Gout = 1
+		else:
+			filt_gain_select = 0
+			Gfilt = 2**(-24)
+			Gout = Greq / Gfilt
+
+		print('calculate distributed gain Gfilt, Gout, filt_gain_select', Gfilt, Gout, filt_gain_select)
+		return (Gfilt, Gout, filt_gain_select)
+	def _calculate_r_theta_gain(self, input_range):
+		Gdsp = self._calculate_filt_dsp_gain()
+		if input_range == 0:
+			Gfilt = 1.0 / Gdsp
+			filt_gain_select = 0
+		elif input_range == 1:
+			Gfilt = 2.0**(8) / Gdsp
+			filt_gain_select = 0
+		elif input_range == 2:
+			Gfilt = 2.0**(8) / Gdsp
+			filt_gain_select = 1
+		else:
+			Gfilt = 1.0 / Gdsp
+			filt_gain_select = 0
+
+		return (Gfilt, filt_gain_select)
 
 	def _get_required_gain(self, ch):
 		Gdsp = self._calculate_filt_dsp_gain()
@@ -938,12 +981,32 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			self.set_gain('aux', 1)
 		self.r_theta_mode = mode
 
-	def _set_r_theta_input_range(self, input_range=0):
-		Gfilt = 2**(8 * input_range) / self._calculate_filt_dsp_gain()
+
+	def _set_filt_gain_select(self, gain_select, ch=None):
+		print('in filt select gain select', gain_select)
+		if self.r_theta_mode is True or ch is None:
+			self.filt_gain_select_ch1 = gain_select
+			self.filt_gain_select_ch2 = gain_select
+		elif ch == 1:
+			self.filt_gain_select_ch1 = gain_select
+		elif ch == 2:
+			self.filt_gain_select_ch2 = gain_select
+
+	# def _set_r_theta_input_range(self, input_range=0):
+	#     Gfilt = 2**(8 * input_range) / self._calculate_filt_dsp_gain()
+	#     self._set_filt_gain('main', Gfilt)
+	#     self._set_filt_gain('aux', Gfilt)
+	#     print('input range settings', Gfilt, input_range)
+		# self._set_output_scaling('main', Gmain)
+
+	def set_input_range_r_theta(self, input_range=0):
+
+		Gfilt, filt_gain_select = self._calculate_r_theta_gain(input_range)
+
+		self._set_filt_gain_select(filt_gain_select)
+
 		self._set_filt_gain('main', Gfilt)
 		self._set_filt_gain('aux', Gfilt)
-		print('input range settings', Gfilt, input_range)
-		# self._set_output_scaling('main', Gmain)
 
 	# def _set_filter_gains(self, ch, r_theta, Greq, Gdsp):
 	#     if r_theta is False:
@@ -969,6 +1032,16 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 _lia_reg_hdl = {
 	'lpf_en':			(REG_LIA_ENABLES,		to_reg_bool(0),
 												from_reg_bool(0)),
+
+	'monitor_a_sensitivity_en':
+		(REG_LIA_ENABLES,
+			to_reg_bool(4),
+			from_reg_bool(4)),
+
+	'monitor_b_sensitivity_en':
+		(REG_LIA_ENABLES,
+			to_reg_bool(5),
+			from_reg_bool(5)),
 
 	'ch1_out_en':
 		(REG_LIA_ENABLES,
@@ -1013,6 +1086,15 @@ _lia_reg_hdl = {
 			to_reg_unsigned(28, 2),
 			from_reg_unsigned(28, 2)),
 
+	'filt_gain_select_ch1':
+		(REG_LIA_ENABLES,
+			 to_reg_bool(29),
+			 from_reg_bool(29)),
+
+	'filt_gain_select_ch2':
+		(REG_LIA_ENABLES,
+			 to_reg_bool(30),
+			 from_reg_bool(30)),
 
 	'main_offset': 		(REG_LIA_OUT_OFFSET1, 	to_reg_signed(0, 16, xform=lambda obj, x: x / obj._dac_gains()[0]),
 												  	from_reg_signed(0, 16, xform=lambda obj, x: x * obj._dac_gains()[0])),
@@ -1020,8 +1102,10 @@ _lia_reg_hdl = {
 	'lpf_pidgain':		(REG_LIA_PIDGAIN1,			to_reg_signed(0, 32, xform=lambda obj, x : x * 2**15),
 													from_reg_signed(0, 32, xform=lambda obj, x: x / 2**15)),
 
-	'ch1_pid1_pidgain':		(REG_LIA_PIDGAIN2,		to_reg_signed(0, 32, xform=lambda obj, x : x),
-													from_reg_signed(0, 32, xform=lambda obj, x: x)),
+	# 'ch1_pid1_pidgain':
+	#     (REG_LIA_PIDGAIN2,
+	#         to_reg_signed(0, 32, xform=lambda obj, x: x),
+	#         from_reg_signed(0, 32, xform=lambda obj, x: x)),
 
 	'r_theta_input_range':
 		(97,
@@ -1054,8 +1138,8 @@ _lia_reg_hdl = {
 
 	'gainstage_gain':
 		(110,
-			to_reg_signed(0, 32, xform=lambda obj, x: x * 2**15),
-			from_reg_signed(0, 32, xform=lambda obj, x: x / 2**15)),
+			to_reg_signed(0, 32, xform=lambda obj, x: x * 2**16),
+			from_reg_signed(0, 32, xform=lambda obj, x: x / 2**16)),
 
 
 	'frequency_demod':	((REG_LIA_FREQDEMOD_H, REG_LIA_FREQDEMOD_L),
