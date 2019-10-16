@@ -383,18 +383,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self._set_filt_gain(lia_ch, Gfilt)
 		print('in set by gain', filt_gain_select, Gfilt, Gout)
 		self._set_filt_gain_select(filt_gain_select, lia_ch)
-		# if self.r_theta_mode is False:
-		#     Gfilt, Gout = self._balance_gains(Greq / Gdsp)
-		#     if lia_ch == 'main':
-		#         self.lpf_int_i_gain_ch1 = Gfilt
-		#     elif lia_ch == 'aux':
-		#         self.lpf_int_i_gain_ch2 = Gfilt
-		#     else:
-		#         self.lpf_int_i_gain_ch1 = Gfilt
-		# elif self.r_theta_mode is True:
-		#     Gout = Greq
-		#     Gfilt = 1.0 / Gdsp
-		#     self.lpf_int_i_gain_ch1 = self.lpf_int_i_gain_ch2 = Gfilt
+
 		Gout = self._apply_dac_gain(lia_ch, Gout)
 
 		if lia_ch != self._pid_channel:
@@ -410,44 +399,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self.pid.input_offset = in_offset
 		self.pid.output_offset = out_offset
 
-	# @needs_commit
-	# def _set_input_range(self, input_range=0):
-	#     """
-	#     Sets the input range whilst in r theta mode. This setting is not
-	#     available in x/y mode.
-
-	#     :type input_range: string; {"smallest", "small", "high"}
-	#     :param input_range: input singal range in r/theta mode
-
-	#     """
-
-	#     Greq = [0, 0]
-	#     Gdsp = [0, 0]
-	#     Gnew = [0, 0]
-
-	#     Greq[0] = self._get_required_gain(1)
-	#     Greq[1] = self._get_required_gain(2)
-	#     print('Greq in set input range', Greq[0])
-	#     print('Greq in set input range', Greq[1])
-
-	#     if self.r_theta_mode is True or input_range == 0:
-	#         self.r_theta_input_range = input_range
-	#     else:
-	#         raise InvalidConfigurationException("Input gains only used in "
-	#                                             "r/theta mode.")
-	#     if self._pid_channel == 'main':
-	#         self.set_pid_by_gain('main', Greq[0])
-	#         self.set_gain('aux', Greq[1])
-	#     else:
-	#         self.set_gain('main', Greq[0])
-	#         self.set_pid_by_gain('aux', Greq[1])
-
-
-
 	@needs_commit
 	def set_gain(self, lia_ch, g):
 		"""
-		Sets the gain stage to be on the specified lock-in channel, and configures its gain.
+		Sets the gain stage to be on the specified lock-in channel, and
+		configures its gain.
 
 		This sets the PID stage to be on the opposite channel.
 
@@ -470,28 +426,12 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			self._pid_channel = new_pid_ch
 			self._set_output_scaling(new_pid_ch, pid_scaling)
 
-
-
-
-		# print('in gain settings',  self.r_theta_input_range)
 		Greq = g
 		Gfilt, Gout, filt_gain_select = self._distribute_gain(Greq)
 		Gout = self._apply_dac_gain(lia_ch, Gout)
-		# print('in set gain', Gfilt, Gout)
+
 		self._set_filt_gain(lia_ch, Gfilt)
 		self._set_filt_gain_select(filt_gain_select, lia_ch)
-		# if self.r_theta_mode is False:
-		#     Gfilt, Gout = self._balance_gains(Greq / Gdsp)
-		#     if lia_ch == 'main':
-		#         self.lpf_int_i_gain_ch1 = Gfilt
-		#     elif lia_ch == 'aux':
-		#         self.lpf_int_i_gain_ch2 = Gfilt
-		#     else:
-		#         self.lpf_int_i_gain_ch1 = Gfilt
-		# elif self.r_theta_mode is True:
-		#     Gout = Greq
-		#     Gfilt = 1.0 / Gdsp
-		#     self.lpf_int_i_gain_ch1 = self.lpf_int_i_gain_ch2 = Gfilt
 
 		# Store selected gain locally. Update on commit with correct DAC
 		# scaling.
@@ -780,16 +720,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		# Set the PID gains using the correct output DAC channel
 		# gs = self._pid_gains
-
 		pid_ch = 1 if self._pid_channel == 'main' else 2
-		# self._set_by_gain(1, gs['g'], gs['kp'], gs['ki'], gs['kd'], 0,
-		#                   gs['si'], gs['sd'], gs['in_offset'],
-		#                   gs['out_offset'], touch_ii=False, dac=pid_ch)
-
-		# Set gainstage gain with correct output DAC channel scaling
-		# self.gainstage_gain = self._gainstage_gain / \
-		#     self._dac_gains()[1 if self._pid_channel == 'main' else 0] \
-		#     / 2**14
 
 		if self.aux_source in _LIA_SIGNALS:
 			# If aux is set to a filtered signal, set this to maximum gain setting.
@@ -802,48 +733,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 	@deprecated(category='method', message="Deprecated.")
 	def set_control_matrix(self):
-		# This function is merely here because LIA inherits PID which has a control matrix
-		# We need to rethink PID inheritance.
 		pass
-
-	# def _balance_gains(self, Greq):
-	#     if Greq > 2**4:
-	#         Gfilt = 2**4
-	#         Gout = Greq / 2**4
-	#     elif Greq < 1 / 2**25:
-	#         Gfilt = 1 / 2**25
-	#         Gout = Greq * 2**25
-	#     else:
-	#         Gout = 1
-	#         Gfilt = Greq
-	#     return (Gfilt, Gout)
-
-	# def _get_balanced_gains(self, ch):
-	#     Gdsp = 1.0 / ( 1.0 - self.lpf_int_ifb_gain)
-
-	#     if ch == 1:
-	#         if self._pid_channel == 'main':
-	#             Gout = self.ch1_pid1_pidgain * self._dac_gains()[
-	#                 ch - 1] * 31.25 /  2.0**4
-	#             print('ch1 Gout for pid', Gout)
-	#         else:
-	#             Gout = self._gainstage_gain #* self._dac_gains()[ch - 1] * 31.25 /  2.0**4
-	#             print('ch1 Gout for gainstage', Gout)
-	#         Gfilt = self.lpf_int_i_gain_ch1
-	#     elif ch == 2:
-	#         if self._pid_channel == 'main':
-	#             Gout = self._gainstage_gain# * self._dac_gains()[ch - 1] * 31.25 /  2.0**4
-	#             print('ch2 Gout for gainstage', Gout)
-	#         else:
-	#             Gout = self.ch1_pid1_pidgain * self._dac_gains()[
-	#                 ch - 1] * 31.25 /  2.0**4
-	#             print('ch2 Gout for pid', Gout)
-	#         Gfilt = self.lpf_int_i_gain_ch1
-
-	#     print(Gout, Gfilt, Gdsp)
-	#     print(Gout * Gfilt * Gdsp)
-
-	#     return Gout * Gfilt * Gdsp
 
 	def _calculate_filt_dsp_gain(self):
 		G = 1.0 / ( 1.0 - self.lpf_int_ifb_gain)
