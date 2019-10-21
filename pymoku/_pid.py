@@ -190,12 +190,20 @@ class PID(object):
 			self.d_gain = 4 * sd if sd else self.ang_freq / float(kd)
 
 		if si is None:
-			i_c  = 0
+			i_c = 0
+		elif ki == 0.0:
+			i_c = 0
 		else:
 			i_c = ki / si
-			if i_c  < self.ang_freq / (2**24-1) :
-				si_max = (g * ki / ( 2 * self.ang_freq / (2**24 -1 )))
-				raise InvalidConfigurationException("Integrator corner below minimum. Decrease integrator saturation below %.3f dB." % (20*math.log(si_max,10)))
+			if i_c < self.ang_freq / (2**24 - 1):
+				si_max = (g * ki / (2 * self.ang_freq / (2**24 - 1)))
+				print(si_max)
+				raise InvalidConfigurationException("Integrator corner below"
+													" minimum. Decrease "
+													"integrator saturation "
+													"below %.3f dB."
+													% (20 *
+													   math.log(si_max, 10)))
 		self.i_fb = 1.0 - (i_c / self.ang_freq)
 
 		if sd :
