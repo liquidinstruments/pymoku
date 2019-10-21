@@ -889,20 +889,10 @@ _lia_reg_hdl = {
 			to_reg_bool(31),
 			from_reg_bool(31)),
 
-	'pid_sig_select':
-		(95,
-			to_reg_unsigned(0, 2),
-			from_reg_unsigned(0, 2)),
-
-	'gain_sig_select':
-		(95,
-			to_reg_unsigned(2, 2),
-			from_reg_unsigned(2, 2)),
-
-	'monitor_a_sensitivity_en':
-		(96,
-			to_reg_bool(0),
-			from_reg_bool(0)),
+    'monitor_a_sensitivity_en':
+        (96,
+            to_reg_bool(0),
+            from_reg_bool(0)),
 
 	'monitor_b_sensitivity_en':
 		(96,
@@ -944,26 +934,35 @@ _lia_reg_hdl = {
 			to_reg_unsigned(8, 2),
 			from_reg_unsigned(8, 2)),
 
-	'pid_ch_select':
-		(96,
-			to_reg_bool(10),
-			from_reg_bool(10)),
+    'aux_select':
+        (96,
+            to_reg_unsigned(10, 2),
+            from_reg_unsigned(10, 2)),
 
-	'aux_select':
-		(96,
-			to_reg_unsigned(11, 2),
-			from_reg_unsigned(11, 2)),
+    'filt_gain_select_ch1':
+        (96,
+             to_reg_bool(12),
+             from_reg_bool(12)),
 
-	'filt_gain_select_ch1':
-		(96,
-			 to_reg_bool(13),
-			 from_reg_bool(13)),
+    'filt_gain_select_ch2':
+        (96,
+             to_reg_bool(13),
+             from_reg_bool(13)),
 
-	'filt_gain_select_ch2':
-		(96,
-			 to_reg_bool(14),
-			 from_reg_bool(14)),
+    'pid_ch_select':
+        (96,
+            to_reg_bool(14),
+            from_reg_bool(14)),
 
+    'pid_sig_select':
+        (96,
+            to_reg_unsigned(15, 2),
+            from_reg_unsigned(15, 2)),
+
+    'gain_sig_select':
+        (96,
+            to_reg_unsigned(17, 2),
+            from_reg_unsigned(17, 2)),
 
 	'lpf_int_ifb_gain':
 		(106,
