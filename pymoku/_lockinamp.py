@@ -306,36 +306,26 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# DAC scaling is used.
 		gain_filter = {'main': 0.0, 'aux': 0.0}
 		gain_output = {'main': 0.0, 'aux': 0.0}
-		gain_dsp = {'main': 0.0, 'aux': 0.0}
 		filt_gain_select = {'main': 0.0, 'aux': 0.0}
-
-		# Greq = kp
-		# Gfilt, Gout, filt_gain_select = self._distribute_gain(Greq)
-		# Gdsp = self._calculate_filt_dsp_gain()
-		# Gout = self._apply_dac_gain(lia_ch, Gout)
-		# self._set_filt_gain(lia_ch, Gfilt)
-		# self._set_filt_gain_select(filt_gain_select, lia_ch)
 
 		if lia_ch != self._pid_channel:
 			self.gain_user[self._pid_channel] = self.gain_user[lia_ch]
 			gain_filter[self._pid_channel], gain_output[self._pid_channel], filt_gain_select[self._pid_channel] = self._distribute_gain(self.gain_user[self._pid_channel])
-			gain_dsp[self._pid_channel] = self._calculate_filt_dsp_gain()
 			gain_output[self._pid_channel] = self._apply_dac_gain(self._pid_channel, gain_output[self._pid_channel])
 			self._set_filt_gain(self._pid_channel, gain_filter[self._pid_channel])
 			self._set_filt_gain_select(filt_gain_select[self._pid_channel], self._pid_channel)
 			self._set_output_scaling(self._pid_channel, gain_output[self._pid_channel])
-			print('pid_channel', self._pid_channel)
-			print('gain_output[self._pid_channel]', gain_output[self._pid_channel])
 
 		self._pid_channel = lia_ch
-		self.gain_user[lia_ch] = kp
+
 		gain_filter[lia_ch], gain_output[lia_ch], filt_gain_select[lia_ch] = self._distribute_gain(kp)
-		gain_dsp[lia_ch] = self._calculate_filt_dsp_gain()
+		gain_dsp = self._calculate_filt_dsp_gain()
 		gain_output[lia_ch] = self._apply_dac_gain(lia_ch, gain_output[lia_ch])
 		self._set_filt_gain(lia_ch, gain_filter[lia_ch])
 		self._set_filt_gain_select(filt_gain_select[lia_ch], lia_ch)
 
-		self.pid.set_reg_by_frequency(kp, i_xover, d_xover, si, sd, overall_scaling=gain_output[lia_ch] * 2.0**16 / gain_filter[lia_ch] / gain_dsp[lia_ch])
+		self.gain_user[lia_ch] = 1.0
+		self.pid.set_reg_by_frequency(kp, i_xover, d_xover, si, sd, overall_scaling=gain_output[lia_ch] * 2.0**16 / gain_filter[lia_ch] / gain_dsp)
 		self.pid.input_offset = in_offset
 		self.pid.output_offset = out_offset
 
@@ -396,21 +386,18 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		if lia_ch != self._pid_channel:
 			self.gain_user[self._pid_channel] = self.gain_user[lia_ch]
 			gain_filter[self._pid_channel], gain_output[self._pid_channel], filt_gain_select[self._pid_channel] = self._distribute_gain(self.gain_user[self._pid_channel])
-			gain_dsp[self._pid_channel] = self._calculate_filt_dsp_gain()
-			gain_output[self._pid_channel] = self._apply_dac_gain(self._pid_channel, gain_output[self._pid_channel])
 			self._set_filt_gain(self._pid_channel, gain_filter[self._pid_channel])
 			self._set_filt_gain_select(filt_gain_select[self._pid_channel], self._pid_channel)
+			gain_output[self._pid_channel] = self._apply_dac_gain(self._pid_channel, gain_output[self._pid_channel])
 			self._set_output_scaling(self._pid_channel, gain_output[self._pid_channel])
-			print('pid_channel', self._pid_channel)
-			print('gain_output[self._pid_channel]', gain_output[self._pid_channel])
 
 		self._pid_channel = lia_ch
 		self.gain_user[lia_ch] = g
+
 		gain_filter[lia_ch], gain_output[lia_ch], filt_gain_select[lia_ch] = self._distribute_gain(g)
-		gain_dsp[lia_ch] = self._calculate_filt_dsp_gain()
-		gain_output[lia_ch] = self._apply_dac_gain(lia_ch, gain_output[lia_ch])
 		self._set_filt_gain(lia_ch, gain_filter[lia_ch])
 		self._set_filt_gain_select(filt_gain_select[lia_ch], lia_ch)
+		gain_output[lia_ch] = self._apply_dac_gain(lia_ch, gain_output[lia_ch])
 
 		self.pid.set_reg_by_gain(gain_output[lia_ch] * 2.0**16,
 								 kp, ki, kd, si, sd)
@@ -451,13 +438,10 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		if lia_ch == self._pid_channel:
 			self.gain_user[self._pid_channel] = self.gain_user[lia_ch]
 			gain_filter[self._pid_channel], gain_output[self._pid_channel], filt_gain_select[self._pid_channel] = self._distribute_gain(self.gain_user[self._pid_channel])
-			gain_dsp[self._pid_channel] = self._calculate_filt_dsp_gain()
-			gain_output[self._pid_channel] = self._apply_dac_gain(self._pid_channel, gain_output[self._pid_channel])
 			self._set_filt_gain(self._pid_channel, gain_filter[self._pid_channel])
 			self._set_filt_gain_select(filt_gain_select[self._pid_channel], self._pid_channel)
+			gain_output[self._pid_channel] = self._apply_dac_gain(self._pid_channel, gain_output[self._pid_channel])
 			self._set_output_scaling(self._pid_channel, gain_output[self._pid_channel])
-			print('pid_channel', self._pid_channel)
-			print('gain_output[self._pid_channel]', gain_output[self._pid_channel])
 
 		if lia_ch == 'main':
 			self._pid_channel = 'aux'
@@ -466,17 +450,23 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		self.gain_user[lia_ch] = g
 		gain_filter[lia_ch], gain_output[lia_ch], filt_gain_select[lia_ch] = self._distribute_gain(g)
-		gain_dsp[lia_ch] = self._calculate_filt_dsp_gain()
+		self._set_filt_gain(lia_ch, gain_filter[lia_ch])
+		self._set_filt_gain_select(filt_gain_select[lia_ch], lia_ch)
 		gain_output[lia_ch] = self._apply_dac_gain(lia_ch, gain_output[lia_ch])
-		self._set_filt_gain(lia_ch, gain_filter[lia_ch])
-		self._set_filt_gain_select(filt_gain_select[lia_ch], lia_ch)
-
-		self._set_filt_gain(lia_ch, gain_filter[lia_ch])
-		self._set_filt_gain_select(filt_gain_select[lia_ch], lia_ch)
 
 		# Store selected gain locally. Update on commit with correct DAC
 		# scaling.
 		self.gainstage_gain = gain_output[lia_ch]
+	def _set_channel_gains(self, lia_ch):
+
+		return gain_output
+
+
+		gain_filter[lia_ch], gain_output[lia_ch], filt_gain_select[lia_ch] = self._distribute_gain(self.gain_user[lia_ch])
+		gain_dsp[lia_ch] = self._calculate_filt_dsp_gain()
+		gain_output[lia_ch] = self._apply_dac_gain(lia_ch, gain_output[lia_ch])
+		self._set_filt_gain(self._pid_channel, gain_filter[lia_ch])
+		self._set_filt_gain_select(filt_gain_select[lia_ch], lia_ch)
 
 	@needs_commit
 	def set_demodulation(self, mode, frequency=1e6, phase=0, output_amplitude=0.5):
@@ -562,13 +552,9 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		_utils.check_parameter_valid('set', order, allowed=[1, 2, 3, 4],
 									 desc="filter order")
 
-		Greq = [0, 0]
 		Gfilt = [0, 0]
 		Gnew = [0, 0]
 		filt_gain_select = [0, 0]
-
-		Greq[0] = self._get_required_gain('main')
-		Greq[1] = self._get_required_gain('aux')
 
 		self.filt_select = order - 1
 
@@ -576,8 +562,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 							  / _LIA_CONTROL_FS)
 		self.lpf_int_ifb_gain = ifb
 
-		Gfilt[0], Gnew[0], filt_gain_select[0] = self._distribute_gain(Greq[0])
-		Gfilt[1], Gnew[1], filt_gain_select[1] = self._distribute_gain(Greq[1])
+		Gfilt[0], Gnew[0], filt_gain_select[0] = self._distribute_gain(self.gain_user['main'])
+		Gfilt[1], Gnew[1], filt_gain_select[1] = self._distribute_gain(self.gain_user['aux'])
 
 		self._set_filt_gain_select(filt_gain_select[0], 'main')
 		self._set_filt_gain_select(filt_gain_select[1], 'aux')
