@@ -457,16 +457,6 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# Store selected gain locally. Update on commit with correct DAC
 		# scaling.
 		self.gainstage_gain = gain_output[lia_ch]
-	def _set_channel_gains(self, lia_ch):
-
-		return gain_output
-
-
-		gain_filter[lia_ch], gain_output[lia_ch], filt_gain_select[lia_ch] = self._distribute_gain(self.gain_user[lia_ch])
-		gain_dsp[lia_ch] = self._calculate_filt_dsp_gain()
-		gain_output[lia_ch] = self._apply_dac_gain(lia_ch, gain_output[lia_ch])
-		self._set_filt_gain(self._pid_channel, gain_filter[lia_ch])
-		self._set_filt_gain_select(filt_gain_select[lia_ch], lia_ch)
 
 	@needs_commit
 	def set_demodulation(self, mode, frequency=1e6, phase=0, output_amplitude=0.5):
