@@ -239,14 +239,6 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		# PID/Gain stage selects are updated on commit
 
-	def _set_r_theta_mode(self, r_theta_en):
-		if self.r_theta_mode == r_theta_en:
-			if r_theta_en is False:
-				log.info('Switched to x/y mode please check gain settings')
-			else:
-				log.info('Switched to r/theta mode please check gain settings')
-		self.r_theta_mode = r_theta_en
-
 	def _update_pid_gain_selects(self):
 		# Update the PID/Gain signal inputs / channel select ouputs to
 		# match the set main/aux source signals
@@ -880,8 +872,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			self.lpf_int_i_gain_ch1 = self.lpf_int_i_gain_ch2 = Gfilt
 			self.set_pid_by_gain('main', 1)
 			self.set_gain('aux', 1)
+			if mode is False:
+				log.info('Switched to x/y mode please check gain settings')
+			else:
+				log.info('Switched to r/theta mode please check gain settings')
 		self.r_theta_mode = mode
-
 
 	def _set_filt_gain_select(self, gain_select, ch=None):
 		if self.r_theta_mode is True or ch is None:
