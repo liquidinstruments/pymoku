@@ -829,17 +829,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			return gain / self._adc_gains()[0] / 2.0**12
 
 	def _apply_dac_gain(self, ch, gain):
-		if ch == 'main':
-			ch_number = 0
-		else:
-			ch_number = 1
+		ch_number = 0 if ch == 'main' else 1
 		return gain / self._dac_gains()[ch_number] / 2.0**15
 
 	def _remove_dac_gain(self, ch, gain):
-		if ch == 'main':
-			ch_number = 0
-		else:
-			ch_number = 1
+		ch_number = 0 if ch == 'main' else 1
 		return gain * self._dac_gains()[ch_number] * 2.0**15
 
 	def _distribute_gain(self, required_gain, i_range=0):
