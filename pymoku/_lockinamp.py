@@ -1038,17 +1038,17 @@ _lia_reg_hdl = {
 		 from_reg_signed(0, 32, xform=lambda obj, x: x / 2.0**16)),
 
 	'main_offset':
-		(112,
+		(111,
 		 to_reg_signed(0, 16,
 					   xform=lambda obj, x: x / obj._dac_gains()[0]),
 		 from_reg_signed(0, 16,
 						 xform=lambda obj, x: x * obj._dac_gains()[0])),
 
 	'aux_offset':
-		(113,
-		 to_reg_signed(16, 16,
+		(112,
+		 to_reg_signed(0, 16,
 					   xform=lambda obj, x: x / obj._dac_gains()[1]),
-		 from_reg_signed(16, 16,
+		 from_reg_signed(0, 16,
 						 xform=lambda obj, x: x * obj._dac_gains()[1])),
 
 	'frequency_demod':
