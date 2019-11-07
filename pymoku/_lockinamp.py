@@ -563,13 +563,18 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		"""
 		Set the low-pass filter parameters.
 
-		:type f_corner: float
+		:type f_corner: float; [300.0e-3, 5.0e6]
 		:param f_corner: Corner frequency of the low-pass filter (Hz)
 
 		:type order: int; [1, 2, 3, 4]
 		:param order: filter order; 0 (bypass), first- or second-order.
 
 		"""
+		_utils.check_parameter_valid('range', f_corner,
+									 allowed=[300.0e-3, 5.0e6],
+									 desc="local oscillator amplitude",
+									 units="Vpp")
+
 		_utils.check_parameter_valid('set', order, allowed=[1, 2, 3, 4],
 									 desc="filter order")
 
