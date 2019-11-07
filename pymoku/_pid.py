@@ -45,7 +45,7 @@ class PID(object):
 	def bypass(self, value):
 		r = self.reg_base + PID._REG_EN
 		return self._instr._accessor_set(r, to_reg_bool(1), value)
-	
+
 	@property
 	def int_en(self):
 		r = self.reg_base + PID._REG_EN
@@ -125,7 +125,7 @@ class PID(object):
 	def i_fb(self, value):
 		r = self.reg_base + PID._REG_I_FB
 		self._instr._accessor_set(r, to_reg_signed(0, 25, xform=lambda obj, x: x * (2.0**24 - 1)), value)
-	
+
 	@property
 	def p_gain(self):
 		r = self.reg_base + PID._REG_P_GAIN
@@ -159,44 +159,51 @@ class PID(object):
 	@property
 	def input_offset(self):
 		r = self.reg_base + PID._REG_IN_OFFSET
-		return self._instr._accessor_get(r, from_reg_signed(0, 16))
+		return self._instr._accessor_get(r, from_reg_signed(16, 16))
 
 	@input_offset.setter
 	def input_offset(self, value):
 		r = self.reg_base + PID._REG_IN_OFFSET
-		return self._instr._accessor_set(r, to_reg_unsigned(0, 16, value))
+		return self._instr._accessor_set(r, to_reg_unsigned(16, 16), value)
 
 	@property
 	def output_offset(self):
 		r = self.reg_base + PID._REG_OUT_OFFSET
-		return self._instr._accessor_get(r, from_reg_signed(0, 16))
+		return self._instr._accessor_get(r, from_reg_signed(16, 16))
 
 	@output_offset.setter
 	def output_offset(self, value):
 		r = self.reg_base + PID._REG_OUT_OFFSET
-		return self._instr._accessor_set(r, to_reg_unsigned(0, 16, value))
+		return self._instr._accessor_set(r, to_reg_unsigned(16, 16), value)
 
 	def set_reg_by_gain(self, g, kp, ki, kd, si, sd):
-		# calculates the device registers ased on the gain values given. 
+		# calculates the device registers ased on the gain values given.
 		# Note that additional scaling due to external gain such as
 		# ADC, DAC, decimation gains, etc. are not accounted for here))
 
 		self.gain = g
 		self.p_gain = kp
 		self.i_gain = ki / self.ang_freq
-
 		if kd == 0:
 			self.d_gain = 0
 		else:
 			self.d_gain = 4 * sd if sd else self.ang_freq / float(kd)
 
 		if si is None:
-			i_c  = 0
+			i_c = 0
+		elif ki == 0.0:
+			i_c = 0
 		else:
 			i_c = ki / si
-			if i_c  < self.ang_freq / (2**24-1) :
-				si_max = (g * ki / ( 2 * self.ang_freq / (2**24 -1 )))
-				raise InvalidConfigurationException("Integrator corner below minimum. Decrease integrator saturation below %.3f dB." % (20*math.log(si_max,10)))
+			if i_c < self.ang_freq / (2**24 - 1):
+				si_max = (g * ki / (2 * self.ang_freq / (2**24 - 1)))
+				print(si_max)
+				raise InvalidConfigurationException("Integrator corner below"
+													" minimum. Decrease "
+													"integrator saturation "
+													"below %.3f dB."
+													% (20 *
+													   math.log(si_max, 10)))
 		self.i_fb = 1.0 - (i_c / self.ang_freq)
 
 		if sd :
@@ -212,8 +219,8 @@ class PID(object):
 
 		self.d_fb = 1.0 - fc_coeff
 
-	def set_reg_by_frequency(self, kp, i_xover, d_xover, si, sd):
-		#converts frequency cross over information 
+	def set_reg_by_frequency(self, kp, i_xover, d_xover, si, sd, overall_scaling=1):
+		# converts frequency cross over information
 
 		# Particularly high or low I or D crossover frequencies (<1Hz, >1MHz) require that some of their gain is
 		# pushed to the overall gain on the end due to dynamic range limitations
@@ -261,4 +268,4 @@ class PID(object):
 		# 	si = math.sqrt(si)
 
 		sd = sd / best_gain if sd else None
-		self.set_reg_by_gain(best_gain, kp, ki, kd, si, sd)
+		self.set_reg_by_gain(best_gain * overall_scaling, kp, ki, kd, si, sd)
