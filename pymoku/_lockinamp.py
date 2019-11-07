@@ -624,7 +624,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self.lo_phase = phase
 
 	@needs_commit
-	def set_monitor(self, monitor_ch, source, high_sensitvity_en=False):
+	def set_monitor(self, monitor_ch, source, high_sensitivity_en=False):
 		"""
 		Select the point inside the lockin amplifier to monitor.
 
@@ -667,11 +667,11 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		if monitor_ch == 'a':
 			self.monitor_a = source
 			self.monitor_select0 = monitor_sources[source]
-			self.monitor_a_sensitivity_en = high_sensitvity_en
+			self.monitor_a_sensitivity_en = high_sensitivity_en
 		elif monitor_ch == 'b':
 			self.monitor_b = source
 			self.monitor_select1 = monitor_sources[source]
-			self.monitor_b_sensitivity_en = high_sensitvity_en
+			self.monitor_b_sensitivity_en = high_sensitivity_en
 		else:
 			raise ValueOutOfRangeException("Invalid channel %d", monitor_ch)
 
@@ -937,12 +937,12 @@ _lia_reg_hdl = {
 		 from_reg_bool(31)),
 
 	'monitor_a_sensitivity_en':
-		(96,
+		(113,
 		 to_reg_bool(0),
 		 from_reg_bool(0)),
 
 	'monitor_b_sensitivity_en':
-		(96,
+		(113,
 		 to_reg_bool(1),
 		 from_reg_bool(1)),
 
