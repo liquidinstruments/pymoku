@@ -720,6 +720,25 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# This function is the portion of set_trigger shared among instruments with embedded scopes.
 		self._set_trigger(source, edge, level, minwidth, maxwidth, hysteresis, hf_reject, mode)
 
+	def set_input_range_r_theta(self, i_range=0):
+		"""
+		Sets the Rect-to-polar conversion range for r theta mode.
+
+		Three scaling ranges are available: 2 Vpp, 7.5 mVpp and 25 uVpp
+
+		:type i_range: integer, [0, 1, 2]
+		:param i_range: range selection, 0 = 2 Vpp, 1 = 7.5 mVpp, 2 = 25 uVpp
+		"""
+		_utils.check_parameter_valid('set', i_range,
+									 allowed=[0, 1, 2],
+									 desc="range scale select")
+		gain_filter, filt_gain_select = self._calculate_r_theta_gain(i_range)
+
+		self._set_filt_gain_select(filt_gain_select)
+
+		self._set_filt_gain('main', gain_filter)
+		self._set_filt_gain('aux', gain_filter)
+
 	def _signal_source_volts_per_bit(self, source, scales, trigger=False):
 		"""
 			Converts volts to bits depending on the signal source
@@ -908,16 +927,6 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			self.filt_gain_select_ch1 = gain_select
 		elif ch == 2:
 			self.filt_gain_select_ch2 = gain_select
-
-	def set_input_range_r_theta(self, i_range=0):
-
-		gain_filter, filt_gain_select = self._calculate_r_theta_gain(i_range)
-
-		self._set_filt_gain_select(filt_gain_select)
-
-		self._set_filt_gain('main', gain_filter)
-		self._set_filt_gain('aux', gain_filter)
-
 
 _lia_reg_hdl = {
 
