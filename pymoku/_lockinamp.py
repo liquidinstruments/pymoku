@@ -245,7 +245,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# auxiliary output enables
 		self.aux_offset = aux_offset
 		self.aux_source = aux
-		self.ch2_signal_en = aux in (_LIA_SIGNALS or ['sine', 'demod'])
+		self.ch2_signal_en = aux in (_LIA_SIGNALS) or aux in ['sine', 'demod']
 		self.ch2_out_en = aux != 'none'
 		# Defaults to local oscillator i.e. 'sine'
 		self.aux_select = 1 if aux in _LIA_SIGNALS else (
