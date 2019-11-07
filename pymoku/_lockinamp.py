@@ -759,10 +759,10 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		if source == _LIA_SOURCE_A:
 			return self._monitor_source_volts_per_bit(
-				self.monitor_a, scales) / deci_gain
+				self.monitor_a, scales) / deci_gain / (16.0 if self.monitor_a_sensitivity_en else 1.0)
 		elif source == _LIA_SOURCE_B:
 			return self._monitor_source_volts_per_bit(
-				self.monitor_b, scales) / deci_gain
+				self.monitor_b, scales) / deci_gain / (16.0 if self.monitor_b_sensitivity_en else 1.0)
 		elif source == _LIA_SOURCE_IN1:
 			return scales['gain_adc1'] * (10.0 if scales['atten_ch1']
 										  else 1.0) / deci_gain
