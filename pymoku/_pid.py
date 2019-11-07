@@ -159,22 +159,22 @@ class PID(object):
 	@property
 	def input_offset(self):
 		r = self.reg_base + PID._REG_IN_OFFSET
-		return self._instr._accessor_get(r, from_reg_signed(0, 16))
+		return self._instr._accessor_get(r, from_reg_signed(16, 16))
 
 	@input_offset.setter
 	def input_offset(self, value):
 		r = self.reg_base + PID._REG_IN_OFFSET
-		return self._instr._accessor_set(r, to_reg_unsigned(0, 16), value)
+		return self._instr._accessor_set(r, to_reg_unsigned(16, 16), value)
 
 	@property
 	def output_offset(self):
 		r = self.reg_base + PID._REG_OUT_OFFSET
-		return self._instr._accessor_get(r, from_reg_signed(0, 16))
+		return self._instr._accessor_get(r, from_reg_signed(16, 16))
 
 	@output_offset.setter
 	def output_offset(self, value):
 		r = self.reg_base + PID._REG_OUT_OFFSET
-		return self._instr._accessor_set(r, to_reg_unsigned(0, 16), value)
+		return self._instr._accessor_set(r, to_reg_unsigned(16, 16), value)
 
 	def set_reg_by_gain(self, g, kp, ki, kd, si, sd):
 		# calculates the device registers ased on the gain values given.

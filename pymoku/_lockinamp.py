@@ -348,6 +348,12 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self.pid.input_offset = in_offset
 		self.pid.output_offset = out_offset
 
+		d1, d2 = self._dac_gains()
+		a1, a2 = self._adc_gains()
+		adc = a1 * 2**12	#a1 * a2 * 2**24 if self.ext_demod == 1 else a1 * 2**12
+		self.pid.input_offset = (in_offset * adc / 2) / (d1 if lia_ch == 'main' else d2)
+		self.pid.output_offset = out_offset / (d1 if lia_ch == 'main' else d2)
+
 	@needs_commit
 	def set_pid_by_gain(self, lia_ch, g, kp=1.0, ki=0, kd=0, si=None, sd=None, in_offset=0, out_offset=0):
 		"""
