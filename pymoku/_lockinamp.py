@@ -596,6 +596,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self.lpf_int_ifb_gain = 1.0 - 2.0 * (
 			math.pi * f_corner) / _LIA_CONTROL_FS
 
+		self.lpf_following_stage_gain = 2**24 - (self.lpf_int_ifb_gain * _LIA_ID_GAINSCALE)
+
 		f[0], n[0], s[0] = self._distribute_gain(self.gain_user['main'])
 		f[1], n[1], s[1] = self._distribute_gain(self.gain_user['aux'])
 
@@ -1044,6 +1046,11 @@ _lia_reg_hdl = {
 					   xform=lambda obj, x: x * 2.0**24),
 		 from_reg_signed(0, 32,
 						 xform=lambda obj, x: x / 2.0**24)),
+
+	'lpf_following_stage_gain':
+		(108,
+		 to_reg_signed(0, 32),
+		 from_reg_signed(0, 32)),
 
 	'lpf_int_i_gain_ch2':
 		(109,
