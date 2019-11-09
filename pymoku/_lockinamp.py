@@ -728,6 +728,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# This function is the portion of set_trigger shared among instruments with embedded scopes.
 		self._set_trigger(source, edge, level, minwidth, maxwidth, hysteresis, hf_reject, mode)
 
+	@needs_commit
 	def set_input_range_r_theta(self, i_range=0):
 		"""
 		Sets the Rect-to-polar conversion range for r theta mode.
