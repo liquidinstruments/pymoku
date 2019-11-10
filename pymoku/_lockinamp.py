@@ -656,6 +656,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		:param monitor_ch: Monitor channel
 		:type source: string; {'none','in1','in2','main','aux','demod','i','q'}
 		:param source: Signal to monitor
+		:type high_sensitivity_en: bool
+		:param high_sensitivity_en: Enable high-sensitivity mode (for signals smaller than 25 mVpp)
 		"""
 		_utils.check_parameter_valid('string', monitor_ch, desc="monitor channel")
 		_utils.check_parameter_valid('string', source, desc="monitor signal")
