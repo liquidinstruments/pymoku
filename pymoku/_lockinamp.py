@@ -578,8 +578,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		"""
 		_utils.check_parameter_valid('range', f_corner,
 									 allowed=[300.0e-3, 5.0e6],
-									 desc="local oscillator amplitude",
-									 units="Vpp")
+									 desc="filter corner frequency",
+									 units="Hz")
 
 		_utils.check_parameter_valid('set', order, allowed=[1, 2, 3, 4],
 									 desc="filter order")
