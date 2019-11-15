@@ -234,15 +234,8 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 				"Can't use x/y outputs in conjunction with r/theta outputs."
 				"Please select r/theta or x/y for both outputs.")
 
-		if main == 'theta':
-			self.ch_scaling['main'] = 1.0 / 1.4
-		else:
-			self.ch_scaling['main'] = 1
-
-		if aux == 'theta':
-			self.ch_scaling['aux'] = 1.0 / 1.4
-		else:
-			self.ch_scaling['aux'] = 1
+		self.ch_scaling['main'] = 1.0 / 1.4 if main == 'theta' else 1.0
+		self.ch_scaling['aux'] = 1.0 / 1.4 if aux == 'theta' else 1.0
 
 		# Update locking mode
 		self._set_r_theta_mode(main in ['r', 'theta'] or aux in ['r', 'theta'])
@@ -548,13 +541,12 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# set the register here because it is shared with the local oscillator
 		# amplitude. It will be updated on commit.
 		self._demod_amp = output_amplitude
-
 		if mode == 'external' and (self.demod_mode == 'internal' or self.demod_mode == 'external_pll'):
-			self.pid.gain = self.pid.gain * 3750 * self._adc_gains()[1]
-			self.gainstage_gain = self.gainstage_gain * 3750 * self._adc_gains()[1]
+			self.pid.gain = self.pid.gain * (1.0 / 3750 / self._adc_gains()[1])
+			self.gainstage_gain = self.gainstage_gain * (1.0 / 3750 / self._adc_gains()[1])
 		elif mode != 'external' and self.demod_mode == 'external':
-			self.pid.gain = self.pid.gain / (3750 * self._adc_gains()[1])
-			self.gainstage_gain = self.gainstage_gain / (3750 * self._adc_gains()[1])
+			self.pid.gain = self.pid.gain / (1.0 / 3750 / self._adc_gains()[1])
+			self.gainstage_gain = self.gainstage_gain / (1.0 / 3750 / self._adc_gains()[1])
 
 		if mode == 'internal':
 			self.ext_demod = 0
