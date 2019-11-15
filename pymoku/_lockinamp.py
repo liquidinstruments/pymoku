@@ -130,6 +130,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		self._demod_amp = 0.5
 		self.r_theta_input_range = 0
 		self.gain_user = {'main': 1.0, 'aux': 1.0}
+		self.ch_scaling = {'main': 1.0, 'aux': 1.0}
 
 	@needs_commit
 	def set_defaults(self):
@@ -232,6 +233,16 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 			raise InvalidConfigurationException(
 				"Can't use x/y outputs in conjunction with r/theta outputs."
 				"Please select r/theta or x/y for both outputs.")
+
+		if main == 'theta':
+			self.ch_scaling['main'] = 1.0 / 1.4
+		else:
+			self.ch_scaling['main'] = 1
+
+		if aux == 'theta':
+			self.ch_scaling['aux'] = 1.0 / 1.4
+		else:
+			self.ch_scaling['aux'] = 1
 
 		# Update locking mode
 		self._set_r_theta_mode(main in ['r', 'theta'] or aux in ['r', 'theta'])
@@ -458,12 +469,6 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# gain select filter
 		s = {'main': 0.0, 'aux': 0.0}
 
-		# Greq = kp
-		# Gfilt, Gout, filt_gain_select = self._distribute_gain(Greq)
-		# Gdsp = self._calculate_filt_dsp_gain()
-		# Gout = self._apply_dac_gain(lia_ch, Gout)
-		# self._set_filt_gain(lia_ch, Gfilt)
-		# self._set_filt_gain_select(filt_gain_select, lia_ch)
 		_pid_ch = self._pid_channel
 		if lia_ch == _pid_ch:
 			self.gain_user[_pid_ch] = self.gain_user[lia_ch]
@@ -487,7 +492,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 		# Store selected gain locally. Update on commit with correct DAC
 		# scaling.
-		self.gainstage_gain = o[lia_ch]
+		self._set_output_scaling(lia_ch, o[lia_ch])
 
 	@needs_commit
 	def set_demodulation(self, mode, frequency=1e6, phase=0, output_amplitude=0.5):
@@ -543,6 +548,13 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		# set the register here because it is shared with the local oscillator
 		# amplitude. It will be updated on commit.
 		self._demod_amp = output_amplitude
+
+		if mode == 'external' and (self.demod_mode == 'internal' or self.demod_mode == 'external_pll'):
+			self.pid.gain = self.pid.gain * 3750 * self._adc_gains()[1]
+			self.gainstage_gain = self.gainstage_gain * 3750 * self._adc_gains()[1]
+		elif mode != 'external' and self.demod_mode == 'external':
+			self.pid.gain = self.pid.gain / (3750 * self._adc_gains()[1])
+			self.gainstage_gain = self.gainstage_gain / (3750 * self._adc_gains()[1])
 
 		if mode == 'internal':
 			self.ext_demod = 0
@@ -839,9 +851,9 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 
 	def _set_output_scaling(self, ch, gain):
 		if self._pid_channel == ch:
-			self.pid.gain = self._apply_dac_gain(ch, gain * 2**16)
+			self.pid.gain = self._apply_dac_gain(ch, gain * 2**16) * self.ch_scaling[ch]
 		else:
-			self.gainstage_gain = self._apply_dac_gain(ch, gain)
+			self.gainstage_gain = self._apply_dac_gain(ch, gain) * self.ch_scaling[ch]
 
 	def _get_output_scaling(self, ch):
 		if self._pid_channel == ch:
@@ -878,7 +890,7 @@ class LockInAmp(PIDController, _CoreOscilloscope):
 		elif self.r_theta_mode is True:
 			filter_gain, filter_gain_select = self._calculate_r_theta_gain(
 				i_range)
-			out_gain = required_gain / 2.0
+			out_gain = required_gain
 			return filter_gain, out_gain, filter_gain_select
 
 	@staticmethod
