@@ -95,7 +95,7 @@ try:
         plt.pause(0.001)
         plt.draw()
 
-        i.stop_stream_data()
+    i.stop_stream_data()
 
 except StreamException as e:
     print("Error occured: %s" % e)
