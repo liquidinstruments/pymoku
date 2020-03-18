@@ -8,7 +8,7 @@ compat_patch = [2]
 
 # List of compatible packs
 compat_packs = [('python-pymoku', '48A13392DD2B5D81A1F9487934D3411F3C72E1A2'),
-                ('mercury.hgp', '869AF7BC39D729B7CAC90662071EBD5EC8D55FE7')]
+                ('mercury', '869AF7BC39D729B7CAC90662071EBD5EC8D55FE7')]
 
 # Compatible network protocol version
 protocol_version = '8'
