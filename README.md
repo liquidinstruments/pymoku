@@ -1,6 +1,9 @@
 # Pymoku
+
 A Python library for the command, control and monitoring of the [Liquid Instruments Moku:Lab](http://www.liquidinstruments.com).
 API documentation can be found at [ReadTheDocs](http://pymoku.readthedocs.org).
+
+:warning: pymoku supports Moku:Lab firmware versions upto and including 511.  For more recent firmware, as well as Moku:Go and Moku:Pro support please visit https://www.liquidinstruments.com/products/apis/python-api/
 
 # Getting Started
 
